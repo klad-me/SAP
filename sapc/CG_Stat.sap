@@ -1,0 +1,392 @@
+class CG_Stat
+{
+    // Сгенерить код для команды
+    static boolean GenStat(I_Stat s)
+    {
+	if (s.type==I_Stat.NOP)
+	{
+	    // Ничего не делать
+	    return true;
+	} else
+	if (s.type==I_Stat.BLOCK)
+	{
+	    // Блок кода
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!GenStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.LABEL)
+	{
+	    // Определение метки
+	    CG_Labels.DefineLabel(s.stringValue);
+	    return true;
+	} else
+	if (s.type==I_Stat.EXPR)
+	{
+	    // Выполнить выражение
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    
+	    // Забываем результат
+	    if (s.expr.result_type.isRef())
+	    {
+		CG.bytecode.putByte(OP.R_POP);
+		CG.ST(-4);
+	    } else
+	    if (s.expr.result_type.type==I_Type.VOID)
+	    {
+	    } else
+	    {
+		CG.bytecode.putByte(OP.OP4Type_IF(OP._POP, s.expr.result_type));
+		CG.ST(-s.expr.result_type.MemoryUsage());
+	    }
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.IF_ELSE)
+	{
+	    // Условие
+	    
+	    // Проверим наличие else
+	    if (s.stat2==null)
+	    {
+		// if (expr) stat
+		String label_end=CG_Labels.GenAutoLabel();
+		
+		// Генерим условие проверки
+		if (!CG_Expr.GenExpr(s.expr)) return false;
+		if (!CG_Expr.GenExpr_CastToBool(s.expr)) return false;
+		
+		// Проверяем условие
+		CG.bytecode.putByte(OP.JZ);
+		CG.bytecode.putShort(CG_Labels.UseLabel(label_end));
+		CG.ST(-1);
+		
+		// Генерим выражение
+		if (!CG_Stat.GenStat(s.stat)) return false;
+		
+		// Метка окончания
+		CG_Labels.DefineLabel(label_end);
+	    } else
+	    {
+		// if (expr) stat else stat2
+		String label_end=CG_Labels.GenAutoLabel();
+		String label_else=CG_Labels.GenAutoLabel();
+		
+		// Генерим условие проверки
+		if (!CG_Expr.GenExpr(s.expr)) return false;
+		if (!CG_Expr.GenExpr_CastToBool(s.expr)) return false;
+		
+		// Проверяем условие
+		CG.bytecode.putByte(OP.JZ);
+		CG.bytecode.putShort(CG_Labels.UseLabel(label_else));
+		CG.ST(-1);
+		
+		// Генерим код
+		if (!CG_Stat.GenStat(s.stat)) return false;
+		CG.bytecode.putByte(OP.GOTO);
+		CG.bytecode.putShort(CG_Labels.UseLabel(label_end));
+		
+		// Метка else
+		CG_Labels.DefineLabel(label_else);
+		
+		// Генерим второй код
+		if (!CG_Stat.GenStat(s.stat2)) return false;
+		
+		// Метка окончания
+		CG_Labels.DefineLabel(label_end);
+	    }
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.WHILE)
+	{
+	    // Цикл while
+	    String label_break="<break>"+s.cycle_num;
+	    String label_continue="<continue>"+s.cycle_num;
+	    
+	    // Метка для continue
+	    CG_Labels.DefineLabel(label_continue);
+	    
+	    // Генерим выражение
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    if (!CG_Expr.GenExpr_CastToBool(s.expr)) return false;
+	    
+	    // Проверяем условие
+	    CG.bytecode.putByte(OP.JZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_break));
+	    CG.ST(-1);
+	    
+	    // Генерим код
+    	    if (!CG_Stat.GenStat(s.stat)) return false;
+	    
+	    // Переход на начало цикла
+	    CG.bytecode.putByte(OP.GOTO);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_continue));
+	    
+	    // Метка для break
+	    CG_Labels.DefineLabel(label_break);
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.DO_WHILE)
+	{
+	    // Цикл do-while
+	    String label_break="<break>"+s.cycle_num;
+	    String label_continue="<continue>"+s.cycle_num;
+	    
+	    // Метка для continue
+	    CG_Labels.DefineLabel(label_continue);
+	    
+	    // Генерим код
+    	    if (!CG_Stat.GenStat(s.stat)) return false;
+	    
+	    // Генерим выражение
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    if (!CG_Expr.GenExpr_CastToBool(s.expr)) return false;
+	    
+	    // Проверяем условие
+	    CG.bytecode.putByte(OP.JNZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_continue));
+	    CG.ST(-1);
+	    
+	    // Метка для break
+	    CG_Labels.DefineLabel(label_break);
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.FOR)
+	{
+	    // Цикл for
+	    String label_break="<break>"+s.cycle_num;
+	    String label_continue="<continue>"+s.cycle_num;
+	    String label_again=CG_Labels.GenAutoLabel();
+	    
+	    // Инициализатор
+	    if (s.exprlist1!=null)
+	    {
+		for (int i=0; i<s.exprlist1.list.size(); i++)
+		{
+		    I_Expr e=(I_Expr)s.exprlist1.list.elementAt(i);
+		    I_Stat tmp=new I_Stat(null, I_Stat.EXPR);
+		    tmp.expr=e;
+		    
+		    if (!GenStat(tmp)) return false;
+		}
+	    }
+	    
+	    // Метка для цикла
+	    CG_Labels.DefineLabel(label_again);
+	    
+	    // Генерим выражение
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    if (!CG_Expr.GenExpr_CastToBool(s.expr)) return false;
+	    
+	    // Проверяем условие
+	    CG.bytecode.putByte(OP.JZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_break));
+	    CG.ST(-1);
+	    
+	    // Генерим код
+    	    if (!CG_Stat.GenStat(s.stat)) return false;
+	    
+	    // Метка для continue
+	    CG_Labels.DefineLabel(label_continue);
+	    
+	    // Финализатор
+	    if (s.exprlist2!=null)
+	    {
+		for (int i=0; i<s.exprlist2.list.size(); i++)
+		{
+		    I_Expr e=(I_Expr)s.exprlist2.list.elementAt(i);
+		    I_Stat tmp=new I_Stat(null, I_Stat.EXPR);
+		    tmp.expr=e;
+		    
+		    if (!GenStat(tmp)) return false;
+		}
+	    }
+	    
+	    // Переход на начало цикла
+	    CG.bytecode.putByte(OP.GOTO);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_again));
+	    
+	    // Метка для break
+	    CG_Labels.DefineLabel(label_break);
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.RETURN)
+	{
+	    // Возврат из функции
+	    
+	    // Получим результат в стеке (должен быть 4 байта)
+	    if (s.expr!=null)
+	    {
+		// Генерим выражение
+		if (!CG_Expr.GenExpr(s.expr)) return false;
+		
+		// Приводим к 4 байтам
+		if (!s.expr.result_type.isRef())
+		{
+		    // Сначала приведем результат к требуемому типу (что возвращает метод)
+		    CG_Expr.GenExpr_CastToType(s.expr, CG.cur_method.return_type);
+		    
+		    // Расширяем тип до 4 байт при необходимости
+		    if (CG.cur_method.return_type.type==I_Type.BYTE)
+		    {
+			CG.bytecode.putByte((byte)(OP.BYTE | OP._TO_INT));
+			CG.ST(3);
+		    } else
+		    if (CG.cur_method.return_type.type==I_Type.SHORT)
+		    {
+			CG.bytecode.putByte((byte)(OP.SHORT | OP._TO_INT));
+			CG.ST(2);
+		    }
+		}
+		
+		// Выходим из мониторов
+		for (int i=0; i<s.intValue; i++)
+		{
+		    CG.bytecode.putByte(OP.SWAP);	// меняем в стеке результат метода и объект для монитора
+		    CG.bytecode.putByte(OP.MONITOR_EXIT);
+		}
+		
+		CG.ST(-4);
+	    } else
+	    {
+		// Возвращаем void
+		CG_LineNumbers.Line(s);
+		
+		// Выходим из мониторов
+		for (int i=0; i<s.intValue; i++)
+		{
+		    CG.bytecode.putByte(OP.MONITOR_EXIT);
+		}
+		
+		// Ничего не возвращаем. return 0 будет сделан в метке <return>
+	    }
+	    
+	    // Переходим на выход из функции
+	    CG.bytecode.putByte(OP.GOTO);
+	    CG.bytecode.putShort(CG_Labels.UseLabel("<return>"));
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.GOTO)
+	{
+	    // Безусловный переход
+	    CG_LineNumbers.Line(s);
+	    
+	    // Сначала выходим из мониторов
+	    for (int i=0; i<s.intValue; i++)
+	    {
+	        CG.bytecode.putByte(OP.MONITOR_EXIT);
+	    }
+	    
+	    // Делаем переход
+	    CG.bytecode.putByte(OP.GOTO);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(s.stringValue));
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.SWITCH)
+	{
+	    // switch-case-default
+	    boolean have_default=false;
+	    String label_break="<break>"+s.cycle_num;
+	    
+	    // Получаем выражение и приводим его к int-у
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    if (!CG_Expr.GenExpr_CastToInt(s.expr)) return false;
+	    
+	    // Генерим переходы
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		I_Stat st=(I_Stat)s.stats_list.elementAt(i);
+		
+		if (st.type==I_Stat.SWITCH_CASE)
+		{
+		    // Условие
+		    st.stringValue=CG_Labels.GenAutoLabel();
+		    
+		    // Генерим выражение и приводим его к int-у
+		    if (!CG_Expr.GenExpr(st.expr)) return false;
+		    if (!CG_Expr.GenExpr_CastToInt(st.expr)) return false;
+		    
+		    // Генерим условие
+		    CG.bytecode.putByte(OP.CASE);
+		    CG.bytecode.putShort(CG_Labels.UseLabel(st.stringValue));
+		    CG.ST(-4);
+		} else
+		if (st.type==I_Stat.SWITCH_DEFAULT)
+		{
+		    // По умолчанию
+		    have_default=true;
+		    st.stringValue=CG_Labels.GenAutoLabel();
+		    
+		    // Вытаскиваем выражение для проверки
+		    CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+		    CG.ST(-4);
+		    
+		    // Переход на default
+		    CG.bytecode.putByte(OP.GOTO);
+		    CG.bytecode.putShort(CG_Labels.UseLabel(st.stringValue));
+		}
+	    }
+	    
+	    // Если нет default - делаем его
+	    if (!have_default)
+	    {
+		CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+		CG.ST(-4);
+		CG.bytecode.putByte(OP.GOTO);
+		CG.bytecode.putShort(CG_Labels.UseLabel(label_break));
+	    }
+	    
+	    
+	    // Генерим код
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		I_Stat st=(I_Stat)s.stats_list.elementAt(i);
+		
+		if ( (st.type==I_Stat.SWITCH_CASE) ||
+		     (st.type==I_Stat.SWITCH_DEFAULT) )
+		{
+		    // Определим метку
+		    CG_Labels.DefineLabel(st.stringValue);
+		} else
+		{
+		    // Это команда
+		    if (!GenStat(st)) return false;
+		}
+	    }
+	    
+	    // Метка для break
+	    CG_Labels.DefineLabel(label_break);
+	    
+	    return true;
+	} else
+	if (s.type==I_Stat.SYNCHRONIZED)
+	{
+	    // Синхронизированный блок
+	    
+	    // Генерим выражение
+	    if (!CG_Expr.GenExpr(s.expr)) return false;
+	    
+	    // Генерим код
+	    CG.bytecode.putByte(OP.MONITOR_ENTER);
+	    if (!GenStat(s.stat)) return false;
+	    CG.bytecode.putByte(OP.MONITOR_EXIT);
+	    CG.ST(-4);
+	    
+	    return true;
+	} else
+	{
+	    // Неизвестная команда !
+	    sapc.error(s.fname+":"+s.line+":  Internal compiler error (CG: bad stat "+s.type+") !\n");
+	    return false;
+	}
+    }
+}

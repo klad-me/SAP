@@ -1,0 +1,93 @@
+
+class L_VirtualTab
+{
+    static boolean CreateVirtualTab()
+    {
+	// Снимаем со всех классов метки
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    cls.L_mark=false;
+	}
+	
+	// Строим таблицы виртуальных методов для всех классов
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    if (cls.is_interface)
+	    {
+		// Для интерфейса не требуется таблица виртуальных методов - создаем пустую
+		cls.L_VirtualTab=new Vector();
+		continue;
+	    }
+	    
+	    if (!Make_VTab(cls)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean Make_VTab(I_Class cls)
+    {
+	// Проверим - может быть этот класс уже имеет таблицу
+	if (cls.L_mark) return true;
+	
+	// Создаем таблицу
+	cls.L_VirtualTab=new Vector();
+	
+	// Добавляем методы предка
+	if (cls.superclass != null)
+	{
+	    // Создаем таблицу у предка
+	    if (!Make_VTab(cls.superclass)) return false;
+	    
+	    // Добавляем методы предка
+	    cls.L_VirtualTab.addAll(cls.superclass.L_VirtualTab);
+	}
+	
+	// Добавляем в таблицу методы, определенные в этом классе (конструкторы не включаем)
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (m.name.charAt(0)=='<') continue;	// это конструктор
+	    
+	    // Проверим - может быть это переопределение метода предка
+	    boolean ok=false;
+	    for (int j=0; j<cls.L_VirtualTab.size(); j++)
+	    {
+		I_Method m1=(I_Method)cls.L_VirtualTab.elementAt(j);
+		
+		if (m1.name.equals(m.name))
+		{
+		    // Имена сходятся. Проверим спецификаторы
+		    if (!m1.spec().equals(m.spec()))
+		    {
+			// Ошибка
+			sapc.error("Incorrect method redeclaration: "+cls.superclass_name+"."+m.name+"->"+cls.name+"."+m.name+" (different specifiers) !\n");
+			return false;
+		    }
+		    
+		    // Все нормально
+		    cls.L_VirtualTab.setElementAt(m, j);
+		    ok=true;
+		    break;
+		}
+	    }
+	    
+	    if (!ok)
+	    {
+		// Это новый метод
+		cls.L_VirtualTab.add(m);
+	    }
+	}
+	
+	
+	// Все нормально. Помечаем класс
+	cls.L_mark=true;
+	return true;
+    }
+}

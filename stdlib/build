@@ -1,0 +1,9 @@
+#! /bin/bash
+
+if [ "$1" == "" ]; then
+    sapc -o obj -i obj *.sap
+    sapdoc -i obj -o doc -idx *.sap
+else
+    sapc -o obj -i obj $*
+    sapdoc -i obj -o doc $*
+fi

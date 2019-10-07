@@ -1,0 +1,57 @@
+
+// Проверить, что класс не переопределяет поле или класс предка
+class Checker_Field_Method_Redef
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверим для начала - есть ли предок
+	if (cls.superclass==null) return true;
+	
+	
+	// Проверим поля
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var v=(I_Var)cls.fields.elementAt(i);
+	    I_Var v1=cls.superclass.FindField(v.name);
+	    if (v1!=null)
+	    {
+		Redefined(v, v1, v.name);
+		return false;
+	    }
+	}
+	
+	// Проверим методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (m.name.equals("<init>")) continue;	// конструктор можно переопределять
+	    
+	    I_Method m1=cls.superclass.FindMethod(m.name);
+	    if (m1!=null)
+	    {
+		// Есть такой же метод. Надо проверить параметры
+		if (!m.equals(m1))
+		{
+		    Redefined(m, m1, m.name);
+		    return false;
+		}
+		
+		// Проверим - может нативным методом собираются переопределить другой метод
+		if (m.is_native)
+		{
+		    sapc.error(m.fname+":"+m.line+":  Incorrect usage of native method !\n");
+		    return false;
+		}
+	    }
+	}
+	
+	return true;
+    }
+    
+    
+    static void Redefined(I_SourceInfo src, I_SourceInfo src1, String name)
+    {
+	sapc.error(src.fname+":"+src.line+":  Field or method '"+name+"' redefined (at "+src1.fname+":"+src1.line+") !\n");
+    }
+}

@@ -1,0 +1,31 @@
+
+// Проверить, что определены все методы, которые нужны для интерфейсов
+class Checker_Interface_Implementing
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверим - а есть ли вообще интерфейсы
+	if (cls.if_list==null) return true;
+	
+	// Проверяем все интерфейсы
+	for (int i=0; i<cls.if_list.size(); i++)
+	{
+	    I_Class iface=sapc.prog.FindClass((String)cls.if_list.elementAt(i));
+	    
+	    // Проверяем все методы интерфейса
+	    for (int j=0; j<iface.methods.size(); j++)
+	    {
+		I_Method m=(I_Method)iface.methods.elementAt(j);
+		I_Method m1=cls.FindMethod(m.name);
+		
+		if ( (m1==null) || (!m.equals(m1)) )
+		{
+		    sapc.error(cls.fname+":"+cls.line+":  Class '"+cls.name+"' implements interface '"+iface.name+"', but not implements method '"+m.name+"' !\n");
+		    return false;
+		}
+	    }
+	}
+	
+	return true;
+    }
+}

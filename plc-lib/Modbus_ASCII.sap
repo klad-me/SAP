@@ -1,0 +1,206 @@
+/**
+ * Реализация драйвера протокола Modbus-ASCII
+ */
+class Modbus_ASCII extends Modbus
+{
+    /**private**/
+    static final byte[] hex=new byte{	// "0123456789ABCDEF"
+	0x30, 0x31, 0x32, 0x33,
+	0x34, 0x35, 0x36, 0x37,
+	0x38, 0x39, 0x41, 0x42,
+	0x43, 0x44, 0x45, 0x46 };
+    
+    /**
+     * private
+     *
+     * Таймер приема
+     */
+    Timer timer;
+    
+    /**private**/
+    final int max_size=128;
+    
+    
+    /**
+     * Создает драйвер Modbus-ASCII
+     */
+    constructor(Stream s) : super(s)
+    {
+	timer=new Timer();
+    }
+    
+    
+    /**
+     * Передать фрейм. Фрейм должен содержать только адрес, команду и данные (без заголовка и контрольной суммы).
+     *
+     * @param data данные для передачи
+     */
+    void send(byte[] data)
+    {
+	if (s instanceof SerialPort)
+	{
+	    ((SerialPort)s).txModbusASCII(data);
+	    return;
+	}
+	
+	// Считаем контрольную сумму
+	byte lrc=LRC(data, data.length);
+	
+	// Создаем временный буфер для передачи
+	byte[] buf=new byte[1+data.length*2+2+2];
+	
+	// Старт пакета
+	buf[0]=0x3A;
+	
+	// Данные
+	for (int i=0; i<data.length; i++)
+	{
+	    buf[i*2+1]=hex[(data[i]>>4)&0x0f];
+	    buf[i*2+2]=hex[data[i]&0x0f];
+	}
+	
+	// LRC
+	buf[data.length*2+1]=hex[(lrc>>4)&0x0f];
+	buf[data.length*2+2]=hex[lrc&0x0f];
+	
+	// Конец пакета
+	buf[data.length*2+3]=0x0D;
+	buf[data.length*2+4]=0x0A;
+	
+	// Отправляем пакет
+	s.writeBytes(buf, 0, buf.length);
+    }
+    
+    
+    /**
+     * Принять фрейм. Фрейм будет содержать только адрес, команду и данные.
+     *
+     * @param max_size максимальный размер фрейма для приема в байтах
+     * @param timeout время для приема фрейма
+     * @return принятые данные, или null в случае таймаута приема
+     */
+    byte[] receive(int timeout)
+    {
+	if (s instanceof SerialPort)
+	{
+	    return ((SerialPort)s).rxModbusASCII(timeout);
+	}
+	
+	int recvpos=0;
+	byte first_digit=0;
+	boolean rxstart=false;
+	
+	// Выделяем буфер под данные
+	byte[] data=new byte[max_size];
+	
+	// Выделяем буфер приема
+	byte[] buf=new byte[64];	// в 2 раза больше, чем в RTU, т.к. у нас по 2 символа на байт
+	
+	// Таймер приема
+	timer.set(timeout);
+	
+	// Принимаем пакет
+	while (timer.read()>0)
+	{
+	    // Читаем данные
+	    int sz=s.readBytes(buf, 0, buf.length);
+	    if (sz<1) Thread.sleep(1);
+	    
+	    for (int i=0; i<sz; i++)
+	    {
+		byte b=buf[i];
+		
+		if (b==0x3A)
+		{
+		    // Начало фрейма
+		    //if (recvpos>0) System.print("ASCII: overstart recvpos="+recvpos+"\r\n");
+		    recvpos=0;
+		    rxstart=true;
+		    first_digit=0;
+		} else
+		{
+		    if (rxstart)
+		    {
+			// Проверяем на hex-цифру
+			if ( ( (b>='0') && (b<='9') ) ||
+			     ( (b>='A') && (b<='F') ) ||
+			     ( (b>='a') && (b<='f') ) )
+			{
+			    // Пришла hex-цифра
+			    if (first_digit==0)
+			    {
+				// Это первая цифра
+				first_digit=b;
+			    } else
+			    {
+				// Это вторая цифра
+				if (recvpos>=max_size) recvpos=0;
+				
+				byte dig1=first_digit;
+				byte dig2=b;
+				byte r;
+				if ( (dig1>='0') && (dig1<='9') ) r=(byte)(dig1-'0'); else
+				if ( (dig1>='A') && (dig1<='F') ) r=(byte)(dig1-'A'+10); else
+								  r=(byte)(dig1-'a'+10);
+				r=(byte)(r << 4);
+				if ( (dig2>='0') && (dig2<='9') ) r=r | (byte)(dig2-'0'); else
+				if ( (dig2>='A') && (dig2<='F') ) r=r | (byte)(dig2-'A'+10); else
+								  r=r | (byte)(dig2-'a'+10);
+				data[recvpos++]=r;
+				first_digit=0;
+			    }
+			} else
+			if ( (b==0x0D) || (b==0x0A) )
+			{
+			    // Конец пакета !
+			    
+			    // Проверим пакет
+			    if ( (recvpos>=3) && (data[recvpos-1]==LRC(data, recvpos-1)) )
+			    {
+				// Пакет нормальный
+				byte[] recvdata=new byte[recvpos-1];
+				
+				System.arrayCopy(data,0,recvdata,0,recvdata.length);
+				
+				return recvdata;
+			    }
+			    //System.print("ASCII: bad packet recvpos="+recvpos+"\r\n");
+			    // Плохой пакет
+			    recvpos=0;
+			    rxstart=false;
+			} else
+			{
+			    // Неизвестный символ - пакет битый
+			    recvpos=0;
+			    rxstart=false;
+			    //System.print("ASCII: bad symbol\r\n");
+			}
+		    }
+		}
+	    }
+	}
+	
+	//System.print("ASCII: recv timeout recvpos="+recvpos+" avail="+s.available()+"\r\n");
+	
+	// Ничего не принято
+	return null;
+    }
+    
+    
+    /**
+     * private
+     *
+     * Считает LRC
+     */
+    byte LRC(byte[] data, int len)
+    {
+	byte lrc=0;
+	
+	for (int i=0; i<len; i++)
+	    lrc=(byte)(lrc+data[i]);
+	lrc=(byte)((int)0xff-(int)lrc);
+	lrc++;
+	
+	return lrc;
+    }
+}

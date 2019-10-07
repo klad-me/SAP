@@ -1,0 +1,72 @@
+
+class L_StaticInitOrder
+{
+    static int current;
+    
+    
+    static void CreateStaticInitOrder()
+    {
+	// Снимаем со всех классов метки
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    cls.L_mark=false;
+	}
+	
+	// Составляем порядок
+	boolean warning=false;
+	current=0;
+	sapc.prog.L_StaticInitOrder=new Vector();
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    if (!cls.L_mark)
+	    {
+		if (MakeOrder(cls)) warning=true;
+	    }
+	}
+	
+	// Проверяем на цикл
+	if (warning)
+	{
+	    sapc.warning("Warning ! Static initialization may fail ! Loop found !\n");
+	}
+    }
+    
+    
+    static boolean MakeOrder(I_Class cls)
+    {
+	boolean warning=false;
+	
+	// Помечаем класс, что мы его обрабатываем
+	cls.L_mark=true;
+	cls.L_StaticInitOrder=-1;
+	
+	// Проходим по всем зависимостям
+	if (cls.staticinit_deps != null)
+	{
+	    for (int i=0; i<cls.staticinit_deps.size(); i++)
+	    {
+		I_Class dep=sapc.prog.FindClass((String)cls.staticinit_deps.elementAt(i));
+		
+		if (!dep.L_mark)
+		{
+		    // Надо рекурсивно проверять
+		    if (MakeOrder(dep)) warning=true;
+		} else
+		{
+		    // Стоит флаг, что класс проверен (или проверяется)
+		    // Проверим - вдруг есть цикл
+		    if (dep.L_StaticInitOrder<0) warning=true;
+		}
+	    }
+	}
+	
+	// Зависимости прошли. Ставим на себя номер
+	cls.L_StaticInitOrder=current++;
+	sapc.prog.L_StaticInitOrder.add(cls);
+	
+	return warning;
+    }
+}

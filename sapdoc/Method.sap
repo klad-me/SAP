@@ -1,0 +1,8 @@
+class Method
+{
+    String name;
+    String return_type;
+    Vector params=new Vector();
+    boolean is_static;
+    String doc;
+}

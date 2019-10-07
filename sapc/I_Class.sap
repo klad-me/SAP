@@ -1,0 +1,470 @@
+
+class I_Class extends I_SourceInfo
+{
+    // Флаги
+    boolean is_interface;
+    
+    // Имя класса и суперкласса
+    String name;
+    String superclass_name;
+    I_Class superclass;
+    
+    // Список определяемых интерфейсов
+    Vector if_list;
+    
+    // Список полей
+    Vector fields;
+    
+    // Список методов
+    Vector methods;
+    
+    // StringPool - только за загруженных классов
+    Vector StringPool;
+    
+    // Документация
+    String doc;
+    
+    // ----------------------------------
+    // Зависимости от других классов
+    Vector depends;
+    
+    // Зависимости <staticinit>
+    Vector staticinit_deps;
+    
+    
+    // ----------------------------------
+    // Отметка для линковщика
+    boolean L_mark;
+    
+    // Номер класса
+    int L_number;
+    
+    // Размер области полей
+    int L_fields_size;
+    
+    // Таблица виртуальных методов
+    Vector L_VirtualTab;
+    
+    // Таблица принадлежности к классам
+    Vector L_InstanceOfTab;
+    
+    // Таблица методов интерфейсов
+    Vector L_InterfaceTab;
+    
+    // Очередность вызова <staticinit>
+    int L_StaticInitOrder;
+    
+    
+    
+    I_Class(Lex lex, String name, String superclass_name, Vector if_list) : super(lex)
+    {
+	is_interface=false;
+	this.name=name;
+	this.superclass_name=superclass_name;
+	this.if_list=if_list;
+	this.fields=new Vector();
+	this.methods=new Vector();
+    }
+    
+    
+    I_Var FindField(String name)
+    {
+	for (int i=0; i<fields.size(); i++)
+	{
+	    I_Var v=(I_Var)fields.elementAt(i);
+	    
+	    if (v.name.equals(name)) return v;
+	}
+	
+	if (name.charAt(0)=='<') return null;
+	
+	if (superclass != null)
+	{
+	    // Ищем у предка
+	    I_Var v=superclass.FindField(name);
+	    if (v!=null) return v;
+	}
+	
+	return null;
+    }
+    
+    
+    I_Method FindMethod(String name)
+    {
+	for (int i=0; i<methods.size(); i++)
+	{
+	    I_Method m=(I_Method)methods.elementAt(i);
+	    
+	    if (m.name.equals(name)) return m;
+	}
+	
+	if (name.charAt(0)=='<') return null;
+	
+	if (superclass != null)
+	{
+	    // Ищем у предка
+	    I_Method m=superclass.FindMethod(name);
+	    if (m!=null) return m;
+	}
+	
+	return null;
+    }
+    
+    
+    boolean CheckFieldName(String name)
+    {
+	for (int i=0; i<fields.size(); i++)
+	{
+	    I_Var v=(I_Var)fields.elementAt(i);
+	    
+	    if (v.name.equals(name)) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    boolean CheckMethodName(String name)
+    {
+	for (int i=0; i<methods.size(); i++)
+	{
+	    I_Method m=(I_Method)methods.elementAt(i);
+	    
+	    if (m.name.equals(name)) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    void addDep(String depname)
+    {
+        // Ищем, может такой класс уже есть
+        for (int i=0; i<depends.size(); i++)
+        {
+            String str=(String)depends.elementAt(i);
+            if (str.equals(depname)) return;
+        }
+	
+        // Добавляем
+        depends.add(depname);
+    }
+
+    
+    
+    static I_Class ParseClass(Lex lex)
+    {
+	if (!lex.expect(Lex.T_CLASS)) return null;
+	lex.GetToken();
+	
+	String doc=lex.last_doc;
+	
+	if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("class name expected !");
+	String class_name=(String)lex.tok_value;
+	
+	String superclass_name=null;
+	if (lex.expect(Lex.T_EXTENDS))
+	{
+	    // Есть суперкласс
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("superclass name expected !");
+	    superclass_name=(String)lex.tok_value;
+	    
+	    
+	    // Проверим, чтоб у класса Object не было суперкласса
+	    if (class_name.equals("Object")) lex.error("class 'Object' can't have parent-class !");
+	}
+	
+	// Супер класс будет Object для тех, кто не указал супер-класс
+	if ( (superclass_name==null) &&
+	     (!class_name.equals("Object")) )
+	    superclass_name="Object";
+	
+	
+	Vector if_list=new Vector();
+	if (lex.expect(Lex.T_IMPLEMENTS))
+	{
+	    // Есть интерфейсы
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("interface name expected !");
+	    
+	    if_list.add(lex.tok_value);
+	    
+	    while (lex.expect(','))
+	    {
+		lex.GetToken();
+		
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("interface name expected !");
+		if_list.add(lex.tok_value);
+	    }
+	}
+	
+	if (lex.GetToken()!='{') lex.error("'{' expected after class header !");
+	
+	I_Class cls=new I_Class(lex, class_name, superclass_name, if_list);
+	cls.doc=doc;
+	ParseClassBody(lex, cls);
+	
+	if (lex.GetToken()!='}') lex.error("'}' expected after class body !");
+	
+	return cls;
+    }
+    
+    
+    static void ParseClassBody(Lex lex, I_Class cls)
+    {
+	while (true)
+	{
+	    boolean is_static=false, is_final=false, is_native=false;
+	    boolean ok;
+	    
+	    // Получаем документацию на поле/метод
+	    lex.last_doc=null;
+	    lex.GetToken();
+	    lex.UngetToken();
+	    String doc=lex.last_doc;
+	    
+	    // Проверяем флаги
+	    while ( (lex.expect(Lex.T_STATIC)) ||
+		    (lex.expect(Lex.T_FINAL)) ||
+		    (lex.expect(Lex.T_NATIVE)) )
+	    {
+		int t=lex.GetToken();
+		
+		if (t==Lex.T_STATIC) is_static=true; else
+		if (t==Lex.T_FINAL) is_final=true; else
+		if (t==Lex.T_NATIVE) is_native=true;
+	    }
+	    
+	    // Смотрим на предмет конструктора
+	    if (lex.expect(Lex.T_CONSTRUCTOR))
+	    {
+		// Это конструктор
+		lex.GetToken();
+		if ( (is_static) || (is_final) ) lex.error("constructor can't have any modifiers !");
+		
+		if (!cls.CheckMethodName("<init>")) lex.error("constructor already defined !");
+		
+		I_Method m=I_Method.ParseMethod(lex, new I_Type(lex, Lex.T_VOID, 0, null), "<init>", false, is_native, false);
+		m.doc=doc;
+		cls.methods.add(m);
+	    } else
+	    // Смотрим на предмет void-метода
+	    if (lex.expect(Lex.T_VOID))
+	    {
+		lex.GetToken();
+		// Это void-метод
+		if (is_final) lex.error("method can't be 'final' !");
+		
+		// Получаем имя метода
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("method name expected after type !");
+		String name=(String)lex.tok_value;
+		
+		if (!cls.CheckMethodName(name)) lex.error("method '"+name+"' already defined !");
+		
+		I_Method m=I_Method.ParseMethod(lex, new I_Type(lex, Lex.T_VOID, 0, null), name, is_static, is_native, false);
+		m.doc=doc;
+		cls.methods.add(m);
+	    } else
+	    // Смотрим на предмет перечисления (static final enum {  VAR, VAR=value, .... };)
+	    if (lex.expect(Lex.T_ENUM))
+	    {
+		// Это перечисление
+		lex.GetToken();
+		
+		if (is_native) lex.error("enum can't be native !");
+		
+		if (lex.GetToken()!='{') lex.error("'{' expected after 'enum'");
+		
+		int next=0;
+		while (true)
+		{
+		    lex.last_doc=null;
+		    I_Type type=new I_Type(lex, Lex.T_INT, 0, null);
+		    if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("variable name expected");
+		    String name=(String)lex.tok_value;
+		    if (!cls.CheckFieldName(name)) lex.error("field '"+name+"' already defined !");
+		    I_Var var=new I_Var(lex, type, name, null);
+		    var.is_static=is_static;
+		    var.is_final=is_final;
+		    I_Expr init;
+		    if (lex.expect('='))
+		    {
+			// Есть инициализатор
+			lex.GetToken();
+			init=I_Expr.ParseExpr(lex);
+			if (init==null) lex.error("expression expected after '"+name+"='");
+			
+			// Упрощаем математику
+			Opt_Math.CheckExpr(init);
+			
+			if (init.type != I_Expr.INT_NUMBER) lex.error("integer constant initializer required for enum element '"+name+"'");
+			next=init.intValue+1;
+		    } else
+		    {
+			// Нет инициализатора - берем следующее число
+			init=new I_Expr(lex, I_Expr.INT_NUMBER, null, null);
+			init.intValue=next++;
+		    }
+		    
+		    // Добавляем поле
+		    var.init=init;
+		    var.doc=lex.last_doc;
+		    cls.fields.add(var);
+		    
+		    int t=lex.GetToken();
+		    if (t==',') continue; else	// есть еще
+		    if (t=='}') break; else	// конец
+			lex.error("',' or '}' expected after enum variable");
+		}
+		
+		// Проверим ';' в конце
+		if (lex.GetToken()!=';') lex.error("';' expected after enum {}");
+	    } else
+	    {
+		// Это или конструктор, или поле, или метод
+		
+		// Проверим на Java-like конструктор
+		if (lex.expect(Lex.T_VARIABLE))
+		{
+		    lex.GetToken();
+		    String name=(String)lex.tok_value;
+		    if (lex.expect('('))
+		    {
+			// Похоже на конструктор. Проверим имя
+			if (name.equals(cls.name))
+			{
+			    // Это конструктор
+			    if ( (is_static) || (is_final) || (is_native) ) lex.error("constructor can't have any modifiers !");
+			    
+			    if (!cls.CheckMethodName("<init>")) lex.error("constructor already defined !");
+			    
+			    I_Method m=I_Method.ParseMethod(lex, new I_Type(lex, Lex.T_VOID, 0, null), "<init>", false, false, false);
+			    m.doc=doc;
+			    cls.methods.add(m);
+			    continue;
+			}
+		    }
+		    lex.UngetToken();
+		}
+		
+		// Получаем тип
+	        I_Type type=I_Type.ParseType(lex);
+		if (type==null)
+		{
+		    if ( (is_static) || (is_final) || (is_native) ) lex.error("type expected after modifiers !");
+		    
+		    // Конец описаний
+		    break;
+		}
+		
+		// Получаем имя метода/поля
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("property or method name expected after type !");
+		String name=(String)lex.tok_value;
+		
+		if (lex.expect('('))
+		{
+		    // Это метод
+		    if (is_final) lex.error("method can't be 'final' !");
+		    
+		    if (!cls.CheckMethodName(name)) lex.error("method '"+name+"' already defined !");
+		    
+		    I_Method m=I_Method.ParseMethod(lex, type, name, is_static, is_native, false);
+		    m.doc=doc;
+		    cls.methods.add(m);
+		} else
+		{
+		    // Это поле
+		    if (is_native) lex.error("field can't be 'native' !");
+		    
+		    Vector v=I_Var.ParseVarList(lex, type, name, is_static, is_final);
+		    if (lex.GetToken()!=';') lex.error("';' expected after fields declaration !");
+		    for (int i=0; i<v.size(); i++)
+		    {
+			I_Var var=(I_Var)v.elementAt(i);
+			var.doc=doc;
+			
+			if (!cls.CheckFieldName(var.name)) lex.error("field '"+var.name+"' already defined !");
+			
+			cls.fields.add(var);
+		    }
+		}
+	    }
+	}
+    }
+    
+    
+    static I_Class ParseInterface(Lex lex)
+    {
+	if (!lex.expect(Lex.T_INTERFACE)) return null;
+	lex.GetToken();
+	
+	String doc=lex.last_doc;
+	
+	if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("interface name expected !");
+	String class_name=(String)lex.tok_value;
+	
+	if (lex.GetToken()!='{') lex.error("'{' expected after interface header !");
+	
+	I_Class cls=new I_Class(lex, class_name, null, null);
+	cls.is_interface=true;
+	cls.doc=doc;
+	ParseInterfaceBody(lex, cls);
+	
+	if (lex.GetToken()!='}') lex.error("'}' expected after interface body !");
+	
+	return cls;
+    }
+    
+    
+    static void ParseInterfaceBody(Lex lex, I_Class cls)
+    {
+	while (true)
+	{
+	    lex.last_doc=null;
+	    
+	    // Смотрим на предмет void-метода
+	    if (lex.expect(Lex.T_VOID))
+	    {
+		String doc=lex.last_doc;
+		
+		lex.GetToken();
+		// Это void-метод
+		
+		// Получаем имя метода
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("method name expected after type !");
+		String name=(String)lex.tok_value;
+		
+		if (!cls.CheckMethodName(name)) lex.error("method "+name+" already defined !");
+		
+		I_Method m=I_Method.ParseMethod(lex, new I_Type(lex, Lex.T_VOID, 0, null), name, false, false, true);
+		m.doc=doc;
+		cls.methods.add(m);
+	    } else
+	    {
+		// Это обычный метод или конец описания
+		String doc=lex.last_doc;
+		
+		// Получаем тип
+	        I_Type type=I_Type.ParseType(lex);
+		if (type==null)
+		{
+		    // Конец описаний
+		    break;
+		}
+		
+		// Получаем имя метода
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("method name expected after type !");
+		String name=(String)lex.tok_value;
+		
+		if (!cls.CheckMethodName(name)) lex.error("method "+name+" already defined !");
+		
+		I_Method m=I_Method.ParseMethod(lex, type, name, false, false, true);
+		m.doc=doc;
+		cls.methods.add(m);
+	    }
+	}
+    }
+}

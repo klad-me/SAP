@@ -1,0 +1,154 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса IP_Address</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>IP_Address</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Предоставляет методы для работы с IP-адресами.<br/>
+IP-адрес представляется в виде массива из 4 байт (byte[4]).<br/>
+Также, существует строковое представление адреса: "aaa.bbb.ccc.ddd".<br/>
+Класс IP_Address занимается конверсией между бинарным и строковым представлением IP-адресов.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#toString"><b>toString</b></a>(byte[]&nbsp;addr)<br/>
+Преобразует бинарный IP-адрес в строку.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static byte[]</td>
+  <td valign="top"><a href="#parseAddress"><b>parseAddress</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Преобразует строковое представление IP-адреса в бинарную форму.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'toString' details -->
+<a name="toString"/>
+<font size="+1"><b>Метод toString</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="String.html"><b>String</b></a> <b>toString</b>(byte[]&nbsp;addr)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Преобразует бинарный IP-адрес в строку.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;IP-адрес в бинарном виде<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+строковое представление IP-адреса
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'parseAddress' details -->
+<a name="parseAddress"/>
+<font size="+1"><b>Метод parseAddress</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static byte[] <b>parseAddress</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Преобразует строковое представление IP-адреса в бинарную форму.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строковое представление IP-адреса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+бинарный IP-адрес, или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

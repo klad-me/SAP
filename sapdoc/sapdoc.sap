@@ -1,0 +1,206 @@
+class sapdoc
+{
+    static void usage()
+    {
+	System.print("Usage: sapdoc [options] [class-names/class-files]\n");
+	System.print("\tOptions are:\n");
+	System.print("\t-o <dir>\tSet output directory\n");
+	System.print("\t-i <dir>\tSet include directory (can be used more than once)\n");
+	System.print("\t-idx\t\tGenerate index.html with classes index\n");
+    }
+    
+    
+    static void main()
+    {
+	String[] args=System.args();
+	
+	// Парсим командную строку
+	Vector names=new Vector();
+	Vector inc_dirs=new Vector();
+	inc_dirs.add("./");
+	String out_dir="./";
+	boolean index=false;
+	{
+	    int n=1;
+	    
+	    while (n < args.length)
+	    {
+		if (args[n].equals("-i"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			String dir=args[n];
+			if (dir.charAt(dir.length()-1)!='/') dir=dir+"/";
+			inc_dirs.add(dir);
+			n++;
+		    }
+		} else
+		if (args[n].equals("-o"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			String dir=args[n];
+			if (dir.charAt(dir.length()-1)!='/') dir=dir+"/";
+			out_dir=dir;
+			n++;
+		    }
+		} else
+		if (args[n].equals("-idx"))
+		{
+		    n++;
+		    index=true;
+		} else
+		{
+		    // Это имя исходника
+		    String name=args[n];
+		    
+		    if (name.endsWith(".sapclass"))
+			name=name.substring(0, name.length()-9); else
+		    if (name.endsWith(".sap"))
+			name=name.substring(0, name.length()-4);
+		    
+		    names.add(name);
+		    n++;
+		}
+	    }
+	}
+	
+	if (names.size()==0)
+	{
+	    // Нечего делать - выводим справку
+	    usage();
+	    return;
+	}
+	
+	// Обрабатываем все исходники
+	Vector class_doc=new Vector();
+	for (int i=0; i<names.size(); i++)
+	{
+	    String name=(String)names.elementAt(i);
+	    Class cls=ClassLoader.LoadClass(name, inc_dirs);
+	    
+	    if (cls==null)
+	    {
+		System.print("Warning: Can't load class '"+name+"' !\n");
+		continue;
+	    }
+	    
+	    DocGen.MakeDocumentation(cls, out_dir);
+	    class_doc.add(cls.doc);
+	}
+	
+	// Генерируем индекс, если надо
+	if (index)
+	{
+	    // Сортируем классы по именам
+	    for (int i=0; i<names.size(); i++)
+	    {
+		for (int j=i+1; j<names.size(); j++)
+		{
+		    String name1=(String)names.elementAt(i);
+		    String name2=(String)names.elementAt(j);
+		    
+		    if (name1.compareTo(name2) > 0)
+		    {
+			// Надо поменять местами
+			names.set(i, name2);
+			names.set(j, name1);
+			
+			Object o=class_doc.elementAt(i);
+			o=class_doc.set(j, o);
+			class_doc.set(i, o);
+		    }
+		}
+	    }
+	    
+	    // Создаем сам index.html
+	    {
+		String fname=out_dir+"index.html";
+    		File F=new File(fname, File.WRITE);
+    		if (!F.ok())
+    		{
+        	    System.print("Unable to write '"+fname+"' !\n");
+        	    return;
+    	        }
+		
+    		DataStream out=new DataStream(F);
+    		
+    		out.print("<html><frameset cols=\"200,*\"><frame src=\"index-list.html\"/><frame name=\"doc\" src=\"index-desc.html\"/></frameset></html>\n");
+    		
+    		F.close();
+	    }
+	    
+	    // Создаем список классов index-list.html
+	    {
+		String fname=out_dir+"index-list.html";
+    		File F=new File(fname, File.WRITE);
+    		if (!F.ok())
+    		{
+        	    System.print("Unable to write '"+fname+"' !\n");
+        	    return;
+    	        }
+		
+    		DataStream out=new DataStream(F);
+    		
+    		out.print(
+"<html>
+<head>
+  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1251\" />
+  <title>Список классов</title>
+</head>
+<body><font face=\"sans-serif\">
+<a href=\"index-desc.html\" target=\"doc\">Все классы</a><br/>
+<br/>
+");
+		for (int i=0; i<names.size(); i++)
+		{
+		    String name=(String)names.elementAt(i);
+		    out.print("<a href=\""+name+".html\" target=\"doc\">"+name+"</a><br/>\n");
+		}
+    		out.print("</font></body>\n</html>\n");
+    		F.close();
+	    }
+	    
+	    // Создаем описание классов index-desc.html
+	    {
+		String fname=out_dir+"index-desc.html";
+    		File F=new File(fname, File.WRITE);
+    		if (!F.ok())
+    		{
+        	    System.print("Unable to write '"+fname+"' !\n");
+        	    return;
+    	        }
+		
+    		DataStream out=new DataStream(F);
+    		
+    		out.print(
+"<html>
+<head>
+  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1251\" />
+  <title>Список классов</title>
+</head>
+<body><font face=\"sans-serif\">
+  <table border=\"1\" width=\"100%\" cellspacing=\"0\">
+    <tr>
+      <td colspan=\"2\" bgcolor=\"#C0C0FF\"><font size=\"+1\"><b>Список классов</b></font></td>
+    </tr>
+");
+		for (int i=0; i<names.size(); i++)
+		{
+		    String name=(String)names.elementAt(i);
+		    
+		    out.print("    <tr><td valign=\"top\"><a href=\""+name+".html\">"+name+"</a></td><td>\n");
+		    out.print(DocGen.firstDocLine((String)class_doc.elementAt(i)));
+		    out.print("    </td></tr>\n");
+		}
+		
+    		out.print("  </table>\n</font></body>\n</html>\n");
+    		F.close();
+	    }
+	}
+	
+	System.print("Finished !\n");
+    }
+}

@@ -1,0 +1,42 @@
+
+// В методе <init> сделать вызов предка
+class Checker_ParentInit
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	if (cls.is_interface) return true;	// интерфейсы мы не проверяем
+	
+	// Если это Object - не надо добавлять предка
+	if (cls.name.equals("Object")) return true;
+	
+	// Получаем конструктор
+	I_Method init=cls.FindMethod("<init>");
+	if (init.is_native) return true;	// нативный init
+	
+	// Добавим вызов предка
+	Vector stats=new Vector();
+	
+	I_Stat s=new I_Stat(null, I_Stat.EXPR);
+	s.fname=init.fname;
+	s.line=init.line;
+	
+	I_Expr e=new I_Expr(null, I_Expr.SUPER_METHOD, null, null);
+	e.stringValue="<init>";
+	e.exprlist=init.super_constructor_params;
+	e.fname=init.fname;
+	e.line=init.line;
+	
+	s.expr=e;
+	
+	stats.add(s);
+	
+	
+	// Добавляем к методу <init>
+	stats.addAll(init.code.stats_list);
+	init.code.stats_list=stats;
+	
+	
+	// Все готово
+	return true;
+    }
+}

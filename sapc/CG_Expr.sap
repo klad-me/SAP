@@ -1,0 +1,1468 @@
+class CG_Expr
+{
+    // Генерировать код для выражения
+    static boolean GenExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	if (e.no_cg) return true;
+	
+	if (e.type==I_Expr.NULL)
+	{
+	    // Поместить в стек null
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.I_PUSH_0);
+	    CG.ST(4);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.THIS)
+	{
+	    // Поместить в стек указатель на текущий исполняемый объект
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.R_LOAD);
+	    CG.bytecode.putShort((short)0);
+	    CG.ST(4);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.INT_NUMBER)
+	{
+	    // Поместить в стек целое число
+	    CG_LineNumbers.Line(e);
+	    
+	    if (e.result_type.type==I_Type.BYTE)
+	    {
+		CG.bytecode.putByte( (byte)( OP.BYTE | OP._PUSH ) );
+		CG.bytecode.putByte( (byte)e.intValue );
+		CG.ST(1);
+	    } else
+	    if (e.result_type.type==I_Type.SHORT)
+	    {
+		CG.bytecode.putByte( (byte)( OP.SHORT | OP._PUSH ) );
+		CG.bytecode.putShort( (short)e.intValue );
+		CG.ST(2);
+	    } else
+	    {
+		CG.bytecode.putByte( (byte)( OP.INT_OR_FLOAT | OP._PUSH ) );
+		CG.bytecode.putInt( e.intValue );
+		CG.ST(4);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.FLOAT_NUMBER)
+	{
+	    // Поместить в стек вещественное число
+	    CG_LineNumbers.Line(e);
+	    
+	    CG.bytecode.putByte( (byte)( OP.INT_OR_FLOAT | OP._PUSH ) );
+	    CG.bytecode.putFloat( e.floatValue );
+	    CG.ST(4);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.STATIC_FIELD)
+	{
+	    // Чтение статического поля
+	    I_Var field=sapc.prog.FindClass(e.ClassName).FindField(e.stringValue);
+	    
+	    if ( (field.is_final) && (e.ClassName.equals(CG.cur_class.name)) && (field.init!=null) && 
+		 ( (field.init.type==I_Expr.INT_NUMBER) || (field.init.type==I_Expr.FLOAT_NUMBER) ) )
+	    {
+		// Можно оптимизировать обращение к полю
+		CG_LineNumbers.Line(e);
+		GenExpr(field.init);
+		GenExpr_CastToType(field.init, e.result_type);
+	    } else
+	    {
+		// Получим объект, если он есть
+		if ( (e.left!=null) && (e.left.type!=I_Expr.THIS) )
+		{
+		    GenExpr(e.left);
+		    CG.bytecode.putByte(OP.R_POP);
+		    CG.ST(-4);
+		}
+		
+		// Получаем спецификатор поля
+		String spec="F"+e.ClassName+"."+field.spec();
+		
+		// Генерим код
+		CG_LineNumbers.Line(e);
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_LOAD_STATIC);
+		    CG.ST(4);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_STATIC, e.result_type) );
+		    CG.ST(e.result_type.MemoryUsage());
+		}
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.FIELD)
+	{
+	    // Чтение поля класса
+	    I_Var field=sapc.prog.FindClass(e.ClassName).FindField(e.stringValue);
+	    
+	    if ( (field.is_final) && (e.ClassName.equals(CG.cur_class.name)) && (field.init!=null) && 
+		 ( (field.init.type==I_Expr.INT_NUMBER) || (field.init.type==I_Expr.FLOAT_NUMBER) ) )
+	    {
+		// Можно оптимизировать обращение к полю
+		CG_LineNumbers.Line(e);
+		GenExpr(field.init);
+		GenExpr_CastToType(field.init, e.result_type);
+	    } else
+	    {
+		// Получим объект
+		GenExpr(e.left);
+		
+		// Получаем спецификатор поля
+		String spec="f"+e.ClassName+"."+field.spec();
+		
+		// Генерим код
+		CG_LineNumbers.Line(e);
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_LOAD_FIELD);
+		    CG.ST(0);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_FIELD, e.result_type) );
+		    CG.ST(e.result_type.MemoryUsage() - 4);
+		}
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.LOCALVAR)
+	{
+	    // Чтение локальной переменной
+	    CG_LineNumbers.Line(e);
+	    if (e.result_type.isRef())
+	    {
+		CG.bytecode.putByte(OP.R_LOAD);
+		CG.ST(4);
+	    } else
+	    {
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD, e.result_type) );
+		CG.ST(e.result_type.MemoryUsage());
+	    }
+	    CG.bytecode.putShort( (short)e.intValue );
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.ARRAY_ELEMENT)
+	{
+	    // Чтение элемента массива
+	    GenExpr(e.left);	// массив
+	    GenExpr(e.right);	// индекс
+	    GenExpr_CastToInt(e.right);
+	    
+	    CG_LineNumbers.Line(e);
+	    if (e.result_type.isRef())
+	    {
+		CG.bytecode.putByte(OP.R_LOAD_ARRAY);
+		CG.ST(-4);
+	    } else
+	    {
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_ARRAY, e.result_type) );
+		CG.ST(e.result_type.MemoryUsage() - 8);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.ARRAY_LENGTH)
+	{
+	    // Получить длину массива
+	    GenExpr(e.left);
+	    CG.bytecode.putByte(OP.ARRAY_LENGTH);
+	    CG.ST(0);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.CAST)
+	{
+	    // Принудительное приведение типа
+	    GenExpr(e.left);
+	    GenExpr_CastToType(e.left, e.result_type);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.U_MINUS)
+	{
+	    // Унарный минус
+	    GenExpr(e.left);
+	    CG.bytecode.putByte( OP.OP4Type(OP._UMINUS, e.result_type) );
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.BIT_NOT)
+	{
+	    // Побитовое "НЕ"
+	    GenExpr(e.left);
+	    CG.bytecode.putByte( OP.OP4Type(OP._NEG, e.result_type) );
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.LOGIC_NOT)
+	{
+	    // Логическое "НЕ"
+	    GenExpr(e.left);
+	    GenExpr_CastToBool(e.left);
+	    CG.bytecode.putByte(OP.LOGIC_NOT);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.INSTANCEOF)
+	{
+	    // Проверить тип
+	    GenExpr(e.left);
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.INSTANCEOF);
+	    String spec="T"+e.instanceof_type.spec();
+	    CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	    CG.ST(-3);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.ASSIGN)
+	{
+	    // Присваивание
+	    if (e.left.type==I_Expr.STATIC_FIELD)
+	    {
+		// Присваивание статическому полю
+		
+		// Получим объект (если есть)
+		if ( (e.left.left!=null) && (e.left.left.type!=I_Expr.THIS) )
+		{
+		    GenExpr(e.left.left);
+		    CG.bytecode.putByte(OP.R_POP);
+		    CG.ST(-4);
+		}
+		
+		// Получим значение
+		GenExpr(e.right);
+		GenExpr_CastToType(e.right, e.result_type);
+		
+		// Делаем присваивание
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_STORE_STATIC);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_STATIC, e.result_type) );
+		}
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		String spec="F"+e.left.ClassName+"."+field.spec();
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	    } else
+	    if (e.left.type==I_Expr.FIELD)
+	    {
+		// Присваивание полю
+		
+		// Получим объект
+		GenExpr(e.left.left);
+		
+		// Получим значение
+		GenExpr(e.right);
+		GenExpr_CastToType(e.right, e.result_type);
+		
+		// Делаем присваивание
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_STORE_FIELD);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_FIELD, e.result_type) );
+		}
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		String spec="f"+e.left.ClassName+"."+field.spec();
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		CG.ST(-4);
+	    } else
+	    if (e.left.type==I_Expr.LOCALVAR)
+	    {
+		// Присваивание локальной переменной
+		
+		// Получим значение
+		GenExpr(e.right);
+		GenExpr_CastToType(e.right, e.result_type);
+		
+		// Делаем присваивание
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_STORE);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE, e.result_type) );
+		}
+		CG.bytecode.putShort( (short)e.left.intValue );
+	    } else
+	    if (e.left.type==I_Expr.ARRAY_ELEMENT)
+	    {
+		// Присваивание элементу массива
+		
+		// Получим массив
+		GenExpr(e.left.left);
+		
+		// Получим индекс
+		GenExpr(e.left.right);
+		GenExpr_CastToInt(e.left.right);
+		
+		// Получим значение
+		GenExpr(e.right);
+		GenExpr_CastToType(e.right, e.result_type);
+		
+		// Делаем присваивание
+		if (e.result_type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_STORE_ARRAY);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_ARRAY, e.result_type) );
+		}
+		CG.ST(-8);
+	    } else
+	    {
+		// Непойми что
+		sapc.error(e.fname+":"+e.line+":  Internal compiler error (CG: bad left expr '"+e.left.type+"' in assign) !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.MUL_ASSIGN) ||
+	     (e.type==I_Expr.DIV_ASSIGN) ||
+	     (e.type==I_Expr.REM_ASSIGN) ||
+	     (e.type==I_Expr.ADD_ASSIGN) ||
+	     (e.type==I_Expr.SUB_ASSIGN) ||
+	     (e.type==I_Expr.AND_ASSIGN) ||
+	     (e.type==I_Expr.OR_ASSIGN) ||
+	     (e.type==I_Expr.XOR_ASSIGN) ||
+	     (e.type==I_Expr.SHL_ASSIGN) ||
+	     (e.type==I_Expr.SHR_ASSIGN) ||
+	     (e.type==I_Expr.SHRU_ASSIGN) )
+	{
+	    // Оператор-присваивание
+	    CG_LineNumbers.Line(e);
+	    
+	    // Получим выражение, которое нам сделает результат
+            int t;
+            switch (e.type)
+            {
+                case I_Expr.MUL_ASSIGN: t=I_Expr.MUL; break;
+                case I_Expr.DIV_ASSIGN: t=I_Expr.DIV; break;
+                case I_Expr.REM_ASSIGN: t=I_Expr.REM; break;
+                case I_Expr.ADD_ASSIGN: t=I_Expr.ADD; break;
+                case I_Expr.SUB_ASSIGN: t=I_Expr.SUB; break;
+                case I_Expr.AND_ASSIGN: t=I_Expr.BIT_AND; break;
+                case I_Expr.OR_ASSIGN:  t=I_Expr.BIT_OR; break;
+                case I_Expr.XOR_ASSIGN: t=I_Expr.BIT_XOR; break;
+                case I_Expr.SHL_ASSIGN: t=I_Expr.SHIFT_LEFT; break;
+                case I_Expr.SHR_ASSIGN: t=I_Expr.SHIFT_RIGHT; break;
+                case I_Expr.SHRU_ASSIGN:t=I_Expr.SHIFT_RIGHT_U; break;
+            }
+            I_Expr tmp=e.op_assign_expr;
+	    e.left.no_cg=true;
+	    
+	    // Тип-ссылка быть не может, т.к. там арифметическая операция
+	    if (e.left.type==I_Expr.STATIC_FIELD)
+	    {
+		// Присваивание статическому полю
+		
+		// Получим объект (если есть)
+		if ( (e.left.left!=null) && (e.left.left.type!=I_Expr.THIS) )
+		{
+		    GenExpr(e.left.left);
+		    CG.bytecode.putByte(OP.R_POP);
+		    CG.ST(-4);
+		}
+		
+		// Получаем поле
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		String spec="F"+e.left.ClassName+"."+field.spec();
+		
+		// Получаем значение поля
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_LOAD_STATIC); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_STATIC, e.result_type) );
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		CG.ST(e.result_type.MemoryUsage());
+		
+		// Получим значение
+		GenExpr(tmp);
+		GenExpr_CastToType(tmp, e.result_type);
+		
+		// Делаем присваивание
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_STORE_STATIC); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_STATIC, e.result_type) );
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	    } else
+	    if (e.left.type==I_Expr.FIELD)
+	    {
+		// Присваивание полю
+		
+		// Получим объект
+		GenExpr(e.left.left);
+		CG.bytecode.putByte(OP.R_DUP);
+		CG.ST(4);
+		
+		// Получим поле
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		String spec="f"+e.left.ClassName+"."+field.spec();
+		
+		// Получим значение поля
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_LOAD_FIELD); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_FIELD, e.result_type) );
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		CG.ST(e.result_type.MemoryUsage()-4);
+		
+		// Получим значение
+		GenExpr(tmp);
+		GenExpr_CastToType(tmp, e.result_type);
+		
+		// Делаем присваивание
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_STORE_FIELD); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_FIELD, e.result_type) );
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		CG.ST(-4);
+	    } else
+	    if (e.left.type==I_Expr.LOCALVAR)
+	    {
+		// Присваивание локальной переменной
+		
+		// Получим знамение локальной переменной
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_LOAD); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD, e.result_type) );
+		CG.bytecode.putShort( (short)e.left.intValue );
+		CG.ST(e.result_type.MemoryUsage());
+		
+		// Получим значение
+		GenExpr(tmp);
+		GenExpr_CastToType(tmp, e.result_type);
+		
+		// Делаем присваивание
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_STORE); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE, e.result_type) );
+		CG.bytecode.putShort( (short)e.left.intValue );
+	    } else
+	    if (e.left.type==I_Expr.ARRAY_ELEMENT)
+	    {
+		// Присваивание элементу массива
+		
+		// Получим массив
+		GenExpr(e.left.left);
+		CG.bytecode.putByte(OP.R_DUP);
+		CG.ST(4);
+		
+		// Получим индекс
+		GenExpr(e.left.right);
+		GenExpr_CastToInt(e.left.right);
+		CG.bytecode.putByte(OP._DUP | OP.INT);
+		CG.ST(4);
+		
+		// Делим параметры
+		CG.bytecode.putByte(OP.SWAP2);
+		
+		// Получим значение массива
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_LOAD_ARRAY); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_ARRAY, e.result_type) );
+		CG.ST(e.result_type.MemoryUsage()-8);
+		
+		// Получим значение
+		GenExpr(tmp);
+		GenExpr_CastToType(tmp, e.result_type);
+		
+		// Делаем присваивание
+		if (e.left.result_type.isRef())
+		    CG.bytecode.putByte(OP.R_STORE_ARRAY); else
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_ARRAY, e.result_type) );
+		CG.ST(-8);
+	    } else
+	    {
+		// Непойми что
+		sapc.error(e.fname+":"+e.line+":  Internal compiler error (CG: bad left expr '"+e.left.type+"' in op-assign) !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.INC) ||
+	     (e.type==I_Expr.DEC) )
+	{
+	    // Это пре/пост инк/дек
+	    I_Expr expr=(e.left!=null)?e.left:e.right;
+	    
+	    if (expr.type==I_Expr.LOCALVAR)
+	    {
+		// Локальная переменная
+		CG_LineNumbers.Line(e);
+		
+		// bsif_load <var>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD, expr.result_type) );
+		CG.bytecode.putShort( (short)expr.intValue );
+		CG.ST(expr.result_type.MemoryUsage());
+		
+		// bsif_inc/dec
+		if (e.type==I_Expr.INC)
+		    CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) ); else
+		    CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) );
+		
+		// bsif_store <var>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE, expr.result_type) );
+		CG.bytecode.putShort( (short)expr.intValue );
+		
+		if (e.left != null)
+		{
+		    // Это пост/инк дек
+		    // bsif_inc/dec
+		    if (e.type==I_Expr.INC)
+			CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) ); else
+			CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) );
+		}
+	    } else
+	    if (expr.type==I_Expr.STATIC_FIELD)
+	    {
+		// Статическое поле
+		
+		// Получаем объект
+		if ( (expr.left!=null) && (expr.left.type!=I_Expr.THIS) )
+		{
+		    GenExpr(expr.left);
+		    CG.bytecode.putByte(OP.R_POP);
+		    CG.ST(-4);
+		}
+		
+		// Получаем спецификатор поля
+		String spec="F"+expr.ClassName+"."+sapc.prog.FindClass(expr.ClassName).FindField(expr.stringValue).spec();
+		short field_n=CG_StringPool.AddString(spec);
+		
+		// Генерим код
+		CG_LineNumbers.Line(e);
+		
+		// bsif_load_static <field>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_STATIC, expr.result_type) );
+		CG.bytecode.putShort(field_n);
+		CG.ST(expr.result_type.MemoryUsage());
+		
+		// bsif_inc/dec
+		if (e.type==I_Expr.INC)
+		    CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) ); else
+		    CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) );
+		
+		// bsif_store_static <field>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_STATIC, expr.result_type) );
+		CG.bytecode.putShort(field_n);
+		
+		if (e.left != null)
+		{
+		    // Это пост/инк дек
+		    // bsif_inc/dec
+		    if (e.type==I_Expr.INC)
+			CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) ); else
+			CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) );
+		}
+	    } else
+	    if (expr.type==I_Expr.FIELD)
+	    {
+		// Поле
+		
+		// Получаем объект
+		GenExpr(expr.left);
+		
+		// Получаем спецификатор поля
+		String spec="F"+expr.ClassName+"."+sapc.prog.FindClass(expr.ClassName).FindField(expr.stringValue).spec();
+		short field_n=CG_StringPool.AddString(spec);
+		
+		// Генерим код
+		CG_LineNumbers.Line(e);
+		
+		// r_dup
+		CG.bytecode.putByte(OP.R_DUP);
+		CG.ST(4);
+		
+		// bsif_load_field <field>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_FIELD, expr.result_type) );
+		CG.bytecode.putShort(field_n);
+		CG.ST(expr.result_type.MemoryUsage() - 4);
+		
+		// bsif_inc/dec
+		if (e.type==I_Expr.INC)
+		    CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) ); else
+		    CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) );
+		
+		// bsif_store_field <field>
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_FIELD, expr.result_type) );
+		CG.bytecode.putShort(field_n);
+		CG.ST(-4);
+		
+		if (e.left != null)
+		{
+		    // Это пост/инк дек
+		    // bsif_inc/dec
+		    if (e.type==I_Expr.INC)
+			CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) ); else
+			CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) );
+		}
+	    } else
+	    if (expr.type==I_Expr.ARRAY_ELEMENT)
+	    {
+		// Элемент массива
+		
+		// Получаем массив
+		GenExpr(expr.left);
+		
+		// Дублируем ссылку
+		CG.bytecode.putByte(OP.R_DUP);
+		CG.ST(4);
+		
+		// Получаем индекс
+		GenExpr(expr.right);
+		GenExpr_CastToInt(expr.right);
+		
+		CG_LineNumbers.Line(expr);
+		
+		// Дублируем индекс
+		CG.bytecode.putByte( (byte)(OP.INT | OP._DUP) );
+		CG.ST(4);
+		
+		// Получаем в стеке две пары массив-индекс
+		CG.bytecode.putByte(OP.SWAP2);
+		
+		// bsif_load_array
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._LOAD_ARRAY, expr.result_type) );
+		CG.ST(expr.result_type.MemoryUsage() - 8);
+		
+		// bsif_inc/dec
+		if (e.type==I_Expr.INC)
+		    CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) ); else
+		    CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) );
+		
+		// bsif_store_array
+		CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_ARRAY, expr.result_type) );
+		CG.ST(-8);
+		
+		if (e.left != null)
+		{
+		    // Это пост/инк дек
+		    // bsif_inc/dec
+		    if (e.type==I_Expr.INC)
+			CG.bytecode.putByte( OP.OP4Type(OP._DEC, expr.result_type) ); else
+			CG.bytecode.putByte( OP.OP4Type(OP._INC, expr.result_type) );
+		}
+	    } else
+	    {
+		// Непойми что
+		sapc.error(e.fname+":"+e.line+":  Internal compiler error (CG: bad expr '"+e.type+"' in inc/dec) !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.MUL) ||
+	     (e.type==I_Expr.DIV) ||
+	     (e.type==I_Expr.REM) ||
+	     (e.type==I_Expr.ADD) ||
+	     (e.type==I_Expr.SUB) ||
+	     (e.type==I_Expr.BIT_AND) ||
+	     (e.type==I_Expr.BIT_XOR) ||
+	     (e.type==I_Expr.BIT_OR) )
+	{
+	    // Арифметика
+	    
+	    // Получаем операнды и приводим их к одному типу
+	    GenExpr(e.left);
+	    GenExpr_CastToType(e.left, e.result_type);
+	    
+	    GenExpr(e.right);
+	    GenExpr_CastToType(e.right, e.result_type);
+	    
+	    // Генерим код
+	    if (e.type==I_Expr.MUL) CG.bytecode.putByte( OP.OP4Type(OP._MUL, e.result_type) ); else
+	    if (e.type==I_Expr.DIV) CG.bytecode.putByte( OP.OP4Type(OP._DIV, e.result_type) ); else
+	    if (e.type==I_Expr.REM) CG.bytecode.putByte( OP.OP4Type(OP._REM, e.result_type) ); else
+	    if (e.type==I_Expr.ADD) CG.bytecode.putByte( OP.OP4Type(OP._ADD, e.result_type) ); else
+	    if (e.type==I_Expr.SUB)
+	    {
+		// left-right == left+(-right)
+		CG.bytecode.putByte( OP.OP4Type(OP._UMINUS, e.result_type) );
+		CG.bytecode.putByte( OP.OP4Type(OP._ADD, e.result_type) );
+	    } else
+	    if (e.type==I_Expr.BIT_AND) CG.bytecode.putByte( OP.OP4Type(OP._AND, e.result_type) ); else
+	    if (e.type==I_Expr.BIT_OR)  CG.bytecode.putByte( OP.OP4Type(OP._OR, e.result_type) ); else
+	    if (e.type==I_Expr.BIT_XOR) CG.bytecode.putByte( OP.OP4Type(OP._XOR, e.result_type) );
+	    
+	    CG.ST(-e.result_type.MemoryUsage());
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.SHIFT_LEFT) ||
+	     (e.type==I_Expr.SHIFT_RIGHT) ||
+	     (e.type==I_Expr.SHIFT_RIGHT_U) )
+	{
+	    // Сдвиги
+	    
+	    // Получаем операнды
+	    GenExpr(e.left);
+	    if (e.type==I_Expr.SHIFT_LEFT) GenExpr_CastToInt(e.left);
+	    GenExpr(e.right);
+	    GenExpr_CastToByte(e.right);
+	    
+	    // Генерим код
+	    if (e.type==I_Expr.SHIFT_LEFT) CG.bytecode.putByte( (byte)(OP.INT | OP._SHL) ); else
+	    if (e.type==I_Expr.SHIFT_RIGHT) CG.bytecode.putByte( OP.OP4Type(OP._SHR, e.result_type) ); else
+	    if (e.type==I_Expr.SHIFT_RIGHT_U) CG.bytecode.putByte( OP.OP4Type(OP._SHRU, e.result_type) );
+	    
+	    CG.ST(-1);
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.IS_LT) ||
+	     (e.type==I_Expr.IS_LE) ||
+	     (e.type==I_Expr.IS_GT) ||
+	     (e.type==I_Expr.IS_GE) ||
+	     (e.type==I_Expr.IS_EQ) ||
+	     (e.type==I_Expr.IS_NOT_EQ) )
+	{
+	    // Сравнение
+	    
+	    // Проверим - может надо сравнивать ссылки
+	    if (e.left.result_type.isRef())
+	    {
+		// Сраним ссылки
+		GenExpr(e.left);
+		GenExpr(e.right);
+		CG.bytecode.putByte(OP.R_EQ);
+		if (e.type==I_Expr.IS_NOT_EQ)
+		    CG.bytecode.putByte(OP.LOGIC_NOT);
+		CG.ST(1-8);
+		return true;
+	    }
+	    
+	    // Получаем общий тип
+	    I_Type t;
+	    if ( (e.left.result_type.type==I_Type.FLOAT) ||
+		 (e.right.result_type.type==I_Type.FLOAT) )
+		t=new I_Type(null, I_Type.FLOAT, 0, null); else
+	    if ( (e.left.result_type.type==I_Type.INT) ||
+		 (e.right.result_type.type==I_Type.INT) )
+		t=new I_Type(null, I_Type.INT, 0, null); else
+	    if ( (e.left.result_type.type==I_Type.SHORT) ||
+		 (e.right.result_type.type==I_Type.SHORT) )
+		t=new I_Type(null, I_Type.SHORT, 0, null); else
+		t=new I_Type(null, I_Type.BYTE, 0, null);
+	    
+	    // Получаем операнды и приводим их к одному типу
+	    GenExpr(e.left);
+	    GenExpr_CastToType(e.left, t);
+	    
+	    GenExpr(e.right);
+	    GenExpr_CastToType(e.right, t);
+	    
+	    // Генерим код
+	    if (e.type==I_Expr.IS_LT)
+		CG.bytecode.putByte( OP.OP4Type(OP._LT, t) ); else
+	    if (e.type==I_Expr.IS_GT)
+		CG.bytecode.putByte( OP.OP4Type(OP._GT, t) ); else
+	    if (e.type==I_Expr.IS_LE)
+	    {
+		CG.bytecode.putByte( OP.OP4Type(OP._GT, t) );
+		CG.bytecode.putByte(OP.LOGIC_NOT);
+	    } else
+	    if (e.type==I_Expr.IS_GE)
+	    {
+		CG.bytecode.putByte( OP.OP4Type(OP._LT, t) );
+		CG.bytecode.putByte(OP.LOGIC_NOT);
+	    } else
+	    if (e.type==I_Expr.IS_EQ)
+		CG.bytecode.putByte( OP.OP4Type(OP._EQ, t) ); else
+	    if (e.type==I_Expr.IS_NOT_EQ)
+	    {
+		CG.bytecode.putByte( OP.OP4Type(OP._EQ, t) );
+		CG.bytecode.putByte(OP.LOGIC_NOT);
+	    }
+	    
+	    CG.ST(1-t.MemoryUsage()*2);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.LOGIC_AND)
+	{
+	    // Логическое "И"
+	    String label_false=CG_Labels.GenAutoLabel();
+	    
+	    // Получаем левое и приводим к bool
+	    GenExpr(e.left);
+	    GenExpr_CastToBool(e.left);
+	    
+	    // Проверим, если false - то конец
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._DUP) );
+	    CG.ST(1);
+	    CG.bytecode.putByte(OP.JZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_false));
+	    CG.ST(-1);
+	    
+	    // Если true - значением является правое
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._POP) );
+	    GenExpr(e.right);
+	    GenExpr_CastToBool(e.right);
+	    
+	    CG_Labels.DefineLabel(label_false);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.LOGIC_OR)
+	{
+	    // Логическое "ИЛИ"
+	    String label_true=CG_Labels.GenAutoLabel();
+	    
+	    // Получаем левое и приводим к bool
+	    GenExpr(e.left);
+	    GenExpr_CastToBool(e.left);
+	    
+	    // Проверим, если true - то конец
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._DUP) );
+	    CG.ST(1);
+	    CG.bytecode.putByte(OP.JNZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_true));
+	    CG.ST(-1);
+	    
+	    // Если false - значением является правое
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._POP) );
+	    GenExpr(e.right);
+	    GenExpr_CastToBool(e.right);
+	    
+	    CG_Labels.DefineLabel(label_true);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.COND_EXPR)
+	{
+	    // Условный оператор
+	    String label_false=CG_Labels.GenAutoLabel();
+	    String label_end=CG_Labels.GenAutoLabel();
+	    
+	    // Генерим тестовое выражение
+	    GenExpr(e.cond);
+	    GenExpr_CastToBool(e.cond);
+	    
+	    // Проверяем
+	    CG.bytecode.putByte(OP.JZ);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_false));
+	    CG.ST(-1);
+	    
+	    // Выражение для true
+	    GenExpr(e.left);
+	    GenExpr_CastToType(e.left, e.result_type);
+	    CG.bytecode.putByte(OP.GOTO);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_end));
+	    
+	    // Выражение для false
+	    CG_Labels.DefineLabel(label_false);
+	    GenExpr(e.right);
+	    GenExpr_CastToType(e.right, e.result_type);
+	    
+	    CG_Labels.DefineLabel(label_end);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.NEW_ARRAY)
+	{
+	    // Создать массив (в т.ч. и с инициализатором)
+	    if (e.exprlist==null)
+	    {
+		// Массив без инициализатора
+		
+		// Получаем размерность
+		GenExpr(e.left);
+		GenExpr_CastToInt(e.left);
+		
+		// Даем команду на создание массива
+		CG_LineNumbers.Line(e);
+		CG.bytecode.putByte(OP.NEW_ARRAY);
+		String spec="T"+e.result_type.spec();
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		
+		return true;
+	    } else
+	    {
+		// Массив с инициализатором
+		String label_null=CG_Labels.GenAutoLabel();
+		
+		// Получаем размерность
+		CG_LineNumbers.Line(e);
+		CG.bytecode.putByte( (byte)(OP.INT | OP._PUSH) );
+		CG.bytecode.putInt(e.exprlist.list.size());
+		CG.ST(4);
+		
+		// Даем команду на создание массива
+		CG.bytecode.putByte(OP.NEW_ARRAY);
+		String spec="T"+e.result_type.spec();
+		CG.bytecode.putShort(CG_StringPool.AddString(spec));
+		
+		// Проверим на null
+		CG.bytecode.putByte(OP.JNULL);
+		CG.bytecode.putShort(CG_Labels.UseLabel(label_null));
+		
+		// Получаем тип данных
+		I_Type t=e.result_type.dup();
+		t.n_array--;
+		
+		// Попробуем заполнить массив короткой инструкцией
+		if (t.isNumeric())
+		{
+		    // В массиве будут числа. Посмотрим - если все числа известны - просто зальем образ массива в байткод дадим команду короткой загрузки
+		    boolean ok=true;
+		    
+		    for (int i=0; i<e.exprlist.list.size(); i++)
+		    {
+			I_Expr expr=(I_Expr)e.exprlist.list.elementAt(i);
+			
+			if ( (expr.type!=I_Expr.INT_NUMBER) &&
+			     (expr.type!=I_Expr.FLOAT_NUMBER) )
+			{
+			    // Это не число
+			    ok=false;
+			    break;
+			}
+		    }
+		    
+		    if (ok)
+		    {
+			// Все элементы - числа. Создаем команду инициализации
+			int l;
+			if (t.type==I_Type.FLOAT) l=4; else
+			if (t.type==I_Type.INT) l=4; else
+			if (t.type==I_Type.SHORT) l=2; else
+			    l=1;
+			
+			CG.bytecode.putByte(OP.FILL_ARRAY_RAW);
+			CG.bytecode.putInt( l * e.exprlist.list.size() );	// размер инициализатора в байтах
+			
+			// Генерим инициализатор
+			for (int i=0; i<e.exprlist.list.size(); i++)
+			{
+			    I_Expr expr=(I_Expr)e.exprlist.list.elementAt(i);
+			    
+			    if (t.type==I_Type.FLOAT)
+			    {
+				// Тип - float
+				float v;
+				
+				if (expr.type==I_Expr.INT_NUMBER)
+				    v=(float)expr.intValue; else
+				    v=expr.floatValue;
+				
+				CG.bytecode.putFloat(v);
+			    } else
+			    {
+				// Тип - int,short,byte
+				int v;
+				
+				if (expr.type==I_Expr.INT_NUMBER)
+				    v=expr.intValue; else
+				    v=(int)expr.floatValue;
+				
+				if (l==4) CG.bytecode.putInt(v); else
+				if (l==2) CG.bytecode.putShort((short)v); else
+				    CG.bytecode.putByte((byte)v);
+			    }
+			}
+			
+			// Все нормально
+			CG_Labels.DefineLabel(label_null);
+			return true;
+		    }
+		}
+		
+		// Заполняем каждый элемент
+		int n=0;
+		for (int i=0; i<e.exprlist.list.size(); i++)
+		{
+		    I_Expr expr=(I_Expr)e.exprlist.list.elementAt(i);
+		    
+		    // Создем команду присваивания
+		    CG.bytecode.putByte(OP.R_DUP);
+		    CG.ST(4);
+		    if (n==0)
+		    {
+			CG.bytecode.putByte(OP.I_PUSH_0);
+		    } else
+		    {
+			CG.bytecode.putByte( (byte)(OP.INT | OP._PUSH) );
+			CG.bytecode.putInt(n);
+		    }
+		    CG.ST(4);
+		    GenExpr(expr);
+		    GenExpr_CastToType(expr, t);
+		    if (t.isRef())
+		    {
+			CG.bytecode.putByte(OP.R_STORE_ARRAY);
+			CG.ST(-8);
+			CG.bytecode.putByte(OP.R_POP);
+			CG.ST(-4);
+		    } else
+		    {
+			CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE_ARRAY, t) );
+			CG.ST(-8);
+			CG.bytecode.putByte( OP.OP4Type_IF(OP._POP, t) );
+			CG.ST(-t.MemoryUsage());
+		    }
+		    n++;
+		}
+		
+		// Все нормально
+		CG_Labels.DefineLabel(label_null);
+		return true;
+	    }
+	} else
+	if (e.type==I_Expr.NEW_INSTANCE)
+	{
+	    // Создать экземпляр класса
+	    String label_null=CG_Labels.GenAutoLabel();
+	    
+	    // Выделяем память
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.NEW_INSTANCE);
+	    CG.bytecode.putShort(CG_StringPool.AddString("C"+e.ClassName));
+	    CG.ST(4);
+	    
+	    // Проверим на null
+	    CG.bytecode.putByte(OP.JNULL);
+	    CG.bytecode.putShort(CG_Labels.UseLabel(label_null));
+	    
+	    // Получаем конструктор
+	    I_Method init=sapc.prog.FindClass(e.ClassName).FindMethod("<init>");
+	    
+	    // Создаем вызов <init>
+	    CG.bytecode.putByte(OP.R_DUP);
+	    CG.ST(4);
+	    int l=GenMethodParams(e.exprlist, init);
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.CALL_METHOD);
+	    CG.bytecode.putByte((byte)l);
+	    CG.bytecode.putShort(CG_StringPool.AddString("m"+e.ClassName+"."+init.spec()));
+	    CG.ST(-(l+4)+4);
+	    CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+	    CG.ST(-4);
+	    
+	    CG_Labels.DefineLabel(label_null);
+	    return true;
+	} else
+	if (e.type==I_Expr.METHOD)
+	{
+	    // Вызов метода
+	    
+	    // Получаем объект
+	    GenExpr(e.left);
+	    
+	    // Получаем класс и метод
+	    I_Class cls=sapc.prog.FindClass(e.ClassName);
+	    I_Method m=cls.FindMethod(e.stringValue);
+	    
+	    // Создаем вызов метода
+	    int l=GenMethodParams(e.exprlist, m);
+	    CG_LineNumbers.Line(e);
+	    if (cls.is_interface)
+		CG.bytecode.putByte(OP.CALL_INTERFACE); else
+		CG.bytecode.putByte(OP.CALL_VIRTUAL);
+	    CG.bytecode.putByte((byte)l);
+	    CG.bytecode.putShort(CG_StringPool.AddString("m"+e.ClassName+"."+m.spec()));
+	    CG.ST(-(l+4)+4);
+	    
+	    // Правим вовращаемое значение
+	    if (m.return_type.isRef())
+	    {
+		// С ссылкой ничего не надо делать
+	    } else
+	    if (m.return_type.type==I_Type.VOID)
+	    {
+		// Забыть значение
+		CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+		CG.ST(-4);
+	    } else
+	    if (m.return_type.type==I_Type.SHORT)
+	    {
+		// Преобразовать int->short
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_SHORT) );
+		CG.ST(-2);
+	    } else
+	    if (m.return_type.type==I_Type.BYTE)
+	    {
+		// Преобразовать int->byte
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_BYTE) );
+		CG.ST(-3);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.STATIC_METHOD)
+	{
+	    // Вызов статического метода
+	    
+	    // Получаем объект (если он есть)
+	    if (e.left != null)
+	    {
+		GenExpr(e.left);
+	    } else
+	    {
+		// Объекта нету - даем null
+		CG_LineNumbers.Line(e);
+		CG.bytecode.putByte(OP.I_PUSH_0);
+		CG.ST(4);
+	    }
+	    
+	    // Получаем класс и метод
+	    I_Class cls=sapc.prog.FindClass(e.ClassName);
+	    I_Method m=cls.FindMethod(e.stringValue);
+	    
+	    // Создаем вызов метода
+	    int l=GenMethodParams(e.exprlist, m);
+	    CG_LineNumbers.Line(e);
+	    if (e.left!=null)
+		CG.bytecode.putByte(OP.CALL_VIRTUAL); else
+		CG.bytecode.putByte(OP.CALL_METHOD);
+	    CG.bytecode.putByte((byte)l);
+	    CG.bytecode.putShort(CG_StringPool.AddString("M"+e.ClassName+"."+m.spec()));
+	    CG.ST(-(l+4)+4);
+	    
+	    // Правим вовращаемое значение
+	    if (m.return_type.isRef())
+	    {
+		// С ссылкой ничего не надо делать
+	    } else
+	    if (m.return_type.type==I_Type.VOID)
+	    {
+		// Забыть значение
+		CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+		CG.ST(-4);
+	    } else
+	    if (m.return_type.type==I_Type.SHORT)
+	    {
+		// Преобразовать int->short
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_SHORT) );
+		CG.ST(-2);
+	    } else
+	    if (m.return_type.type==I_Type.BYTE)
+	    {
+		// Преобразовать int->byte
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_BYTE) );
+		CG.ST(-3);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.SUPER_METHOD)
+	{
+	    // Вызов метода предка
+	    
+	    // Получаем объект
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.R_LOAD);
+	    CG.bytecode.putShort((short)0);
+	    CG.ST(4);
+	    
+	    // Получаем класс и метод
+	    I_Class cls=sapc.prog.FindClass(e.ClassName);
+	    I_Method m=cls.FindMethod(e.stringValue);
+	    
+	    // Создаем вызов метода
+	    int l=GenMethodParams(e.exprlist, m);
+	    CG_LineNumbers.Line(e);
+	    CG.bytecode.putByte(OP.CALL_METHOD);
+	    CG.bytecode.putByte((byte)l);
+	    CG.bytecode.putShort(CG_StringPool.AddString( (m.is_static?"M":"m")+e.ClassName+"."+m.spec() ));
+	    CG.ST(-(l+4)+4);
+	    
+	    // Правим вовращаемое значение
+	    if (m.return_type.isRef())
+	    {
+		// С ссылкой ничего не надо делать
+	    } else
+	    if (m.return_type.type==I_Type.VOID)
+	    {
+		// Забыть значение
+		CG.bytecode.putByte( (byte)(OP.INT | OP._POP) );
+		CG.ST(-4);
+	    } else
+	    if (m.return_type.type==I_Type.SHORT)
+	    {
+		// Преобразовать int->short
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_SHORT) );
+		CG.ST(-2);
+	    } else
+	    if (m.return_type.type==I_Type.BYTE)
+	    {
+		// Преобразовать int->byte
+		CG.bytecode.putByte( (byte)(OP.INT | OP._TO_BYTE) );
+		CG.ST(-3);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.VARLIST)
+	{
+	    // Инициализация локальных переменных
+	    for (int i=0; i<e.varlist.size(); i++)
+	    {
+		I_Var v=(I_Var)e.varlist.elementAt(i);
+		
+		// Получаем инициализатор
+		if (v.init!=null)
+		{
+		    // Есть инициализатор
+		    GenExpr(v.init);
+		    GenExpr_CastToType(v.init, v.type);
+		} else
+		{
+		    // Нет инициализатора. Инитим нулем
+		    CG_LineNumbers.Line(v);
+		    
+		    if ( (v.type.isRef()) ||
+			 (v.type.type==I_Type.FLOAT) ||
+			 (v.type.type==I_Type.INT) )
+		    {
+			CG.bytecode.putByte(OP.I_PUSH_0);
+			CG.ST(4);
+		    } else
+		    if (v.type.type==I_Type.SHORT)
+		    {
+			CG.bytecode.putByte( (byte)(OP.SHORT | OP._PUSH) );
+			CG.bytecode.putShort((short)0);
+			CG.ST(2);
+		    } else
+		    {
+			CG.bytecode.putByte( (byte)(OP.BYTE | OP._PUSH) );
+			CG.bytecode.putByte((byte)0);
+			CG.ST(1);
+		    }
+		}
+		
+		// Делаем присваивание
+		if (v.type.isRef())
+		{
+		    CG.bytecode.putByte(OP.R_STORE);
+		    CG.bytecode.putShort((short)v.addr);
+		    CG.bytecode.putByte(OP.R_POP);
+		    CG.ST(-4);
+		} else
+		{
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._STORE, v.type) );
+		    CG.bytecode.putShort((short)v.addr);
+		    CG.bytecode.putByte( OP.OP4Type_IF(OP._POP, v.type) );
+		    CG.ST(-v.type.MemoryUsage());
+		}
+	    }
+	    
+	    return true;
+	} else
+	{
+	    // Непойми что
+	    sapc.error(e.fname+":"+e.line+":  Internal compiler error (CG: bad expr '"+e.type+"') !\n");
+	    return false;
+	}
+    }
+    
+    
+    static int GenMethodParams(I_ExprList params, I_Method m)
+    {
+	if (params==null) return 0;
+	
+	int len=0;
+	
+	for (int i=0; i<params.list.size(); i++)
+	{
+	    I_Expr e=(I_Expr)params.list.elementAt(i);
+	    I_Type t=((I_Var)m.params.elementAt(i)).type;
+	    
+	    // Генерим выражение и кастим к требуемому типу
+	    GenExpr(e);
+	    GenExpr_CastToType(e, t);
+	    
+	    len=len+t.MemoryUsage();
+	}
+	
+	return len;
+    }
+    
+    
+    static boolean GenExpr_CastToType(I_Expr e, I_Type t)
+    {
+	if (e.result_type.isRef())
+	{
+	    // Это ссылка. Проверим автокаст
+	    if (Typer.CanAutoCast(e.result_type, t)) return true;	// лишнее приведение не требуется
+	    
+	    // Делаем каст
+	    String spec="T"+t.spec();
+	    CG.bytecode.putByte(OP.CAST);
+	    CG.bytecode.putShort(CG_StringPool.AddString(spec));
+	} else
+	if (t.type==I_Type.BYTE)
+	{
+	    GenExpr_CastToByte(e);
+	} else
+	if (t.type==I_Type.SHORT)
+	{
+	    GenExpr_CastToShort(e);
+	} else
+	if (t.type==I_Type.INT)
+	{
+	    GenExpr_CastToInt(e);
+	} else
+	if (t.type==I_Type.FLOAT)
+	{
+	    GenExpr_CastToFloat(e);
+	}
+	
+	return true;
+    }
+    
+    
+    // Генерить каст к bool
+    static boolean GenExpr_CastToBool(I_Expr e)
+    {
+	// Проверим - может выражение уже возвращает bool
+	if ( (e.type==I_Expr.LOGIC_NOT) ||
+	     (e.type==I_Expr.IS_LT) ||
+	     (e.type==I_Expr.IS_LE) ||
+	     (e.type==I_Expr.IS_GT) ||
+	     (e.type==I_Expr.IS_GE) ||
+	     (e.type==I_Expr.IS_EQ) ||
+	     (e.type==I_Expr.IS_NOT_EQ) ||
+	     (e.type==I_Expr.LOGIC_AND) ||
+	     (e.type==I_Expr.LOGIC_OR) ||
+	     (e.type==I_Expr.INSTANCEOF) )
+	{
+	    // Уже bool
+	    return true;
+	}
+	
+	
+	if (e.result_type.type==I_Type.BYTE)
+	{
+	    // Это уже байт
+	} else
+	if (e.result_type.type==I_Type.SHORT)
+	{
+	    // 2 байта. Сделаем B_OR (получим байт, который будет 0 если оба байта были 0)
+	    CG.bytecode.putByte(OP._OR | OP.BYTE);
+	    CG.ST(-1);
+	} else
+	{
+	    // 4 байта. Сделаем сначала S_OR, потом B_OR и получим байт
+	    CG.bytecode.putByte(OP._OR | OP.SHORT);
+	    CG.ST(-2);
+	    CG.bytecode.putByte(OP._OR | OP.BYTE);
+	    CG.ST(-1);
+	}
+	
+	// Приводим к bool
+	CG.bytecode.putByte(OP.BYTE_TO_BOOL);
+	
+	return true;
+    }
+    
+    
+    // Генерить каст к byte
+    static boolean GenExpr_CastToByte(I_Expr e)
+    {
+	if (e.result_type.type==I_Type.SHORT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.SHORT | OP._TO_BYTE) );
+	    CG.ST(-1);
+	} else
+	if (e.result_type.type==I_Type.INT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.INT | OP._TO_BYTE) );
+	    CG.ST(-3);
+	} else
+	if (e.result_type.type==I_Type.FLOAT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.FLOAT | OP._TO_BYTE) );
+	    CG.ST(-3);
+	}
+	
+	return true;
+    }
+    
+    
+    // Генерить каст к short
+    static boolean GenExpr_CastToShort(I_Expr e)
+    {
+	if (e.result_type.type==I_Type.BYTE)
+	{
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._TO_SHORT) );
+	    CG.ST(1);
+	} else
+	if (e.result_type.type==I_Type.INT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.INT | OP._TO_SHORT) );
+	    CG.ST(-2);
+	} else
+	if (e.result_type.type==I_Type.FLOAT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.FLOAT | OP._TO_SHORT) );
+	    CG.ST(-2);
+	}
+	
+	return true;
+    }
+    
+    
+    // Генерить каст к int
+    static boolean GenExpr_CastToInt(I_Expr e)
+    {
+	if (e.result_type.type==I_Type.BYTE)
+	{
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._TO_INT) );
+	    CG.ST(3);
+	} else
+	if (e.result_type.type==I_Type.SHORT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.SHORT | OP._TO_INT) );
+	    CG.ST(2);
+	} else
+	if (e.result_type.type==I_Type.FLOAT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.FLOAT | OP._TO_INT) );
+	}
+	
+	return true;
+    }
+    
+    
+    // Генерить каст к float
+    static boolean GenExpr_CastToFloat(I_Expr e)
+    {
+	if (e.result_type.type==I_Type.BYTE)
+	{
+	    CG.bytecode.putByte( (byte)(OP.BYTE | OP._TO_FLOAT) );
+	    CG.ST(3);
+	} else
+	if (e.result_type.type==I_Type.SHORT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.SHORT | OP._TO_FLOAT) );
+	    CG.ST(2);
+	} else
+	if (e.result_type.type==I_Type.INT)
+	{
+	    CG.bytecode.putByte( (byte)(OP.INT | OP._TO_FLOAT) );
+	}
+	
+	return true;
+    }
+}

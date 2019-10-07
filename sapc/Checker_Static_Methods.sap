@@ -1,0 +1,96 @@
+
+// Проверить, что в статических методах не используются динамические поля и методы
+class Checker_Static_Methods
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверим все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	if (!m.is_static) return true;	// это не статический метод
+	
+	return CheckStat(m.code);
+    }
+    
+    
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	// Проверям все внутри
+	if (!CheckExpr(s.expr)) return false;
+	if (!CheckExprList(s.exprlist1)) return false;
+	if (!CheckExprList(s.exprlist2)) return false;
+	if (!CheckStat(s.stat)) return false;
+	if (!CheckStat(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExprList(I_ExprList l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    if (!CheckExpr((I_Expr)l.list.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	
+	if (e.type==I_Expr.THIS)
+	{
+	    // this означает использование динамических данных !
+	    sapc.error(e.fname+":"+e.line+":  Using dinamyc data from static method is not allowed !\n");
+	    return false;
+	}
+	
+	// Проверяем все внутри
+	if (!CheckExpr(e.left)) return false;
+	if (!CheckExpr(e.right)) return false;
+	if (!CheckExpr(e.cond)) return false;
+	if (!CheckExprList(e.exprlist)) return false;
+	if (!CheckVarList(e.varlist)) return false;
+	
+	return true;
+    }
+    
+    
+    static boolean CheckVarList(Vector l)
+    {
+        if (l==null) return true;
+
+        for (int i=0; i<l.size(); i++)
+        {
+            I_Var v=(I_Var)l.elementAt(i);
+
+            if (!CheckExpr(v.init)) return false;
+        }
+
+        return true;
+    }
+}

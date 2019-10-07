@@ -1,0 +1,1415 @@
+
+class Typer
+{
+    static I_Class cur_class;
+    static I_Method cur_method;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	cur_class=cls;
+	
+	// Проверяем все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	cur_method=m;
+	
+	return CheckStat(m.code);
+    }
+    
+    
+    // Проверка кода
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	
+	if (s.type==I_Stat.NOP)
+	{
+	    // Ничего не делать
+	    return true;
+	} else
+	if (s.type==I_Stat.BLOCK)
+	{
+	    // Блок кода
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	    return true;
+	} else
+	if (s.type==I_Stat.LABEL)
+	{
+	    // Определение метки
+	    return true;
+	} else
+	if (s.type==I_Stat.EXPR)
+	{
+	    // Выражение
+	    return CheckExpr(s.expr);
+	} else
+	if ( (s.type==I_Stat.IF_ELSE) ||
+	     (s.type==I_Stat.WHILE) ||
+	     (s.type==I_Stat.DO_WHILE) )
+	{
+	    // Условие/цикл
+	    
+	    // Проверим выражение
+	    if (!CheckExpr(s.expr)) return false;
+	    
+	    // Проверим тип выражения - должно быть int
+	    if (!s.expr.result_type.isInteger())
+	    {
+		sapc.error(s.expr.fname+":"+s.expr.line+":  Incorrect expression type (must be integer) !\n");
+		return false;
+	    }
+	    
+	    // Проверяем код
+	    if (!CheckStat(s.stat)) return false;
+	    if (!CheckStat(s.stat2)) return false;
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (s.type==I_Stat.FOR)
+	{
+	    // Цикл for
+	    
+	    // Проверим выражение 1
+	    if (!CheckExprList(s.exprlist1)) return false;
+	    
+	    // Проверим условие
+	    if (!CheckExpr(s.expr)) return false;
+	    if (!s.expr.result_type.isInteger())
+	    {
+		sapc.error(s.expr.fname+":"+s.expr.line+":  Incorrect expression type (must be integer) !\n");
+		return false;
+	    }
+	    
+	    // Проверим выражение 2
+	    if (!CheckExprList(s.exprlist2)) return false;
+	    
+	    // Проверим код
+	    if (!CheckStat(s.stat)) return false;
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (s.type==I_Stat.RETURN)
+	{
+	    // Выход из метода
+	    
+	    // Проверим выражение
+	    if (!CheckExpr(s.expr)) return false;
+	    
+	    // Проверим на void-метод
+	    if (cur_method.return_type.type==I_Type.VOID)
+	    {
+		// Это void-метод. Значение нельзя возвращать
+		if (s.expr!=null)
+		{
+		    sapc.error(s.fname+":"+s.line+":  Trying to return value from void method !\n");
+		    return false;
+		}
+		
+		return true;
+	    }
+	    
+	    // Это не void-метод. Проверим - есть ли выражение
+	    if (s.expr==null)
+	    {
+		sapc.error(s.fname+":"+s.line+":  Non-void method must return value !\n");
+		return false;
+	    }
+	    
+	    // Проверим совместимость типов
+	    if (!CanAutoCast(s.expr.result_type, cur_method.return_type))
+	    {
+		// Нельзя сделать автоматический каст
+		sapc.error(s.expr.fname+":"+s.expr.line+":  Incorrect expression type (got '"+s.expr.result_type.toString()+"' but required '"+cur_method.return_type.toString()+"') !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (s.type==I_Stat.GOTO)
+	{
+	    // Переход
+	    return true;
+	} else
+	if (s.type==I_Stat.SWITCH)
+	{
+	    // switch-case-default
+	    
+	    // Проверим выражение
+	    if (!CheckExpr(s.expr)) return false;
+	    if (!s.expr.result_type.isInteger())
+	    {
+		sapc.error(s.expr.fname+":"+s.expr.line+":  Incorrect expression type (must be integer) !\n");
+		return false;
+	    }
+	    
+	    // Проверим команды и метки
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		I_Stat st=(I_Stat)s.stats_list.elementAt(i);
+		
+		if (st.type==I_Stat.SWITCH_CASE)
+		{
+		    // Это case x:
+		    
+		    // Проверим выражение
+		    if (!CheckExpr(st.expr)) return false;
+		    if (!st.expr.result_type.isInteger())
+		    {
+			sapc.error(st.expr.fname+":"+st.expr.line+":  Incorrect expression type (must be integer) !\n");
+			return false;
+		    }
+		} else
+		if (st.type==I_Stat.SWITCH_DEFAULT)
+		{
+		    // Это default:
+		} else
+		{
+		    // Это просто команда
+		    if (!CheckStat(st)) return false;
+		}
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (s.type==I_Stat.SYNCHRONIZED)
+	{
+	    // Синхронизированный блок
+	    
+	    // Проверим выражение. Оно должно быть ссылкой
+	    if (!CheckExpr(s.expr)) return false;
+	    if (!s.expr.result_type.isRef())
+	    {
+		sapc.error(s.expr.fname+":"+s.expr.line+":  Incorrect expression type for 'synchronized' (must be reference) !\n");
+		return false;
+	    }
+	    
+	    // Проверим команду
+	    if (!CheckStat(s.stat)) return false;
+	    
+	    // Все нормально
+	    return true;
+	} else
+	{
+	    sapc.error(s.fname+":"+s.line+":  Internal compiller error (bad stat "+s.type+") !\n");
+	    return false;
+	}
+    }
+    
+    
+    static boolean CheckExprList(I_ExprList l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    if (!CheckExpr((I_Expr)l.list.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	
+	if (e.type==I_Expr.NULL)
+	{
+	    // null
+	    e.result_type=new I_Type(null, I_Type.REF, 0, null);
+	    return true;
+	} else
+	if (e.type==I_Expr.THIS)
+	{
+	    // this - имеет тип текущего класса
+	    e.result_type=new I_Type(null, I_Type.REF, 0, cur_class.name);
+	    return true;
+	} else
+	if (e.type==I_Expr.INT_NUMBER)
+	{
+	    // Целое число. В зависимости от значения получаем тип
+	    if ( (e.intValue >= -128) &&
+		 (e.intValue <= 127) )
+	    {
+		e.result_type=new I_Type(null, I_Type.BYTE, 0, null);
+	    } else
+	    if ( (e.intValue >= -32768) &&
+		 (e.intValue <= 32767) )
+	    {
+		e.result_type=new I_Type(null, I_Type.SHORT, 0, null);
+	    } else
+	    {
+		e.result_type=new I_Type(null, I_Type.INT, 0, null);
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.FLOAT_NUMBER)
+	{
+	    // Дробное число
+	    e.result_type=new I_Type(null, I_Type.FLOAT, 0, null);
+	    return true;
+	} else
+	if (e.type==I_Expr.STRING)
+	{
+	    // Строка
+	    // Изменим код, чтоб это был код new String(new byte{char1,char2,char3...});
+	    e.type=I_Expr.NEW_INSTANCE;
+	    e.ClassName="String";
+	    e.exprlist=new I_ExprList(null);
+	    e.exprlist.fname=e.fname;
+	    e.exprlist.line=e.line;
+	    
+	    I_Expr init=new I_Expr(null, I_Expr.NEW_ARRAY, null, null);
+	    init.fname=e.fname;
+	    init.line=e.line;
+	    init.result_type=new I_Type(null, I_Type.BYTE, 1, null);
+	    init.exprlist=new I_ExprList(null);
+	    init.exprlist.fname=e.fname;
+	    init.exprlist.line=e.line;
+	    I_Type t=new I_Type(null, I_Type.BYTE, 0, null);
+	    for (int i=0; i<e.stringValue.length(); i++)
+	    {
+		byte c=(byte)e.stringValue.charAt(i);
+		
+		I_Expr v=new I_Expr(null, I_Expr.INT_NUMBER, null, null);
+		v.intValue=c;
+		init.exprlist.list.add(v);
+	    }
+	    
+	    e.exprlist.list.add(init);
+	    
+	    return CheckExpr(e);
+	} else
+	if (e.type==I_Expr.ASSIGN)
+	{
+	    // Присваивание
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Слева должно быть: поле, локальная переменная, элемент массива
+	    if ( (e.left.type != I_Expr.FIELD) &&
+		 (e.left.type != I_Expr.STATIC_FIELD) &&
+		 (e.left.type != I_Expr.LOCALVAR) &&
+		 (e.left.type != I_Expr.ARRAY_ELEMENT) )
+	    {
+		sapc.error(e.left.fname+":"+e.left.line+":  Incorrect left expression in assignment !\n");
+		return false;
+	    }
+	    
+	    // Проверим финальность поля
+	    if ( (e.left.type == I_Expr.FIELD) ||
+		 (e.left.type == I_Expr.STATIC_FIELD) )
+	    {
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		
+		if ( (field.is_final) && (!e.first_init) )
+		{
+		    sapc.error(e.fname+":"+e.line+":  Can't assign value to final field '"+e.left.ClassName+"."+e.left.stringValue+"' !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Проверяем тип
+	    if (!CanAutoCast(e.right.result_type, e.left.result_type))
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incompatible types in assignment ('"+e.right.result_type.toString()+"' and '"+e.left.result_type.toString()+"') !\n");
+		return false;
+	    }
+	    
+	    // Можно делать присваивание
+	    
+	    // Результатом присваивания будет тип левого аргумента
+	    e.result_type=e.left.result_type;
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.MUL_ASSIGN) ||
+	     (e.type==I_Expr.DIV_ASSIGN) ||
+	     (e.type==I_Expr.REM_ASSIGN) ||
+	     (e.type==I_Expr.ADD_ASSIGN) ||
+	     (e.type==I_Expr.SUB_ASSIGN) ||
+	     (e.type==I_Expr.AND_ASSIGN) ||
+	     (e.type==I_Expr.OR_ASSIGN) ||
+	     (e.type==I_Expr.XOR_ASSIGN) ||
+	     (e.type==I_Expr.SHL_ASSIGN) ||
+	     (e.type==I_Expr.SHR_ASSIGN) ||
+	     (e.type==I_Expr.SHRU_ASSIGN) )
+	{
+	    // Оператор-присваивание
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Слева должно быть: поле, локальная переменная, элемент массива
+	    if ( (e.left.type != I_Expr.FIELD) &&
+		 (e.left.type != I_Expr.STATIC_FIELD) &&
+		 (e.left.type != I_Expr.LOCALVAR) &&
+		 (e.left.type != I_Expr.ARRAY_ELEMENT) )
+	    {
+		sapc.error(e.left.fname+":"+e.left.line+":  Incorrect left expression in assignment !\n");
+		return false;
+	    }
+	    
+	    // Проверим финальность поля
+	    if ( (e.left.type == I_Expr.FIELD) ||
+		 (e.left.type == I_Expr.STATIC_FIELD) )
+	    {
+		I_Var field=sapc.prog.FindClass(e.left.ClassName).FindField(e.left.stringValue);
+		
+		if ( (field.is_final) && (!e.first_init) )
+		{
+		    sapc.error(e.fname+":"+e.line+":  Can't assign value to final field '"+e.left.ClassName+"."+e.left.stringValue+"' !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Создадим фиктивное выражение для проверки действия
+	    int t;
+	    switch (e.type)
+	    {
+		case I_Expr.MUL_ASSIGN:	t=I_Expr.MUL; break;
+		case I_Expr.DIV_ASSIGN:	t=I_Expr.DIV; break;
+		case I_Expr.REM_ASSIGN:	t=I_Expr.REM; break;
+		case I_Expr.ADD_ASSIGN:	t=I_Expr.ADD; break;
+		case I_Expr.SUB_ASSIGN:	t=I_Expr.SUB; break;
+		case I_Expr.AND_ASSIGN:	t=I_Expr.BIT_AND; break;
+		case I_Expr.OR_ASSIGN:	t=I_Expr.BIT_OR; break;
+		case I_Expr.XOR_ASSIGN:	t=I_Expr.BIT_XOR; break;
+		case I_Expr.SHL_ASSIGN:	t=I_Expr.SHIFT_LEFT; break;
+		case I_Expr.SHR_ASSIGN:	t=I_Expr.SHIFT_RIGHT; break;
+		case I_Expr.SHRU_ASSIGN:t=I_Expr.SHIFT_RIGHT_U; break;
+	    }
+	    I_Expr tmp=new I_Expr(null, t, e.left, e.right);
+	    tmp.fname=e.fname;
+	    tmp.line=e.line;
+	    if (!Typer.CheckExpr(tmp)) return false;
+	    e.op_assign_expr=tmp;
+	    
+	    // Можно делать присваивание
+	    e.result_type=e.left.result_type;
+	    return true;
+	} else
+	if (e.type==I_Expr.SUPER_METHOD)
+	{
+	    // Вызов метода предка
+	    
+	    // Проверим - есть ли вообще предок
+	    if (cur_class.superclass==null)
+	    {
+		sapc.error(e.fname+":"+e.line+":  Trying to call parent method '"+e.stringValue+"' of class '"+cur_class.name+"' with no parent !\n");
+		return false;
+	    }
+	    
+	    e.ClassName=cur_class.superclass_name;
+	    
+	    // Получим метод предка
+	    I_Method m=cur_class.superclass.FindMethod(e.stringValue);
+	    if (m==null)
+	    {
+		sapc.error(e.fname+":"+e.line+":  Method '"+cur_class.superclass_name+"."+e.stringValue+"' not found !\n");
+		return false;
+	    }
+	    
+	    // Проверяем параметры вызова
+	    if (!CheckMethodParams(e.ClassName, m, e)) return false;
+	    
+	    // Ставим тип результата
+	    e.result_type=m.return_type;
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.METHOD) ||
+	     (e.type==I_Expr.STATIC_METHOD) )
+	{
+	    // Вызов метода (в т.ч. и статического)
+	    
+	    // Проверим класс
+	    if (e.left != null)
+	    {
+		if (!CheckExpr(e.left)) return false;
+		
+		// Проверим тип
+		if ( (e.left.result_type.type!=I_Type.REF) ||
+		     (e.left.result_type.ClassName==null) ||
+		     (e.left.result_type.n_array>0) )
+		{
+		    // Неверный класс
+		    sapc.error(e.left.fname+":"+e.left.line+":  Incorrect expression type for calling method !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Получаем класс
+	    if (e.left!=null)
+		e.ClassName=e.left.result_type.ClassName;
+	    
+	    // Получаем метод
+	    I_Method m=sapc.prog.FindClass(e.ClassName).FindMethod(e.stringValue);
+	    if (m==null)
+	    {
+		sapc.error(e.fname+":"+e.line+":  Method '"+e.ClassName+"."+e.stringValue+"' not found !\n");
+		return false;
+	    }
+	    
+	    // Проверяем параметры вызова
+	    if (!CheckMethodParams(e.ClassName, m, e)) return false;
+	    
+	    // Проверяем на статичность метода
+	    if (m.is_static)
+	    {
+		// Это статический метод
+		e.type=I_Expr.STATIC_METHOD;
+	    } else
+	    {
+		// Это не статический метод - должен быть класс
+		if (e.left==null)
+		{
+		    sapc.error(e.fname+":"+e.line+":  Non-static method '"+e.ClassName+"."+e.stringValue+"' can't be called without object reference !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Ставим тип результата
+	    e.result_type=m.return_type;
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.FIELD) ||
+	     (e.type==I_Expr.STATIC_FIELD) )
+	{
+	    // Доступ к полю (в т.ч. и статическому)
+	    
+	    // Проверим класс
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    // Проверим тип класса
+	    if (e.left!=null)
+	    {
+		// Проверим на массив
+		if (e.left.result_type.n_array>0)
+		{
+		    // Это массив. У массива только одно поле - length
+		    if (e.stringValue.equals("length"))
+		    {
+			// Это запрос длины массива
+			e.type=I_Expr.ARRAY_LENGTH;
+			e.result_type=new I_Type(null, I_Type.INT, 0, null);
+			return true;
+		    } else
+		    {
+			// Неверное поле
+			sapc.error(e.fname+":"+e.line+":  Trying to access field '"+e.stringValue+"' of array !\n");
+			return false;
+		    }
+		}
+		
+		// Не массив. Значит должна быть ссылка
+		if ( (e.left.result_type.type!=I_Type.REF) ||
+		     (e.left.result_type.ClassName==null) )
+		{
+		    sapc.error(e.left.fname+":"+e.left.line+":  Incorrect expression type for accessing field !\n");
+		    return false;
+		}
+		
+		// Получаем имя класса
+		e.ClassName=e.left.result_type.ClassName;
+	    }
+	    
+	    // Получаем поле
+	    I_Var field=sapc.prog.FindClass(e.ClassName).FindField(e.stringValue);
+	    if (field==null)
+	    {
+		sapc.error(e.fname+":"+e.line+":  Field '"+e.ClassName+"."+e.stringValue+"' not found !\n");
+		return false;
+	    }
+	    
+	    // Проверим на статичность
+	    if (field.is_static)
+	    {
+		e.type=I_Expr.STATIC_FIELD;
+	    } else
+	    {
+		// Не статическое поле. Проверим, чтоб был объект вызова
+		if (e.left==null)
+		{
+		    sapc.error(e.fname+":"+e.line+":  Non-static field '"+e.ClassName+"."+e.stringValue+"' can't be used without object reference !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Ставим тип результата
+	    e.result_type=field.type;
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.LOCALVAR)
+	{
+	    // Доступ к локальной переменной.
+	    
+	    // Тип уже установлен
+	    return true;
+	} else
+	if (e.type==I_Expr.NEW_INSTANCE)
+	{
+	    // Создать новый экземпляр класса
+	    
+	    // Получаем класс
+	    I_Class cls=sapc.prog.FindClass(e.ClassName);
+	    if (cls.is_interface)
+	    {
+		// Попытка создать экземпляр интерфейса
+		sapc.error(e.fname+":"+e.line+":  Trying to create instance of interface '"+e.ClassName+"' !\n");
+		return false;
+	    }
+	    
+	    // Получаем конструктор
+	    I_Method init=cls.FindMethod("<init>");
+	    
+	    // Проверяем параметры
+	    if (!CheckMethodParams(e.ClassName, init, e)) return false;
+	    
+	    // Ставим тип
+	    e.result_type=new I_Type(null, I_Type.REF, 0, e.ClassName);
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.NEW_ARRAY)
+	{
+	    // Создать массив (либо пустой, либо с инициализатором)
+	    
+	    if (e.exprlist!=null)
+	    {
+		// Есть инициализатор
+		
+		// Получаем тип элементов
+		I_Type type=e.result_type.dup();
+		type.n_array--;
+		
+		// Проверяем все элементы
+		for (int i=0; i<e.exprlist.list.size(); i++)
+		{
+		    I_Expr ex=(I_Expr)e.exprlist.list.elementAt(i);
+		    
+		    if (!CheckExpr(ex)) return false;
+		    if (!CanAutoCast(ex.result_type, type))
+		    {
+			sapc.error(ex.fname+":"+ex.line+":  Incorrect type for initializer element "+(i+1)+" !\n");
+			return false;
+		    }
+		}
+	    } else
+	    {
+		// Нет инициализатора
+		
+		// Проверим только размерность
+		if (!CheckExpr(e.left)) return false;
+		if (!e.left.result_type.isInteger())
+		{
+		    sapc.error(e.left.fname+":"+e.left.line+":  Incorrect dimention type (must be integer) !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (e.type==I_Expr.ARRAY_ELEMENT)
+	{
+	    // Доступ к элементу массива
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем тип массива
+	    if (e.left.result_type.n_array==0)
+	    {
+		sapc.error(e.left.fname+":"+e.left.line+":  Array expected for [] operator !\n");
+		return false;
+	    }
+	    
+	    // Проверяем тип индекса
+	    if (!e.right.result_type.isInteger())
+	    {
+		sapc.error(e.right.fname+":"+e.right.line+":  Array index must be integer !\n");
+		return false;
+	    }
+	    
+	    // Получаем тип результата
+	    e.result_type=e.left.result_type.dup();
+	    e.result_type.n_array--;
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.CAST)
+	{
+	    // Принудительное приведение типа
+	    
+	    // Проверяем выражение
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    // Проверим автокаст
+	    if (CanAutoCast(e.left.result_type, e.result_type))
+	    {
+		// Автокаст сработал. Ставим флаг
+		e.intValue=1;
+		return true;
+	    }
+	    
+	    // Проверим принудительный каст
+	    if (!CanCast(e.left.result_type, e.result_type))
+	    {
+		sapc.error(e.fname+":"+e.line+":  Can't cast '"+e.left.result_type.toString()+"' to '"+e.result_type.toString()+"' !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if (e.type==I_Expr.INSTANCEOF)
+	{
+	    // Проверить тип
+	    
+	    // Проверяем выражение
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    // Проверим тип выражения
+	    if ( (e.left.result_type.n_array>0) ||
+		 (e.left.result_type.type!=I_Type.REF) ||
+		 (e.left.result_type.ClassName==null) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type for 'instanceof' !\n");
+		return false;
+	    }
+	    
+	    // Ставим тип результата
+	    e.result_type=new I_Type(null, I_Type.BYTE, 0, null);
+	    
+	    return true;
+	} else
+	if ( (e.type==I_Expr.INC) ||
+	     (e.type==I_Expr.DEC) )
+	{
+	    // Пре/пост инк/дек
+	    
+	    // Проверим выражение
+	    I_Expr expr=(e.left!=null)?e.left:e.right;
+	    if (!CheckExpr(expr)) return false;
+	    
+	    // Проверим тип выражения (должно быть поле/локальная_пер/элемент_массива
+	    if ( (expr.type!=I_Expr.ARRAY_ELEMENT) &&
+		 (expr.type!=I_Expr.FIELD) &&
+		 (expr.type!=I_Expr.STATIC_FIELD) &&
+		 (expr.type!=I_Expr.LOCALVAR) )
+	    {
+		sapc.error(expr.fname+":"+expr.line+":  Incorrect expression !\n");
+		return false;
+	    }
+	    
+	    // Проверим финальность поля
+	    if ( (expr.type==I_Expr.FIELD) ||
+		 (expr.type==I_Expr.STATIC_FIELD) )
+	    {
+		I_Var field=sapc.prog.FindClass(expr.ClassName).FindField(expr.stringValue);
+		
+		if (field.is_final)
+		{
+		    sapc.error(e.fname+":"+e.line+":  Can't modify value of final field '"+expr.ClassName+"."+expr.stringValue+"' !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Проверяем тип выражения
+	    if (!expr.result_type.isNumeric())
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type (must be numeric) !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=expr.result_type;
+	    return true;
+	} else
+	if (e.type==I_Expr.U_MINUS)
+	{
+	    // Унарный минус
+	    
+	    // Проверим выражение
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    // Проверим тип выражения
+	    if (!e.left.result_type.isNumeric())
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type for unary minus !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=e.left.result_type;
+	    return true;
+	} else
+	if ( (e.type==I_Expr.BIT_NOT) ||
+	     (e.type==I_Expr.LOGIC_NOT) )
+	{
+	    // Побитовое и логическое "НЕ"
+	    
+	    // Проверим выражение
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    // Проверим тип выражения
+	    if (!e.left.result_type.isInteger())
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type (must be integer) !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=e.left.result_type;
+	    return true;
+	} else
+	if ( (e.type==I_Expr.ADD) ||
+	     (e.type==I_Expr.SUB) ||
+	     (e.type==I_Expr.MUL) ||
+	     (e.type==I_Expr.DIV) ||
+	     (e.type==I_Expr.REM) )
+	{
+	    // Арифметика
+	    
+	    // Проверим выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    
+	    
+	    // Проверим конкатенацию строк
+	    if ( (e.type==I_Expr.ADD) &&
+		 ( (e.left.result_type.isRef()) && (e.left.result_type.ClassName.equals("String")) ) )
+	    {
+		// К строке что-то прибавляют
+		
+		// Можно прибавлять: строку или число
+		if ( (e.right.result_type.isNumeric()) ||
+		     ( (e.right.result_type.isRef()) && (e.right.result_type.ClassName!=null) && (e.right.result_type.ClassName.equals("String")) ) )
+		{
+		    // Генерим вызов String.append(right_value)
+		    cur_class.addDep("String");
+		    e.type=I_Expr.METHOD;
+		    e.ClassName="String";
+		    e.stringValue="append";
+		    e.exprlist=new I_ExprList(null);
+		    e.exprlist.fname=e.fname;
+		    e.exprlist.line=e.line;
+		    
+		    // В зависимости от типа правого выражения генерим параметр метода String.append
+		    if (e.right.result_type.isInteger())
+		    {
+			// Прибавляют целое число
+			cur_class.addDep("Integer");
+			I_Expr right=new I_Expr(null, I_Expr.STATIC_METHOD, null, null);
+			right.fname=e.fname;
+			right.line=e.line;
+			right.ClassName="Integer";
+			right.stringValue="toString";
+			right.exprlist=new I_ExprList(null);
+			right.exprlist.fname=e.fname;
+			right.exprlist.line=e.line;
+			right.exprlist.list.add(e.right);
+			e.right=null;
+			e.exprlist.list.add(right);
+		    } else
+		    if (e.right.result_type.isFloat())
+		    {
+			// Прибавляют вещественное число
+			cur_class.addDep("Float");
+			I_Expr right=new I_Expr(null, I_Expr.STATIC_METHOD, null, null);
+			right.fname=e.fname;
+			right.line=e.line;
+			right.ClassName="Float";
+			right.stringValue="toString";
+			right.exprlist=new I_ExprList(null);
+			right.exprlist.fname=e.fname;
+			right.exprlist.line=e.line;
+			right.exprlist.list.add(e.right);
+			e.right=null;
+			e.exprlist.list.add(right);
+		    } else
+		    {
+			// Прибавляют строку
+			e.exprlist.list.add(e.right);
+			e.right=null;
+		    }
+		    
+		    
+		    // Надо заново проверить поправленное выражение - вдруг чего-то не хватает
+		    if (!CheckExpr(e)) return false;
+		    
+		    // Все нормально
+		    return true;
+		} else
+		{
+		    // Ошибка - неверный тип
+		    sapc.error(e.fname+":"+e.line+":  String concatenation only supports numeric and string types !\n");
+		    return false;
+		}
+	    }
+	    
+	    
+	    
+	    // Проверяем тип выражений
+	    if ( (!e.left.result_type.isNumeric()) ||
+		 (!e.right.result_type.isNumeric()) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type for arithmetic operator !\n");
+		return false;
+	    }
+	    
+	    // Получаем тип результата
+	    if ( (e.type==I_Expr.DIV) ||
+		 (e.type==I_Expr.REM) )
+	    {
+		int left=e.left.result_type.weight();
+		int right=e.right.result_type.weight();
+		
+		// Левый тип должен быть шире, чем правый (или такой же)
+		if (left < right)
+		{
+		    sapc.error(e.fname+":"+e.line+":  Right expression type of divide/remainder operator can't be wider than the left one !\n");
+		    return false;
+		}
+		
+		e.result_type=e.left.result_type;
+	    } else
+	    {
+		// float X * = float
+		// int X * = int
+		// short X * = int
+		// byte X * = short
+		if ( (e.left.result_type.type==I_Type.FLOAT) ||
+		     (e.right.result_type.type==I_Type.FLOAT) )
+		{
+		    e.result_type=new I_Type(null, I_Type.FLOAT, 0, null);
+		} else
+		if ( (e.left.result_type.type==I_Type.INT) ||
+		     (e.right.result_type.type==I_Type.INT) ||
+		     (e.left.result_type.type==I_Type.SHORT) ||
+		     (e.right.result_type.type==I_Type.SHORT) )
+		{
+		    e.result_type=new I_Type(null, I_Type.INT, 0, null);
+		} else
+		{
+		    e.result_type=new I_Type(null, I_Type.SHORT, 0, null);
+		}
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.SHIFT_LEFT) ||
+	     (e.type==I_Expr.SHIFT_RIGHT) ||
+	     (e.type==I_Expr.SHIFT_RIGHT_U) )
+	{
+	    // Сдвиги
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем тип выражения
+	    if ( (!e.left.result_type.isInteger()) ||
+		 (!e.right.result_type.isInteger()) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type for shift operator !\n");
+		return false;
+	    }
+	    
+	    // Получаем тип результата
+	    if (e.type==I_Expr.SHIFT_LEFT)
+	    {
+		// Надо расширять размер до int, т.к неизвестно на сколько бит влево будет сдвиг
+		e.result_type=new I_Type(null, I_Type.INT, 0, null);
+	    } else
+	    {
+		// Тип остается тот же
+		e.result_type=e.left.result_type;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.BIT_AND) ||
+	     (e.type==I_Expr.BIT_OR) ||
+	     (e.type==I_Expr.BIT_XOR) )
+	{
+	    // Побитовые операции
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем тип выражйний
+	    if ( (!e.left.result_type.isInteger()) ||
+		 (!e.right.result_type.isInteger()) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect expression type for bit operator !\n");
+		return false;
+	    }
+	    
+	    // Получим тип результата (больший тип)
+	    int left=e.left.result_type.weight();
+	    int right=e.right.result_type.weight();
+	    int t=(left>right)?left:right;
+	    
+	    if (t==0) e.result_type=new I_Type(null, I_Type.BYTE, 0, null); else
+	    if (t==1) e.result_type=new I_Type(null, I_Type.SHORT, 0, null); else
+		e.result_type=new I_Type(null, I_Type.INT, 0, null);
+	    
+	    // Все нормально
+	    return true;
+	} else
+	if ( (e.type==I_Expr.IS_EQ) ||
+	     (e.type==I_Expr.IS_NOT_EQ) )
+	{
+	    // Равенство/неравенство
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем совместимость типов
+	    if ( (!CanAutoCast(e.left.result_type, e.right.result_type)) &&
+		 (!CanAutoCast(e.right.result_type, e.left.result_type)) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incompatible types in equation !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=new I_Type(null, I_Type.BYTE, 0, null);
+	    return true;
+	} else
+	if ( (e.type==I_Expr.IS_LT) ||
+	     (e.type==I_Expr.IS_LE) ||
+	     (e.type==I_Expr.IS_GT) ||
+	     (e.type==I_Expr.IS_GE) )
+	{
+	    // Сравнение
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем тип выражений
+	    if ( (!e.left.result_type.isNumeric()) ||
+		 (!e.right.result_type.isNumeric()) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect types in comparision !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=new I_Type(null, I_Type.BYTE, 0, null);
+	    return true;
+	} else
+	if ( (e.type==I_Expr.LOGIC_AND) ||
+	     (e.type==I_Expr.LOGIC_OR) )
+	{
+	    // Логическое "И" и "ИЛИ"
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем типы выражений
+	    if ( (!e.left.result_type.isInteger()) ||
+		 (!e.right.result_type.isInteger()) )
+	    {
+		sapc.error(e.fname+":"+e.line+":  Incorrect types for logic operator !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    e.result_type=new I_Type(null, I_Type.BYTE, 0, null);
+	    return true;
+	} else
+	if (e.type==I_Expr.COND_EXPR)
+	{
+	    // Условное выражение
+	    
+	    // Проверяем выражения
+	    if (!CheckExpr(e.cond)) return false;
+	    if (!CheckExpr(e.left)) return false;
+	    if (!CheckExpr(e.right)) return false;
+	    
+	    // Проверяем тип условия
+	    if (!e.cond.result_type.isInteger())
+	    {
+		sapc.debug("spec='"+e.cond.result_type.spec()+"'\n");
+		sapc.error(e.cond.fname+":"+e.cond.line+":  Incorrect conditional expression type !\n");
+		return false;
+	    }
+	    
+	    // Проверяем совместимость типов результатов
+	    if (CanAutoCast(e.right.result_type, e.left.result_type))
+	    {
+		e.result_type=e.left.result_type;
+	    } else
+	    if (CanAutoCast(e.left.result_type, e.right.result_type))
+	    {
+		e.result_type=e.right.result_type;
+	    } else
+	    {
+		sapc.error(e.fname+":"+e.line+":  True and false expressions in conditional operator have different types !\n");
+		return false;
+	    }
+	    
+	    // Все нормально
+	    return true;
+	} else
+        if (e.type==I_Expr.ARRAY_LENGTH)
+        {
+            // Получить длину массива
+
+            // Проверим выражение
+            if (!CheckExpr(e.left)) return false;
+
+            // Проверим тип выражения
+            if (e.left.result_type.n_array==0)
+            {
+                sapc.error(e.fname+":"+e.line+":  Incorrect expression type (must be array) !\n");
+                return false;
+            }
+
+            // Все нормально
+            e.result_type=new I_Type(null, I_Type.INT, 0, null);
+            return true;
+        } else
+	if (e.type==I_Expr.VARLIST)
+	{
+	    // Список локальных переменных с инициализаторами
+	    // Проверяем все переменные
+	    for (int i=0; i<e.varlist.size(); i++)
+	    {
+		I_Var v=(I_Var)e.varlist.elementAt(i);
+		
+		if (v.init!=null)
+		{
+		    // Есть инициализатор
+		    
+		    // Проверяем выражение
+		    if (!CheckExpr(v.init)) return false;
+		    
+		    // Проверяем тип
+		    if (!CanAutoCast(v.init.result_type, v.type))
+		    {
+			sapc.error(v.fname+":"+v.line+":  Incorrect initializer type !\n");
+			return false;
+		    }
+		}
+	    }
+	    
+	    // Все нормально
+	    e.result_type=new I_Type(null, I_Type.VOID, 0, null);
+	    return true;
+	} else
+	{
+	    sapc.error(e.fname+":"+e.line+":  Internal compiler error (Typer: bad expr "+e.type+") !\n");
+	    return false;
+	}
+    }
+    
+    
+    // Проверить - можно ли делать автоматическое приведение типа (только вверх)
+    static boolean CanAutoCast(I_Type type_from, I_Type type_to)
+    {
+	// Проверим на null
+	if ( (type_from.type==I_Type.REF) &&
+	     (type_from.ClassName==null) )
+	{
+	    // null можно приводить к ссылке или массиву
+	    return type_to.isRef();
+	}
+	
+	if ( (type_to.type==I_Type.REF) &&
+	     (type_to.ClassName==null) )
+	{
+	    // К null можно привести ссылку
+	    return type_from.isRef();
+	}
+	
+	// К типу Object можно привести любую ссылку
+	if ( (type_to.type==I_Type.REF) &&
+	     (type_to.n_array==0) &&
+	     (type_to.ClassName.equals("Object")) )
+	{
+	    return type_from.isRef();
+	}
+	
+	// Проверим массив
+	if (type_from.n_array>0)
+	{
+	    // Исходный тип - массив. Тип должен точно сходиться
+	    if ( (type_from.n_array != type_to.n_array) ||
+		 (type_from.type != type_to.type) ) return false;
+	    
+	    if (type_from.type==I_Type.REF)
+	    {
+		// Тип ссылка. Можно кастить только от потомка к предку
+		return IsParent(sapc.prog.FindClass(type_from.ClassName), type_to.ClassName);
+	    }
+	    
+	    // Все нормально
+	    return true;
+	}
+	
+	// Это не массив
+	
+	// Проверим, чтоб не кастили к массиву
+	if (type_to.n_array>0) return false;
+	
+	// Проверяем базовый тип
+	if (type_from.type == I_Type.VOID)
+	{
+	    // void нельзя никуда кастить
+	    return false;
+	} else
+	if (type_from.type == I_Type.BYTE)
+	{
+	    // byte можно кастить к byte, short, int, float
+	    switch (type_to.type)
+	    {
+		case I_Type.BYTE:
+		case I_Type.SHORT:
+		case I_Type.INT:
+		case I_Type.FLOAT:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type == I_Type.SHORT)
+	{
+	    // short можно кастить к short, int, float
+	    switch (type_to.type)
+	    {
+		case I_Type.SHORT:
+		case I_Type.INT:
+		case I_Type.FLOAT:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type == I_Type.INT)
+	{
+	    // int можно кастить к int, float
+	    switch (type_to.type)
+	    {
+		case I_Type.INT:
+		case I_Type.FLOAT:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type == I_Type.FLOAT)
+	{
+	    // float можно кастить только к float
+	    switch (type_to.type)
+	    {
+		case I_Type.FLOAT:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	{
+	    // Это ссылка. Можно кастить только от потомка к предку
+	    if (type_to.type != I_Type.REF) return false;
+	    return IsParent(sapc.prog.FindClass(type_from.ClassName), type_to.ClassName);
+	}
+    }
+    
+    
+    // Проверить - можно ли делать принудительный каст типов
+    static boolean CanCast(I_Type type_from, I_Type type_to)
+    {
+	// Считаем, что автокаст не удался
+	// Разрешаем каст вниз float->int->short->byte, ref_parent->ref_child, Object->ref
+	
+	// Проверим на null
+	if ( (type_from.type==I_Type.REF) &&
+	     (type_from.ClassName==null) ) return false;
+	
+	// Из Object можно кастить в любую ссылку или массив
+	if ( (type_from.type==I_Type.REF) &&
+	     (type_from.n_array==0) &&
+	     (type_from.ClassName.equals("Object")) )
+	{
+	    // Каст из Object
+	    return type_to.isRef();
+	}
+	
+	// К разным размерностям кастить нельзя
+	if (type_from.n_array != type_to.n_array) return false;
+	
+	// Проверим на массив
+	if (type_from.n_array>0)
+	{
+	    // Это массив. Кастить можно только ссылки
+	    if (type_from.type!=I_Type.REF) return false;
+	    if (!type_to.isRef()) return false;
+	    
+	    // Защита от дурака: проверим, чтобы type_to был потомком type_from
+	    return IsParent(sapc.prog.FindClass(type_to.ClassName), type_from.ClassName);
+	}
+	
+	// Это не массив
+	
+	// Проверим базовый тип
+	if (type_from.type==I_Type.VOID)
+	{
+	    // void нельзя кастить
+	    return false;
+	} else
+	if (type_from.type==I_Type.FLOAT)
+	{
+	    // float можно кастить к int, short, byte
+	    switch (type_to.type)
+	    {
+		case I_Type.INT:
+		case I_Type.SHORT:
+		case I_Type.BYTE:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type==I_Type.INT)
+	{
+	    // int можно кастить к short, byte
+	    switch (type_to.type)
+	    {
+		case I_Type.SHORT:
+		case I_Type.BYTE:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type==I_Type.SHORT)
+	{
+	    // short можно кастить к byte
+	    switch (type_to.type)
+	    {
+		case I_Type.BYTE:
+		    return true;
+		
+		default:
+		    return false;
+	    }
+	} else
+	if (type_from.type==I_Type.BYTE)
+	{
+	    // byte некуда ниже кастить
+	    return false;
+	} else
+	{
+	    // Это ссылка
+	    
+	    // Защита от дурака
+	    return IsParent(sapc.prog.FindClass(type_to.ClassName), type_from.ClassName);
+	}
+    }
+    
+    
+    // Проверить, является ли name предком cls (или им самим)
+    static boolean IsParent(I_Class cls, String name)
+    {
+	// Проверим на самого себя
+	if (cls.name.equals(name)) return true;
+	
+	// Проверим предка
+	if (cls.superclass!=null)
+	{
+	    if (IsParent(cls.superclass, name)) return true;
+	}
+	
+	// Проверим интерфейсы
+	if (cls.if_list!=null)
+	{
+	    for (int i=0; i<cls.if_list.size(); i++)
+	    {
+		String iface=(String)cls.if_list.elementAt(i);
+		
+		if (iface.equals(name)) return true;
+	    }
+	}
+	
+	// Не является
+	return false;
+    }
+    
+    
+    // Проверить параметры вызова метода
+    // Сам выводит сообщение об ошибке
+    static boolean CheckMethodParams(String className, I_Method m, I_Expr params)
+    {
+	int n=0;
+	
+	if (params.exprlist!=null) n=params.exprlist.list.size();
+	
+	// Для начала сравним кол-во параметров
+	if (m.params.size() != n)
+	{
+	    sapc.error(params.fname+":"+params.line+":  Incorrect number of parameters for calling method '"+className+"."+m.name+"' !\n");
+	    return false;
+	}
+	
+	if (n==0) return true;
+	
+	// Проверим параметры
+	for (int i=0; i<params.exprlist.list.size(); i++)
+	{
+	    I_Var m_param=(I_Var)m.params.elementAt(i);
+	    I_Expr value=(I_Expr)params.exprlist.list.elementAt(i);
+	    
+	    // Проверяем параметр
+	    if (!CheckExpr(value)) return false;
+	    
+	    // Проверяем тип параметра
+	    if (!CanAutoCast(value.result_type, m_param.type))
+	    {
+		sapc.error(value.fname+":"+value.line+":  Incorrect type for parameter "+(i+1)+"("+m_param.type.toString()+" "+m_param.name+") for calling '"+className+"."+m.name+"' !\n");
+		return false;
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+}

@@ -1,0 +1,602 @@
+class DocGen
+{
+    static final int TABLE_DESC_OFFS = 100;
+    static final int DESC_OFFS = 40;
+    
+    
+    static DataStream out;
+    static Class cls;
+    static boolean have_fields;
+    static boolean have_methods;
+    
+    
+    static void MakeDocumentation(Class cls, String out_dir)
+    {
+	String fname=out_dir+cls.name+".html";
+	File F=new File(fname, File.WRITE);
+	if (!F.ok())
+	{
+	    System.print("Unable to write '"+fname+"' !\n");
+	    return;
+	}
+	
+	out=new DataStream(F);
+	this.cls=cls;
+	
+	html_begin();
+	
+	class_section();
+	constructor_section();
+	fields_brief_section();
+	methods_brief_section();
+	fields_detail_section();
+	methods_detail_section();
+	
+	html_end();
+	
+	F.close();
+    }
+    
+    
+    
+    static void class_section()
+    {
+	out.print("\n<!-- Class section -->\n");
+	out.print("<a name=\"CLASS\"/>\n");
+	block_begin("Класс");
+	block_begin_row();
+	
+	out.print("<table border=\"0\" width=\"100%\">\n");
+	out.print("<tr><td colspan=\"2\" valign=\"top\">");
+	if (!cls.is_interface) out.print("class "); else out.print("interface ");
+	out.print("<b>"+cls.name+"</b>");
+	if ( (cls.superclass!=null) &&
+	     (!cls.superclass.equals("Object")) )
+	{
+	    out.print(" extends ");
+	    printType(cls.superclass);
+	}
+	if (cls.if_list.size() > 0)
+	{
+	    out.print(" implements ");
+	    printType((String)cls.if_list.elementAt(0));
+	    for (int i=1; i<cls.if_list.size(); i++)
+	    {
+		out.print(", ");
+		printType((String)cls.if_list.elementAt(i));
+	    }
+	}
+	out.print("</td></tr>\n");
+	
+	if (cls.doc!=null)
+	{
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    printFullDoc(cls.doc);
+	    out.print("  </td></tr>\n");
+	}
+	out.print("</table>\n");
+	
+	block_end_row();
+	block_end();
+    }
+    
+    
+    
+    static void constructor_section()
+    {
+	// Ищем конструктор
+	Method m;
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    m=(Method)cls.methods.elementAt(i);
+	    if (m.name.equals("<init>")) break;
+	    m=null;
+	}
+	if (m==null) return;	// нет конструктора
+	if ( (m.doc==null) || (firstDocLine(m.doc).startsWith("private")) ) return;	// не надо выводить конструктор
+	
+	out.print("\n<!-- Constructor section -->\n");
+	out.print("<a name=\"CONSTRUCTOR\"/>\n");
+	block_begin("Конструктор");
+	block_begin_row();
+	method_brief(m);
+	block_end_row();
+	block_end();
+    }
+    
+    
+    static void fields_brief_section()
+    {
+	// Посмотрим - а есть ли вообще поля :)
+	have_fields=false;
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    Var v=(Var)cls.fields.elementAt(i);
+	    if ( (v.doc==null) || (firstDocLine(v.doc).startsWith("private")) ) continue;
+	    have_fields=true;
+	    break;
+	}
+	if (!have_fields) return;	// нет методов
+	
+	out.print("\n<!-- Fields section -->\n");
+	out.print("<a name=\"FIELDS\"/>\n");
+	block_begin("Поля");
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    Var v=(Var)cls.fields.elementAt(i);
+	    
+	    if ( (v.doc==null) || (firstDocLine(v.doc).startsWith("private")) ) continue;
+	    
+	    block_begin_row();
+	    field_brief(v);
+	    block_end_row();
+	}
+	block_end();
+    }
+    
+    
+    static void field_brief(Var v)
+    {
+	out.print(
+"<table border=\"0\" width=\"100%\"><tr>
+");
+	out.print("  <td width=\""+TABLE_DESC_OFFS+"\" valign=\"top\">");
+	if (v.is_static) out.print("static ");
+	if (v.is_final) out.print("final ");
+	printType(v.type);
+	out.print("</td>\n");
+	out.print("  <td valign=\"top\"><a href=\"#"+v.name+"\"><b>"+v.name+"</b></a>");
+	if (v.doc!=null)
+	    out.print("<br/>\n"+firstDocLine(v.doc));
+	out.print("</td>\n</tr></table>\n");
+    }
+    
+    
+    static void methods_brief_section()
+    {
+	// Посмотрим - а есть ли вообще методы :)
+	have_methods=false;
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    Method m=(Method)cls.methods.elementAt(i);
+	    if (m.name.charAt(0)=='<') continue;
+	    if ( (m.doc==null) || (firstDocLine(m.doc).startsWith("private")) ) continue;
+	    have_methods=true;
+	    break;
+	}
+	if (!have_methods) return;	// нет методов
+	
+	out.print("\n<!-- Methods section -->\n");
+	out.print("<a name=\"METHODS\"/>\n");
+	block_begin("Методы");
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    Method m=(Method)cls.methods.elementAt(i);
+	    
+	    if (m.name.charAt(0)=='<') continue;
+	    if ( (m.doc==null) || (firstDocLine(m.doc).startsWith("private")) ) continue;
+	    
+	    block_begin_row();
+	    method_brief(m);
+	    block_end_row();
+	}
+	block_end();
+    }
+    
+    
+    
+    static void method_brief(Method m)
+    {
+	out.print(
+"<table border=\"0\" width=\"100%\"><tr>
+");
+	if (m.name.equals("<init>"))
+	{
+	    // Это конструктор
+	    out.print("  <td width=\""+TABLE_DESC_OFFS+"\" valign=\"top\">&nbsp;</td>\n");
+	    out.print("  <td valign=\"top\"><a href=\"#constructor\"><b>constructor</b></a>");
+	} else
+	{
+	    // Это просто метод
+	    out.print("  <td width=\""+TABLE_DESC_OFFS+"\" valign=\"top\">");
+	    if (m.is_static) out.print("static ");
+	    printType(m.return_type);
+	    out.print("</td>\n");
+	    out.print("  <td valign=\"top\"><a href=\"#"+m.name+"\"><b>"+m.name+"</b></a>");
+	}
+	out.print("(");
+	for (int i=0; i<m.params.size(); i++)
+	{
+	    Var v=(Var)m.params.elementAt(i);
+	    
+	    if (i!=0) out.print(", ");
+	    printType(v.type);
+	    out.print("&nbsp;"+v.name);
+	}
+	out.print(")");
+	if (m.doc!=null)
+	    out.print("<br/>\n"+firstDocLine(m.doc));
+	out.print("</td>\n</tr></table>\n");
+    }
+    
+    
+    
+    
+    static void fields_detail_section()
+    {
+	if (!have_fields) return;
+	
+	block_begin("Детальное описание полей");
+	block_end();
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    Var v=(Var)cls.fields.elementAt(i);
+	    
+	    if ( (v.doc==null) || (firstDocLine(v.doc).startsWith("private")) ) continue;
+	    
+	    field_detail(v);
+	}
+    }
+    
+    
+    static void field_detail(Var v)
+    {
+	out.print("\n<!-- Field '"+v.name+"' details -->\n");
+	out.print("<a name=\""+v.name+"\"/>\n");
+	out.print("<font size=\"+1\"><b>Поле "+v.name+"</b></font><br/><br/>\n");
+	out.print("<table border=\"0\" width=\"100%\">\n");
+	out.print("<tr><td colspan=\"2\" valign=\"top\">");
+	if (v.is_static) out.print("static ");
+	if (v.is_final) out.print("final ");
+	printType(v.type);
+	out.print(" <b>"+v.name+"</b></td></tr>\n");
+	if (v.doc!=null)
+	{
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    printFullDoc(v.doc);
+	    out.print("  </td></tr>\n");
+	}
+	out.print("</table>\n");
+	out.print("<hr/>\n");
+    }
+    
+    
+    
+    
+    static void methods_detail_section()
+    {
+	if (!have_methods) return;
+	
+	block_begin("Детальное описание методов");
+	block_end();
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    Method m=(Method)cls.methods.elementAt(i);
+	    
+	    if (m.name.equals("<staticinit>")) continue;
+	    if ( (m.doc==null) || (firstDocLine(m.doc).startsWith("private")) ) continue;
+	    
+	    method_detail(m);
+	}
+    }
+    
+    
+    static void method_detail(Method m)
+    {
+	if (m.name.equals("<init>"))
+	{
+	    out.print("\n<!-- Constructor details -->\n");
+	    out.print("<a name=\"constructor\"/>\n");
+	    out.print("<font size=\"+1\"><b>Конструктор</b></font><br/><br/>\n");
+	} else
+	{
+	    out.print("\n<!-- Method '"+m.name+"' details -->\n");
+	    out.print("<a name=\""+m.name+"\"/>\n");
+	    out.print("<font size=\"+1\"><b>Метод "+m.name+"</b></font><br/><br/>\n");
+	}
+	
+	out.print(
+"<table border=\"0\" width=\"100%\">
+  <tr><td colspan=\"2\">
+");
+	if (m.name.equals("<init>"))
+	{
+	    // Это конструктор
+	    out.print("<b>constructor</b>");
+	} else
+	{
+	    // Это просто метод
+	    if (m.is_static) out.print("static ");
+	    printType(m.return_type);
+	    out.print(" <b>"+m.name+"</b>");
+	}
+	out.print("(");
+	for (int i=0; i<m.params.size(); i++)
+	{
+	    Var v=(Var)m.params.elementAt(i);
+	    
+	    if (i!=0) out.print(", ");
+	    printType(v.type);
+	    out.print("&nbsp;"+v.name);
+	}
+	out.print(")\n");
+	out.print("  </td></tr>\n");
+	
+	if (m.doc!=null)
+	{
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    printFullDoc(m.doc);
+	    out.print("  </td></tr>\n");
+	}
+	out.print("</table>\n");
+	out.print("<hr/>\n");
+    }
+    
+    
+    
+    
+    
+    static void printType(String type)
+    {
+	int idx=type.indexOf('[');
+	String base, ext;
+	if (idx>0)
+	{
+	    base=type.substring(0, idx);
+	    ext=type.substring(idx, type.length());
+	} else
+	{
+	    base=type;
+	    ext="";
+	}
+	
+	String[] base_types=new String{ "byte", "short", "int", "float", "void", "Object" };
+	boolean is_base=false;
+	for (int i=0; i<base_types.length; i++)
+	{
+	    if (base.equals(base_types[i]))
+	    {
+		is_base=true;
+		break;
+	    }
+	}
+	
+	if (is_base)
+	    out.print(base+ext); else
+	    out.print("<a href=\""+base+".html\"><b>"+base+"</b></a>"+ext);
+    }
+    
+    
+    
+    static String firstDocLine(String doc)
+    {
+	Vector list=parseMultiLine(doc);
+	StringBuffer buf=new StringBuffer();
+	
+	// Первой строкой считаем все до пустой строки, или строки начинающейся с @
+	for (int i=0; i<list.size(); i++)
+	{
+	    String s=(String)list.elementAt(i);
+	    
+	    if ( (s.length()==0) ||
+		 (s.charAt(0)=='@') ) break;
+	    buf.appendString(s);
+	    buf.appendChar('\n');
+	}
+	
+	return buf.toString();
+    }
+    
+    
+    
+    static String printFullDoc(String doc)
+    {
+	Vector list=parseMultiLine(doc);
+	Vector params=new Vector();
+	String returns=null;
+	Vector authors=new Vector();
+	
+	// Найдем, где заканчивается сокращенное описание
+	int full_start=0;
+	for (int i=0; i<list.size(); i++)
+	{
+	    String s=(String)list.elementAt(i);
+	    
+	    if ( (s.length()==0) ||
+		 (s.charAt(0)=='@') )
+	    {
+		if (s.length()==0)
+		{
+		    full_start=i+1;
+		}
+		break;
+	    }
+	}
+	
+	// Пропускаем пустые строки перед полным описанием. Если встретим собаку - значит полного описания нет
+	for ( ; full_start<list.size(); full_start++)
+	{
+	    String s=(String)list.elementAt(full_start);
+	    
+	    if (s.length()==0) continue;
+	    if (s.charAt(0)=='@') full_start=0;	// нет полного описания
+	    break;
+	}
+	if (full_start == list.size()) full_start=0;	// только короткое описание
+	
+	for (int i=full_start; i<list.size(); i++)
+	{
+	    String s=(String)list.elementAt(i);
+	    
+	    if (s.startsWith("@param "))
+	    {
+	        params.add(s.substring(7, s.length()).trim());
+	    } else
+	    if (s.startsWith("@return "))
+	    {
+	        returns=s.substring(8, s.length()).trim();
+	    } else
+	    if (s.startsWith("@author "))
+	    {
+		authors.add(s.substring(8, s.length()).trim());
+	    } else
+	    {
+	        // Просто описание
+	        out.print(s+"\n");
+	    }
+	}
+	
+	if ( (params.size() > 0) || (returns != null) || (authors.size() > 0) )
+	    out.print("<br/>\n");
+	
+	if (params.size() > 0)
+	{
+	    out.print("<br/><table border=\"0\" width=\"100%\">\n");
+	    out.print("  <tr><td colspan=\"2\"><b>Параметры:</b></td></tr>\n");
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    for (int i=0; i<params.size(); i++)
+	    {
+	        String s=(String)params.elementAt(i);
+	        String name, desc;
+	        if (s.indexOf(' ')==-1)
+	        {
+	    	    name=s;
+		    desc="";
+		} else
+		{
+		    name=s.substring(0, s.indexOf(' '));
+		    desc=s.substring(s.indexOf(' ')+1, s.length()).trim();
+		}
+		out.print(name+"&nbsp;-&nbsp;"+desc+"<br/>\n");
+	    }
+	    out.print("</td></tr></table>\n");
+	}
+	
+	if (returns != null)
+	{
+	    out.print("<br/><table border=\"0\" width=\"100%\">\n");
+	    out.print("  <tr><td colspan=\"2\"><b>Возвращаемое значение:</b></td></tr>\n");
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    out.print(returns+"\n");
+	    out.print("</td></tr></table>\n");
+	}
+	
+	if (authors.size() > 0)
+	{
+	    out.print("<br/><table border=\"0\" width=\"100%\">\n");
+	    out.print("  <tr><td colspan=\"2\"><b>Авторы:</b></td></tr>\n");
+	    out.print("  <tr><td width=\""+DESC_OFFS+"\">&nbsp;</td><td>\n");
+	    for (int i=0; i<authors.size(); i++)
+	    {
+	        String s=(String)authors.elementAt(i);
+		out.print("*&nbsp;"+s+"<br/>\n");
+	    }
+	    out.print("</td></tr></table>\n");
+	}
+    }
+    
+    
+    static Vector parseMultiLine(String doc)
+    {
+	Vector v=new Vector();
+	int idx;
+	
+	while ( (idx=doc.indexOf('\n')) != -1 )
+	{
+	    v.add( doc.substring(0, idx) );
+	    doc=doc.substring(idx+1, doc.length());
+	}
+	if (doc.length()>0) v.add(doc);
+	
+	return v;
+    }
+    
+    
+    
+    
+    static void block_begin(String caption)
+    {
+	out.print(
+"  <table border=\"1\" width=\"100%\" cellspacing=\"0\">
+    <tr>
+      <td bgcolor=\"#C0C0FF\"><font size=\"+1\"><b>" + caption +"</b></font></td>
+    </tr>
+");
+    }
+    
+    
+    static void block_begin_row()
+    {
+	out.print("    <tr><td>\n");
+    }
+    
+    
+    static void block_end_row()
+    {
+	out.print("    </td></tr>\n");
+    }
+    
+    
+    static void block_end()
+    {
+	out.print("  </table>\n  <hr/>\n");
+    }
+    
+    
+    static void html_begin()
+    {
+	out.print(
+"<html>
+<head>
+  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1251\" />
+  <title>Описание класса "+cls.name+"</title>
+</head>
+<body><font face=\"sans-serif\">
+  <!-- Top navigation -->
+  <a name=\"TOP\"/>
+");
+	html_navigation();
+    }
+    
+    
+    static void html_end()
+    {
+	out.print(
+"
+  <!-- Bottom navigation -->
+  <a name=\"BOTTOM\"/>
+");
+	html_navigation();
+	out.print(
+"</font></body>
+</html>
+");
+    }
+    
+    
+    static void html_navigation()
+    {
+	block_begin("Навигация");
+	block_begin_row();
+	out.print(
+"
+<table border=\"0\">
+  <tr>
+    <td><a href=\"#CLASS\"><b>Класс</b></a></td>
+");
+	if (!cls.is_interface) out.print(
+"    <td>|</td>
+    <td><a href=\"#CONSTRUCTOR\"><b>Конструктор</b></a></td>
+");
+	out.print(
+"    <td>|</td>
+    <td><a href=\"#FIELDS\"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href=\"#METHODS\"><b>Методы</b></a></td>
+  </tr>
+</table>
+");
+	block_end_row();
+	block_end();
+    }
+}

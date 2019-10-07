@@ -1,0 +1,403 @@
+/*
+ * Тут будем изменять байткод для виртуальной машины. Все символьные ссылки в StringPool будем заменять
+ * на индексы соответствующих структур
+ *
+ * Менять будем следующее:
+ * 1. x_load_static и x_store_static - меняем на адрес статического поля
+ * 2. x_load_field и x_store_field - меняем на адрес поля внутри класса
+ * 3. call_virtual - меняем на индекс в таблице виртуальных методов
+ * 4. call_interface - меняем на индекс метода интерфейса (для поиска его в таблице методов интерфейсов)
+ * 5. call_method - меняем на индекс в глобальной таблице методов
+ * 6. new_array, new_instance, cast, instanceof - меняем на идентификатор типа (описан ниже)
+ *
+ * Идентификатор типа - это 16-битное число, упакованное как:
+ * 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+ *  | \______/ \_______/ \_____________/
+ *  |    |         |            |
+ *  |    |         |            +--------- идентификатор класса (в таблице классов)
+ *  |    |         |
+ *  |    |         +---------------------- размерность массива (может быть 0, если это не массив)
+ *  |    |
+ *  |    +-------------------------------- базовый тип (описан ниже)
+ *  |
+ *  +------------------------------------- флаг, что это не просто идентификатор класса, а тип или объект-массив
+ *
+ * Базовый тип:
+ * BYTE         = 0
+ * SHORT        = 1
+ * INT/FLOAT    = 2
+ * REFERENCE    = 3 (в этом случае используем идентификатор класса)
+ */
+
+
+class L_PrepareCode
+{
+    static boolean PrepareAll()
+    {
+	// Обрабатываем все классы
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    if (!PrepareClass(cls)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean PrepareClass(I_Class cls)
+    {
+	// Проверим, что это не интерфейсы
+	if (cls.is_interface) return true;
+	
+	// Обрабатываем все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (!PrepareMethod(m)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean PrepareMethod(I_Method m)
+    {
+	// Проверим, что у метода есть код
+	if (m.compiled_code_size==0)
+	{
+	    if (!m.is_native)
+	    {
+		sapc.error("Method '"+m.L_ParentClass.name+"."+m.name+"' don't have code !\n");
+		return false;
+	    }
+	    return true;
+	}
+	
+	// Обрабатываем байткод
+	int PC=0;
+	while (PC < m.compiled_code_size)
+	{
+	    byte op=m.compiled_code[PC++];
+	    
+	    // Обрабатываем команду
+	    switch (op)
+	    {
+		case (byte)(OP.BYTE		| OP._LOAD_STATIC):
+		case (byte)(OP.SHORT		| OP._LOAD_STATIC):
+		case (byte)(OP.INT_OR_FLOAT	| OP._LOAD_STATIC):
+		case OP.R_LOAD_STATIC:
+		case (byte)(OP.BYTE		| OP._STORE_STATIC):
+		case (byte)(OP.SHORT		| OP._STORE_STATIC):
+		case (byte)(OP.INT_OR_FLOAT	| OP._STORE_STATIC):
+		case OP.R_STORE_STATIC:
+		    // Работа со статическим полем
+		    {
+			// Получаем спецификатор поля
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC));
+			
+			// Получаем класс и имя поля
+			String spec_cls=spec.substring(1, spec.indexOf('.'));
+			String spec_field=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+			
+			I_Class cls=sapc.prog.FindClass(spec_cls);
+			I_Var field=null;
+			if (cls!=null) field=cls.FindField(spec_field);
+			if ( (cls==null) || (field==null) )
+			{
+			    // Поле или класс не найен
+			    sapc.error("Static field '"+spec_cls+"."+spec_field+"' not found (used in '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Проверим тип
+			if ( (!field.spec().equals(spec.substring(spec.indexOf('.')+1, spec.length()))) ||
+			     (!field.is_static) )
+			{
+			    // Не тот тип
+			    sapc.error("Incorrect type used for field '"+spec_cls+"."+spec_field+"' (in method '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Устанавливаем адрес вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC, (short)field.L_address);
+		    }
+		    break;
+		
+		
+		case (byte)(OP.BYTE		| OP._LOAD_FIELD):
+		case (byte)(OP.SHORT		| OP._LOAD_FIELD):
+		case (byte)(OP.INT_OR_FLOAT	| OP._LOAD_FIELD):
+		case OP.R_LOAD_FIELD:
+		case (byte)(OP.BYTE		| OP._STORE_FIELD):
+		case (byte)(OP.SHORT		| OP._STORE_FIELD):
+		case (byte)(OP.INT_OR_FLOAT	| OP._STORE_FIELD):
+		case OP.R_STORE_FIELD:
+		    // Работа с полем класса
+		    {
+			// Получаем спецификатор поля
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC));
+			
+			// Получаем класс и имя поля
+			String spec_cls=spec.substring(1, spec.indexOf('.'));
+			String spec_field=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+			
+			I_Class cls=sapc.prog.FindClass(spec_cls);
+			I_Var field=null;
+			if (cls!=null) field=cls.FindField(spec_field);
+			if ( (cls==null) || (field==null) )
+			{
+			    // Поле или класс не найен
+			    sapc.error("Field '"+spec_cls+"."+spec_field+"' not found (used in '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Проверим тип
+			if ( (!field.spec().equals(spec.substring(spec.indexOf('.')+1, spec.length()))) ||
+			     (field.is_static) )
+			{
+			    // Не тот тип
+			    sapc.error("Incorrect type used for field '"+spec_cls+"."+spec_field+"' (in method '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Устанавливаем адрес вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC, (short)field.L_address);
+		    }
+		    break;
+		
+		
+		case OP.CALL_VIRTUAL:
+		    // Вызов виртуального метода
+		    {
+			// Получаем спецификатор метода
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC+1));
+			
+			// Получаем класс и имя метода
+			String spec_cls=spec.substring(1, spec.indexOf('.'));
+			String spec_m=spec.substring(spec.indexOf('.')+1, spec.indexOf('('));
+			boolean st=((spec.charAt(0)=='M')?true:false);
+			
+			I_Class cls=sapc.prog.FindClass(spec_cls);
+			I_Method meth=null;
+			if (cls!=null) meth=cls.FindMethod(spec_m);
+			if ( (cls==null) || (meth==null) )
+			{
+			    // Метод или класс не найен
+			    sapc.error("Method '"+spec_cls+"."+spec_m+"' not found (used in '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Проверим тип
+			if ( (!meth.spec().equals(spec.substring(spec.indexOf('.')+1, spec.length()))) ||
+			     (st!=meth.is_static) )
+			{
+			    // Не тот тип
+			    sapc.error("Incorrect type used for method '"+spec_cls+"."+spec_m+"' (in method '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Получаем номер виртуального метода в таблице
+			int v=0;
+			for (int i=0; i<cls.L_VirtualTab.size(); i++)
+			{
+			    I_Method m1=(I_Method)cls.L_VirtualTab.elementAt(i);
+			    
+			    if (m1.name.equals(spec_m))
+			    {
+				v=i;
+				break;
+			    }
+			}
+			
+			// Устанавливаем адрес вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC+1, (short)v);
+		    }
+		    break;
+		
+		
+		case OP.CALL_METHOD:
+		    // Вызов метода
+		    {
+			// Получаем спецификатор метода
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC+1));
+			
+			// Получаем класс и имя метода
+			String spec_cls=spec.substring(1, spec.indexOf('.'));
+			String spec_m=spec.substring(spec.indexOf('.')+1, spec.indexOf('('));
+			boolean st=((spec.charAt(0)=='M')?true:false);
+			
+			I_Class cls=sapc.prog.FindClass(spec_cls);
+			I_Method meth=null;
+			if (cls!=null) meth=cls.FindMethod(spec_m);
+			if ( (cls==null) || (meth==null) )
+			{
+			    // Метод или класс не найен
+			    sapc.error("Method '"+spec_cls+"."+spec_m+"' not found (used in '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Проверим тип
+			if ( (!meth.spec().equals(spec.substring(spec.indexOf('.')+1, spec.length()))) ||
+			     (st!=meth.is_static) )
+			{
+			    // Не тот тип
+			    sapc.error("Incorrect type used for method '"+spec_cls+"."+spec_m+"' (in method '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Устанавливаем адрес вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC+1, (short)meth.L_MethodNumber);
+		    }
+		    break;
+		
+		
+		case OP.CALL_INTERFACE:
+		    // Вызов метода интерфейса
+		    {
+			// Получаем спецификатор метода
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC+1));
+			
+			// Получаем класс и имя метода
+			String spec_cls=spec.substring(1, spec.indexOf('.'));
+			String spec_m=spec.substring(spec.indexOf('.')+1, spec.indexOf('('));
+			
+			I_Class cls=sapc.prog.FindClass(spec_cls);
+			I_Method meth=null;
+			if (cls!=null) meth=cls.FindMethod(spec_m);
+			if ( (cls==null) || (meth==null) )
+			{
+			    // Метод или класс не найен
+			    sapc.error("Method '"+spec_cls+"."+spec_m+"' not found (used in '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Проверим тип
+			if (!meth.spec().equals(spec.substring(spec.indexOf('.')+1, spec.length())))
+			{
+			    // Не тот тип
+			    sapc.error("Incorrect type used for method '"+spec_cls+"."+spec_m+"' (in method '"+m.L_ParentClass.name+"."+m.name+"') !\n");
+			    return false;
+			}
+			
+			// Устанавливаем адрес вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC+1, (short)meth.L_MethodNumber);
+		    }
+		    break;
+		
+		
+		case OP.NEW_ARRAY:
+		case OP.NEW_INSTANCE:
+		case OP.CAST:
+		case OP.INSTANCEOF:
+		    // Работа с типами
+		    {
+			// Получаем спецификатор типа
+			String spec=(String)m.L_ParentClass.StringPool.elementAt(CG_Stream.R_Short(m.compiled_code, PC));
+			short value;
+			
+			if (spec.charAt(0)=='C')
+			{
+			    // Это обращение к классу (new_instance)
+			    I_Class cls=sapc.prog.FindClass(spec.substring(1, spec.length()));
+			    
+			    if (cls==null)
+			    {
+				sapc.error("Class '"+spec.substring(1, spec.length())+"' not found (used in method '"+m.L_ParentClass.name+"."+m.name+") !\n");
+				return false;
+			    }
+			    
+			    if (cls.is_interface)
+			    {
+				sapc.error("Trying to use interface '"+spec.substring(1, spec.length())+"' as class (in method '"+m.L_ParentClass.name+"."+m.name+") !\n");
+				return false;
+			    }
+			    
+			    // Получаем номер
+			    value=0;
+			    for (int i=0; i<sapc.prog.classes.size(); i++)
+			    {
+				if ( ((I_Class)sapc.prog.classes.elementAt(i))==cls )
+				{
+				    value=(short)i;
+				    break;
+				}
+			    }
+			} else
+			{
+			    // Это тип
+			    I_Type t=ClassLoader.parseType(spec.substring(1, spec.length()));
+			    
+			    // Получаем номер класса, если надо
+			    int cls_idx=0;
+			    if (t.type==I_Type.REF)
+			    {
+				// Это ссылка. Ищем класс
+				boolean ok=false;
+				
+				for (int i=0; i<sapc.prog.classes.size(); i++)
+				{
+				    if (t.ClassName.equals( ((I_Class)sapc.prog.classes.elementAt(i)).name ))
+				    {
+					cls_idx=i;
+					ok=true;
+				    }
+				}
+				
+				if (!ok)
+				{
+				    sapc.error("Class '"+t.ClassName+"' not found (used in method '"+m.L_ParentClass.name+"."+m.name+") !\n");
+				    return false;
+				}
+			    }
+			    
+			    // Создаем идентификатор типа
+			    int base_type=0;
+			    switch (t.type)
+			    {
+				case I_Type.BYTE:
+				    base_type=0;
+				    break;
+				
+				case I_Type.SHORT:
+				    base_type=1;
+				    break;
+				
+				case I_Type.INT:
+				case I_Type.FLOAT:
+				    base_type=2;
+				    break;
+				
+				case I_Type.REF:
+				    base_type=3;
+				    break;
+			    }
+			    
+			    // Получаем идентификатор типа
+			    value=(short)( 0x8000 | (base_type << 12) | (t.n_array << 8) | cls_idx );
+			}
+			
+			// Устанавливаем идентификатор типа вместо спецификатора
+			CG_Stream.W_Short(m.compiled_code, PC, value);
+		    }
+		    break;
+	    }
+	    
+	    // Пропускаем операнды
+	    if (op != OP.FILL_ARRAY_RAW)
+	    {
+		PC=PC+OP.op_size[((int)op) & 0xff];
+	    } else
+	    {
+		PC=PC+4+CG_Stream.R_Int(m.compiled_code, PC);
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+}

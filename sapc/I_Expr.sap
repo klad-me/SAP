@@ -1,0 +1,797 @@
+
+class I_Expr extends I_SourceInfo
+{
+    // Типы выражений
+    static final int ASSIGN		= -1;	// +
+    static final int COND_EXPR		= -2;	// +
+    static final int LOGIC_OR		= -3;	// +
+    static final int LOGIC_AND		= -4;	// +
+    static final int BIT_OR		= -5;	// +
+    static final int BIT_XOR		= -6;	// +
+    static final int BIT_AND		= -7;	// +
+    static final int IS_EQ		= -8;	// +
+    static final int IS_NOT_EQ		= -9;	// +
+    static final int IS_LT		= -10;	// +
+    static final int IS_GT		= -11;	// +
+    static final int IS_LE		= -12;	// +
+    static final int IS_GE		= -13;	// +
+    static final int SHIFT_LEFT		= -14;	// +
+    static final int SHIFT_RIGHT	= -15;	// +
+    static final int SHIFT_RIGHT_U	= -16;	// +
+    static final int ADD		= -17;	// +
+    static final int SUB		= -18;	// +
+    static final int MUL		= -19;	// +
+    static final int DIV		= -20;	// +
+    static final int REM		= -21;	// +
+    static final int INC		= -22;	// +
+    static final int DEC		= -23;	// +
+    static final int U_MINUS		= -24;	// +
+    static final int BIT_NOT		= -25;	// +
+    static final int LOGIC_NOT		= -26;	// +
+    static final int CAST		= -27;	// +
+    static final int ARRAY_ELEMENT	= -28;	// +
+    static final int INSTANCEOF		= -29;	// +
+    static final int FIELD		= -30;	// +
+    static final int STATIC_FIELD	= -31;	// +
+    static final int METHOD		= -32;	// +
+    static final int STATIC_METHOD	= -33;	// +
+    static final int INT_NUMBER		= -34;	// +
+    static final int FLOAT_NUMBER	= -35;	// +
+    static final int STRING		= -36;	// + (типизатор меняет на new_instance)
+    static final int NULL		= -37;	// +
+    static final int THIS		= -38;	// +
+    static final int VARIABLE		= -39;	// неизвестно - поле или локальная переменная/параметр
+    static final int LOCALVAR		= -40;	// +
+    static final int SUPER_METHOD	= -41;	// +
+    static final int NEW_INSTANCE	= -42;	// +
+    static final int NEW_ARRAY		= -43;	// +
+    static final int ARRAY_LENGTH	= -44;	// +
+    static final int MUL_ASSIGN		= -45;
+    static final int DIV_ASSIGN		= -46;
+    static final int REM_ASSIGN		= -47;
+    static final int ADD_ASSIGN		= -48;
+    static final int SUB_ASSIGN		= -49;
+    static final int AND_ASSIGN		= -50;
+    static final int OR_ASSIGN		= -51;
+    static final int XOR_ASSIGN		= -52;
+    static final int SHL_ASSIGN		= -53;
+    static final int SHR_ASSIGN		= -54;
+    static final int SHRU_ASSIGN	= -55;
+    
+    static final int VARLIST		= -99;	// список локальных переменных с инициализаторами
+    
+    
+    
+    // Тип выражения
+    int type;
+    
+    // Список локальных переменных
+    Vector varlist;
+    
+    // Левая и правая части выражения
+    I_Expr left, right;
+    
+    // Условие
+    I_Expr cond;
+    
+    // Выражение для оператора-присваивание
+    I_Expr op_assign_expr;
+    
+    // Тип результата
+    I_Type result_type;
+    
+    // Тип для проверки типа
+    I_Type instanceof_type;
+    
+    // Список выражений для вызова метода или инициализации массива
+    I_ExprList exprlist;
+    
+    // Флаг, что не требуется кодогенерация
+    byte no_cg;
+    
+    // Значение
+    String stringValue;
+    int intValue;
+    float floatValue;
+    String ClassName;
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    // Флаг, что это инициализация переменной, а не реальный код
+    boolean first_init;
+    
+    
+    
+    
+    I_Expr(Lex lex, int type, I_Expr left, I_Expr right) : super(lex)
+    {
+	switch (type)
+	{
+	    case Lex.T_LOGIC_OR:		type=LOGIC_OR; break;
+	    case Lex.T_LOGIC_AND:		type=LOGIC_AND; break;
+	    case '|':				type=BIT_OR; break;
+	    case '^':				type=BIT_XOR; break;
+	    case '&': 				type=BIT_AND; break;
+	    case Lex.T_IS_EQ:			type=IS_EQ; break;
+	    case Lex.T_IS_NOT_EQ:		type=IS_NOT_EQ; break;
+	    case '<':				type=IS_LT; break;
+	    case '>':				type=IS_GT; break;
+	    case Lex.T_IS_LE:			type=IS_LE; break;
+	    case Lex.T_IS_GE:			type=IS_GE; break;
+	    case Lex.T_SHIFT_LEFT: 		type=SHIFT_LEFT; break;
+	    case Lex.T_SHIFT_RIGHT: 		type=SHIFT_RIGHT; break;
+	    case Lex.T_SHIFT_RIGHT_U: 		type=SHIFT_RIGHT_U; break;
+	    case '+':				type=ADD; break;
+	    case '-':				type=SUB; break;
+	    case '*':				type=MUL; break;
+	    case '/':				type=DIV; break;
+	    case '%':				type=REM; break;
+	    case Lex.T_INC:			type=INC; break;
+	    case Lex.T_DEC:			type=DEC; break;
+	    //case '-':				type=U_MINUS; break;
+	    case '~':				type=BIT_NOT; break;
+	    case '!':				type=LOGIC_NOT; break;
+	    case Lex.T_MUL_ASSIGN:		type=MUL_ASSIGN; break;
+	    case Lex.T_DIV_ASSIGN:		type=DIV_ASSIGN; break;
+	    case Lex.T_REM_ASSIGN:		type=REM_ASSIGN; break;
+	    case Lex.T_ADD_ASSIGN:		type=ADD_ASSIGN; break;
+	    case Lex.T_SUB_ASSIGN:		type=SUB_ASSIGN; break;
+	    case Lex.T_AND_ASSIGN:		type=AND_ASSIGN; break;
+	    case Lex.T_OR_ASSIGN:		type=OR_ASSIGN; break;
+	    case Lex.T_XOR_ASSIGN:		type=XOR_ASSIGN; break;
+	    case Lex.T_SHL_ASSIGN:		type=SHL_ASSIGN; break;
+	    case Lex.T_SHR_ASSIGN:		type=SHR_ASSIGN; break;
+	    case Lex.T_SHRU_ASSIGN:		type=SHRU_ASSIGN; break;
+	}
+	this.type=type;
+	this.left=left;
+	this.right=right;
+    }
+    
+    
+    static I_Expr ParseExpr(Lex lex)
+    {
+	return Assign_Expr(lex);
+    }
+    
+    
+    
+    static I_Expr Assign_Expr(Lex lex)
+    {
+	I_Expr e1=Conditional_Expr(lex);
+	I_Expr e2, e3;
+	
+	int t=lex.GetToken();
+	switch (t)
+	{
+	    case '=':
+		e2=Assign_Expr(lex);
+		if (e2==null) lex.error("expression expected after '=' !");
+		return new I_Expr(lex, ASSIGN, e1 ,e2);
+	    
+	    case Lex.T_MUL_ASSIGN:
+	    case Lex.T_DIV_ASSIGN:
+	    case Lex.T_REM_ASSIGN:
+	    case Lex.T_ADD_ASSIGN:
+	    case Lex.T_SUB_ASSIGN:
+	    case Lex.T_AND_ASSIGN:
+	    case Lex.T_OR_ASSIGN:
+	    case Lex.T_XOR_ASSIGN:
+	    case Lex.T_SHL_ASSIGN:
+	    case Lex.T_SHR_ASSIGN:
+	    case Lex.T_SHRU_ASSIGN:
+		e2=Assign_Expr(lex);
+		if (e2==null) lex.error("expression expected after assignment !");
+		return new I_Expr(lex, t, e1 ,e2);
+	    
+	    default:
+		// Это не присваивание
+		lex.UngetToken();
+		return e1;
+	}
+    }
+    
+    
+    static I_Expr Conditional_Expr(Lex lex)
+    {
+	I_Expr cond=Logical_Or_Expr(lex);
+	if (cond==null) return null;
+	
+	if (!lex.expect('?')) return cond;
+	lex.GetToken();
+	
+	I_Expr e1=Logical_Or_Expr(lex);
+	if (e1==null) lex.error("expression expected after '?' !");
+	
+	if (lex.GetToken()!=':') lex.error("':' expected after expression !");
+	
+	I_Expr e2=Conditional_Expr(lex);
+	if (e2==null) lex.error("expression expected after ':' !");
+	
+	
+	I_Expr e=new I_Expr(lex, COND_EXPR, e1,e2);
+	e.cond=cond;
+	
+	return e;
+    }
+    
+    
+    static I_Expr Logical_Or_Expr(Lex lex)
+    {
+	I_Expr e1=Logical_And_Expr(lex);
+	if (e1==null) return null;
+	
+	while (lex.expect(Lex.T_LOGIC_OR))
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Logical_And_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Logical_And_Expr(Lex lex)
+    {
+	I_Expr e1=Inclusive_Or_Expr(lex);
+	if (e1==null) return null;
+	
+	while (lex.expect(Lex.T_LOGIC_AND))
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Inclusive_Or_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Inclusive_Or_Expr(Lex lex)
+    {
+	I_Expr e1=Exclusive_Or_Expr(lex);
+	if (e1==null) return null;
+	
+	while (lex.expect('|'))
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Exclusive_Or_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Exclusive_Or_Expr(Lex lex)
+    {
+	I_Expr e1=And_Expr(lex);
+	if (e1==null) return null;
+	
+	while (lex.expect('^'))
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=And_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr And_Expr(Lex lex)
+    {
+	I_Expr e1=Equality_Expr(lex);
+	if (e1==null) return null;
+	
+	while (lex.expect('&'))
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Equality_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Equality_Expr(Lex lex)
+    {
+	I_Expr e1=Relational_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect(Lex.T_IS_EQ)) ||
+		(lex.expect(Lex.T_IS_NOT_EQ)) )
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Relational_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Relational_Expr(Lex lex)
+    {
+	I_Expr e1=Shift_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect('<')) ||
+		(lex.expect('>')) ||
+		(lex.expect(Lex.T_IS_LE)) ||
+		(lex.expect(Lex.T_IS_GE)) )
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Shift_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Shift_Expr(Lex lex)
+    {
+	I_Expr e1=Additive_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect(Lex.T_SHIFT_LEFT)) ||
+		(lex.expect(Lex.T_SHIFT_RIGHT)) ||
+		(lex.expect(Lex.T_SHIFT_RIGHT_U)) )
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Additive_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Additive_Expr(Lex lex)
+    {
+	I_Expr e1=Multiplicative_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect('+')) ||
+		(lex.expect('-')) )
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Multiplicative_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Multiplicative_Expr(Lex lex)
+    {
+	I_Expr e1=Cast_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect('*')) ||
+		(lex.expect('/')) ||
+		(lex.expect('%')) )
+	{
+	    int t=lex.GetToken();
+	    
+	    I_Expr e2=Cast_Expr(lex);
+	    if (e2==null) lex.error("expression expected after operator !");
+	    
+	    e1=new I_Expr(lex, t, e1, e2);
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Unary_Expr(Lex lex)
+    {
+	int t=lex.GetToken();
+	I_Expr e;
+	
+	switch (t)
+	{
+	    case Lex.T_INC:
+	    case Lex.T_DEC:
+		e=Unary_Expr(lex);
+		if (e==null) lex.error("expression expected after operator !");
+		return new I_Expr(lex, t, null, e);
+	    
+	    case '-':
+	    case '~':
+	    case '!':
+		e=Cast_Expr(lex);
+		if (e==null) lex.error("expression expected after operator !");
+		if (t=='-')
+		    return new I_Expr(lex, U_MINUS, e, null); else
+		    return new I_Expr(lex, t, e, null);
+	    
+	    default:
+		lex.UngetToken();
+	}
+	
+	return Postfix_Expr(lex);
+    }
+    
+    
+    static I_Expr Cast_Expr(Lex lex)
+    {
+	if (!lex.expect('(')) return Unary_Expr(lex);
+	lex.GetToken();
+	
+	// var [ ] - cast
+	// var [ <other> - unary
+	// var ) - cast
+	// var <other> - unary
+	// <other> - unary
+	
+	int t=lex.GetToken();
+	if (t==Lex.T_VARIABLE)
+	{
+	    t=lex.GetToken();
+	    if (t=='[')
+	    {
+		if (!lex.expect(']'))
+		{
+		    // Это не каст
+		    lex.UngetToken();	// [
+		    lex.UngetToken();	// var
+		    lex.UngetToken();	// (
+		    return Unary_Expr(lex);
+		}
+	    } else
+	    if (t!=')')
+	    {
+		// Это не каст
+		lex.UngetToken();	// )
+		lex.UngetToken();	// var
+		lex.UngetToken();	// (
+		return Unary_Expr(lex);
+	    }
+	    lex.UngetToken();	// [ | )
+	}
+	lex.UngetToken();	// var
+	
+	I_Type type=I_Type.ParseType(lex);
+	if (type==null)
+	{
+	    lex.UngetToken();	// (
+	    return Unary_Expr(lex);
+	}
+	
+	if (lex.GetToken()!=')') lex.error("')' expected after type !");
+	
+	I_Expr e1=Cast_Expr(lex);
+	if (e1==null)
+	{
+	    // Выражения дальше мы не нашли. Проверим, может быть тип выражения простой - типа ObjectName
+	    if ( (type.type==I_Type.REF) &&
+		 (type.n_array==0) )
+	    {
+		// Возможно это просто выражение
+		lex.UngetToken();	// )
+		lex.UngetToken();	// ObjectName
+		lex.UngetToken();	// (
+		return Unary_Expr(lex);
+	    }
+	    lex.error("expression expected after type cast operator !");
+	}
+	
+	I_Expr e=new I_Expr(lex, CAST, e1, null);
+	e.result_type=type;
+	
+	return e;
+    }
+    
+    
+    static I_Expr Postfix_Expr(Lex lex)
+    {
+	I_Expr e1=Primary_Expr(lex);
+	if (e1==null) return null;
+	
+	while ( (lex.expect('[')) ||
+		(lex.expect('.')) ||
+		(lex.expect(Lex.T_INC)) ||
+		(lex.expect(Lex.T_DEC)) ||
+		(lex.expect(Lex.T_INSTANCEOF)) )
+	{
+	    int t=lex.GetToken();
+	    
+	    if (t=='[')
+	    {
+		// Это обращение к массиву
+		I_Expr e2=ParseExpr(lex);
+		if (e2==null) lex.error("array index expected !");
+		if (lex.GetToken()!=']') lex.error("']' expected after array index !");
+		
+		e1=new I_Expr(lex, ARRAY_ELEMENT, e1, e2);
+	    } else
+	    if (t=='.')
+	    {
+		// Это обращение к полю или методу
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("field/method name expected !");
+		String name=(String)lex.tok_value;
+		
+		if (lex.expect('('))
+		{
+		    // Это обращение к методу
+		    lex.GetToken();
+		    I_ExprList l=I_ExprList.ParseExprList(lex);
+		    if (lex.GetToken()!=')') lex.error("')' expected after method parameters !");
+		    
+		    e1=new I_Expr(lex, METHOD, e1, null);
+		    e1.stringValue=name;
+		    e1.exprlist=l;
+		} else
+		{
+		    // Это обращение к полю
+		    e1=new I_Expr(lex, FIELD, e1, null);
+		    e1.stringValue=name;
+		}
+	    } else
+	    if ( (t==Lex.T_INC) || (t==Lex.T_DEC) )
+	    {
+		// Пост инк/дек
+		e1=new I_Expr(lex, t, e1, null);
+	    } else
+	    //if (t==T_INSTANCEOF)
+	    {
+		// Проверка типа
+		e1=new I_Expr(lex, INSTANCEOF, e1, null);
+		e1.instanceof_type=I_Type.ParseType(lex);
+		if (e1.instanceof_type==null) lex.error("type expected after 'instanceof' !");
+	    }
+	}
+	
+	return e1;
+    }
+    
+    
+    static I_Expr Primary_Expr(Lex lex)
+    {
+	int t=lex.GetToken();
+	I_Expr e=null;
+	
+	if (t==Lex.T_VARIABLE)
+	{
+	    // var()
+	    // var(params)
+	    // var
+	    String name=(String)lex.tok_value;
+	    
+	    if (lex.expect('('))
+	    {
+		// Это вызов метода
+		lex.GetToken();
+		I_ExprList l=I_ExprList.ParseExprList(lex);
+		if (lex.GetToken()!=')') lex.error("')' expected after method parameters !");
+		
+		e=new I_Expr(lex, METHOD, new I_Expr(lex, THIS, null, null), null);
+		e.stringValue=name;
+		e.exprlist=l;
+	    } else
+	    {
+		// Это обращение к переменной
+		e=new I_Expr(lex, VARIABLE, null, null);
+		e.stringValue=name;
+	    }
+	} else
+	if (t==Lex.T_NEW)
+	{
+	    // new class()
+	    // new class(params)
+	    // new type[expr]
+	    // new type{exprlist}
+	    if (lex.expect(Lex.T_VARIABLE))
+	    {
+		lex.GetToken();
+		String name=(String)lex.tok_value;
+		
+		if (lex.expect('('))
+		{
+		    // Это создание нового класса
+		    lex.GetToken();
+		    I_ExprList l=I_ExprList.ParseExprList(lex);
+		    if (lex.GetToken()!=')') lex.error("')' expected after constructor parameters !");
+		    
+		    e=new I_Expr(lex, NEW_INSTANCE, null, null);
+		    e.ClassName=name;
+		    e.exprlist=l;
+		    e.result_type=new I_Type(lex, Lex.T_VARIABLE, 0, name);
+		    
+		    return e;
+		}
+		lex.UngetToken();
+	    }
+	    
+	    // Это создание массива
+	    I_Type type=I_Type.ParseType(lex);
+	    if (type==null) lex.error("type expected after 'new' !");
+	    t=lex.GetToken();
+	    if (t=='[')
+	    {
+		e=new I_Expr(lex, NEW_ARRAY, null, null);
+		type.n_array++;
+		e.result_type=type;
+		e.left=ParseExpr(lex);
+		if (e.left==null) lex.error("dimention expected after '[' !");
+		if (lex.GetToken()!=']') lex.error("']' expected after dimention !");
+	    } else
+	    if (t=='{')
+	    {
+		e=new I_Expr(lex, NEW_ARRAY, null, null);
+		type.n_array++;
+		e.result_type=type;
+		e.exprlist=I_ExprList.ParseExprList(lex);
+		if (e.exprlist==null) lex.error("initializer expected after '{' !");
+		if (lex.GetToken()!='}') lex.error("'}' expected after initialized !");
+		
+		// Считаем размерность
+		e.intValue=e.exprlist.list.size();
+	    } else
+	    {
+		lex.error("'(params)' or '[dim]' or '{init_list}' expected after 'new' !");
+	    }
+	} else
+	if (t==Lex.T_INT_NUMBER)
+	{
+	    e=new I_Expr(lex, INT_NUMBER, null, null);
+	    e.intValue=((Integer)lex.tok_value).intValue();
+	} else
+	if (t==Lex.T_FLOAT_NUMBER)
+	{
+	    e=new I_Expr(lex, FLOAT_NUMBER, null, null);
+	    e.floatValue=((Float)lex.tok_value).floatValue();
+	} else
+	if (t==Lex.T_STRING)
+	{
+	    e=new I_Expr(lex, STRING, null, null);
+	    e.stringValue=(String)lex.tok_value;
+	} else
+	if (t==Lex.T_NULL)
+	{
+	    e=new I_Expr(lex, NULL, null, null);
+	} else
+	if (t==Lex.T_THIS)
+	{
+	    e=new I_Expr(lex, THIS, null, null);
+	} else
+	if (t==Lex.T_SUPER)
+	{
+	    // super.var()
+	    // super.var(params)
+	    if (lex.GetToken()!='.') lex.error("'.' expected after 'super' !");
+	    if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("method name expected after 'super.' !");
+	    String name=(String)lex.tok_value;
+	    if (lex.GetToken()!='(') lex.error("'(' expected before method parameters !");
+	    I_ExprList l=I_ExprList.ParseExprList(lex);
+	    if (lex.GetToken()!=')') lex.error("')' expected after method parameters !");
+	    
+	    e=new I_Expr(lex, SUPER_METHOD, null, null);
+	    e.stringValue=name;
+	    e.exprlist=l;
+	} else
+	if (t=='(')
+	{
+	    e=ParseExpr(lex);
+	    
+	    t=lex.GetToken();
+	    if (t!=')') lex.error("')' expected after expression !");
+	} else
+	{
+	    // Это не нам
+	    lex.UngetToken();
+	}
+	
+	return e;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // Получить выражение или определение локальных переменных
+    static I_Expr ParseExprOrVarList(Lex lex)
+    {
+	// Тут могут быть следующие ситуации:
+	// T_VARIABLE T_VARIABLE - это определение переменной
+	// T_VARIABLE '[' ']' - Это определение переменной
+	// T_VARIABLE '[' <other> - это выражение
+	// T_VARIABLE <other> - это выражение
+	// <type> - это определение переменной
+	// <other> - это выражение
+	
+	// Проверим T_VARIABLE
+	if (lex.expect(Lex.T_VARIABLE))
+	{
+	    lex.GetToken();
+	    if (lex.expect(Lex.T_VARIABLE))
+	    {
+		// Это определение переменной
+		lex.UngetToken();
+		return ParseVarList(lex, I_Type.ParseType(lex));
+	    } else
+	    if (lex.expect('['))
+	    {
+		lex.GetToken();
+		if (lex.expect(']'))
+		{
+		    // Это определение переменной
+		    lex.UngetToken();
+		    lex.UngetToken();
+		    return ParseVarList(lex, I_Type.ParseType(lex));
+		} else
+		{
+		    // Это выражение
+		    lex.UngetToken();
+		    lex.UngetToken();
+		    return ParseExpr(lex);
+		}
+	    } else
+	    {
+		// Это выражение
+		lex.UngetToken();
+		return ParseExpr(lex);
+	    }
+	}
+	
+	// Попробуем получить тип
+	I_Type type=I_Type.ParseType(lex);
+	if (type!=null)
+	{
+	    // Это определение переменной
+	    return ParseVarList(lex, type);
+	}
+	
+	// Это выражение
+	return ParseExpr(lex);
+    }
+    
+    
+    static I_Expr ParseVarList(Lex lex, I_Type type)
+    {
+	if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("variable name expected after type !");
+	
+	I_Expr expr=new I_Expr(lex, VARLIST, null, null);
+	expr.varlist=I_Var.ParseVarList(lex, type, (String)lex.tok_value, false, false);
+	
+	return expr;
+    }
+}

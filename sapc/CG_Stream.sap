@@ -1,0 +1,150 @@
+
+// Поток для байткода
+class CG_Stream
+{
+    static final int ADD=256;
+    byte[] data;
+    int size;
+    
+    
+    CG_Stream()
+    {
+	data=new byte[256];
+	size=0;
+    }
+    
+    
+    void unwind(int n)
+    {
+	size=size-n;
+    }
+    
+    
+    void ensureCapacity(int n)
+    {
+	if (n<=0) return;
+	// Убедиться, что есть место под n байт
+	if (data.length-size >= n) return;	// есть место
+	int len=size+n+ADD;
+	byte[] tmp=new byte[len];
+	System.arrayCopy(data, 0, tmp, 0, size);
+	data=tmp;
+    }
+    
+    
+    void putByte(byte b)
+    {
+	ensureCapacity(1);
+	data[size++]=b;
+    }
+    
+    
+    void putBytes(byte[] buf, int buf_size)
+    {
+	if (buf_size<=0) return;
+	//sapc.debug("buf.length="+buf.length+" data.length="+data.length+" size="+size+" buf_size="+buf_size+"\n");
+	ensureCapacity(buf_size);
+	System.arrayCopy(buf, 0, data, size, buf_size);
+	size=size+buf_size;
+    }
+    
+    
+    void putShort(short s)
+    {
+	putByte( (byte)( s & 0xff ) );
+	putByte( (byte)( (s>>>8) & 0xff ) );
+    }
+    
+    
+    void putShortAt(int offs, short s)
+    {
+	data[offs+0]=(byte)( s & 0xff );
+	data[offs+1]=(byte)( (s>>>8) & 0xff );
+    }
+    
+    
+    void putInt(int i)
+    {
+	putByte( (byte)( i & 0xff ) );
+	putByte( (byte)( (i>>>8) & 0xff ) );
+	putByte( (byte)( (i>>>16) & 0xff ) );
+	putByte( (byte)( (i>>>24) & 0xff ) );
+    }
+    
+    
+    void putIntAt(int offs, int i)
+    {
+	data[offs+0]=(byte)( i & 0xff );
+	data[offs+1]=(byte)( (i>>>8) & 0xff );
+	data[offs+2]=(byte)( (i>>>16) & 0xff );
+	data[offs+3]=(byte)( (i>>>24) & 0xff );
+    }
+    
+    
+    void putFloat(float f)
+    {
+	putInt( Float.floatToIntBits(f) );
+    }
+    
+    
+    void putString(String s)
+    {
+	if (s==null)
+	{
+	    putByte((byte)0);
+	    return;
+	}
+	
+	int l=s.length();
+	if (l < 128)
+	{
+	    // Размер - 1 байт (макс 127 символов)
+	    putByte((byte)l);
+	} else
+	{
+	    // Размер - 2 байта (макс 32767 символов)
+	    putByte((byte)(((l>>8) & 0x7f) | 0x80));
+	    putByte((byte)(l & 0xff));
+	}
+	putBytes(s.getBytes(), s.length());
+    }
+    
+    
+    int size()
+    {
+	return size;
+    }
+    
+    
+    byte[] bytes()
+    {
+	return data;
+    }
+    
+    
+
+
+    static short R_Short(byte[] code, int offs)
+    {
+        return (short)( ((((int)code[offs+1]) << 8) & 0xff00) | (((int)code[offs+0]) & 0xff) );
+    }
+    
+    
+    static void W_Short(byte[] code, int offs, short s)
+    {
+	code[offs+0]=(byte)( s & 0xff );
+	code[offs+1]=(byte)( (s>>>8) & 0xff );
+    }
+    
+    
+    static int R_Int(byte[] code, int offs)
+    {
+        return ((((int)R_Short(code, offs+2)) << 16) & 0xffff0000) | (((int)R_Short(code, offs+0)) & 0xffff);
+    }
+
+
+    static float R_Float(byte[] code, int offs)
+    {
+        return Float.intBitsToFloat(R_Int(code, offs));
+    }
+}

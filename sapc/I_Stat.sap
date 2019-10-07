@@ -1,0 +1,315 @@
+
+class I_Stat extends I_SourceInfo
+{
+    // Типы команд
+    final static int NOP		= 0;
+    final static int BLOCK		= 1;
+    final static int LABEL		= 2;
+    final static int EXPR		= 3;
+    final static int IF_ELSE		= 4;
+    final static int WHILE		= 5;
+    final static int DO_WHILE		= 6;
+    final static int FOR		= 7;
+    final static int BREAK		= 8;
+    final static int CONTINUE		= 9;
+    final static int RETURN		= 10;
+    final static int GOTO		= 11;
+    final static int SWITCH		= 12;
+    final static int SWITCH_CASE	= 13;
+    final static int SWITCH_DEFAULT	= 14;
+    final static int SYNCHRONIZED	= 15;
+    
+    // Тип
+    int type;
+    
+    // Значение
+    String stringValue;
+    int intValue;
+    
+    // Выражение
+    I_Expr expr;
+    
+    // Списки выражений (для FOR)
+    I_ExprList exprlist1, exprlist2;
+    
+    // Команды
+    I_Stat stat, stat2;
+    
+    // Список команд для блока или switch
+    Vector stats_list;
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    // Номер цикла
+    int cycle_num;
+    
+    
+    
+    I_Stat(Lex lex, int type) : super(lex)
+    {
+	this.type=type;
+    }
+    
+    
+    
+    static I_Stat ParseStat(Lex lex)
+    {
+	I_Stat stat;
+	
+	if (lex.expect('{'))
+	{
+	    // Это блок кода
+	    lex.GetToken();
+	    stat=new I_Stat(lex, BLOCK);
+	    
+	    // Читаем инструкции
+	    stat.stats_list=new Vector();
+	    while (true)
+	    {
+		I_Stat st=I_Stat.ParseStat(lex);
+		
+		if (st==null) break;
+		
+		stat.stats_list.add(st);
+	    }
+	    
+	    if (lex.GetToken()!='}') lex.error("'}' expected after code block !");
+	} else
+	if (lex.expect(';'))
+	{
+	    // Это пустой оператор
+	    lex.GetToken();
+	    
+	    stat=new I_Stat(lex, NOP);
+	} else
+	if (lex.expect(Lex.T_IF))
+	{
+	    // Это условие
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'if' !");
+	    stat=new I_Stat(lex, IF_ELSE);
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("expression expected !");
+	    if (lex.GetToken()!=')') lex.error("')' expected after expression !");
+	    stat.stat=I_Stat.ParseStat(lex);
+	    if (stat.stat==null) lex.error("statement expected after 'if' !");
+	    
+	    // Проверим на наличие else
+	    if (lex.expect(Lex.T_ELSE))
+	    {
+		// Есть else
+		lex.GetToken();
+		stat.stat2=I_Stat.ParseStat(lex);
+		if (stat.stat2==null) lex.error("statement expected after 'else' !");
+	    }
+	} else
+	if (lex.expect(Lex.T_WHILE))
+	{
+	    // Это цикл while
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'while' !");
+	    stat=new I_Stat(lex, WHILE);
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("expression expected !");
+	    if (lex.GetToken()!=')') lex.error("')' expected after expression !");
+	    stat.stat=I_Stat.ParseStat(lex);
+	    if (stat.stat==null) lex.error("statement expected after 'while' !");
+	} else
+	if (lex.expect(Lex.T_DO))
+	{
+	    // Это цикл do-while
+	    lex.GetToken();
+
+	    stat=new I_Stat(lex, DO_WHILE);
+	    stat.stat=I_Stat.ParseStat(lex);
+	    if (stat.stat==null) lex.error("statement expected after 'do' !");
+	    
+	    if (lex.GetToken()!=Lex.T_WHILE) lex.error("'while' expected after statement !");
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'while' !");
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("expression expected !");
+	    if (lex.GetToken()!=')') lex.error("')' expected after expression !");
+	} else
+	if (lex.expect(Lex.T_FOR))
+	{
+	    // Это цикл for
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'for' !");
+	    
+	    stat=new I_Stat(lex, FOR);
+	    
+	    // Выражение 1
+	    stat.exprlist1=I_ExprList.ParseExprList(lex);
+	    // Выражения 1 может и не быть
+	    if (lex.GetToken()!=';') lex.error("';' expected after first expression !");
+	    
+	    // Выражение 2
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("second expression required !");
+	    if (lex.GetToken()!=';') lex.error("';' expected after second expression !");
+	    
+	    // Выражение 3
+	    stat.exprlist2=I_ExprList.ParseExprList(lex);
+	    // Выражения 3 может и не быть
+	    if (lex.GetToken()!=')') lex.error("')' expected after third expression !");
+	    
+	    stat.stat=I_Stat.ParseStat(lex);
+	    if (stat.stat==null) lex.error("statement expected after 'for' !");
+	} else
+	if (lex.expect(Lex.T_BREAK))
+	{
+	    // Это команда break
+	    lex.GetToken();
+	    
+	    stat=new I_Stat(lex, BREAK);
+	    if (lex.expect(Lex.T_INT_NUMBER))
+	    {
+		// Есть глубина
+		lex.GetToken();
+		stat.intValue=((Integer)lex.tok_value).intValue()-1;
+	    }
+	    
+	    if (lex.GetToken()!=';') lex.error("';' expected after statement !");
+	} else
+	if (lex.expect(Lex.T_CONTINUE))
+	{
+	    // Это команда continue
+	    lex.GetToken();
+	    
+	    stat=new I_Stat(lex, CONTINUE);
+	    if (lex.expect(Lex.T_INT_NUMBER))
+	    {
+		// Есть глубина
+		lex.GetToken();
+		stat.intValue=((Integer)lex.tok_value).intValue()-1;
+	    }
+	    
+	    if (lex.GetToken()!=';') lex.error("';' expected after statement !");
+	} else
+	if (lex.expect(Lex.T_RETURN))
+	{
+	    // Это команда return
+	    lex.GetToken();
+	    
+	    stat=new I_Stat(lex, RETURN);
+	    
+	    // Получаем результат (может быть и null)
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    
+	    if (lex.GetToken()!=';') lex.error("';' expected after statement !");
+	} else
+	if (lex.expect(Lex.T_GOTO))
+	{
+	    // Это команда goto
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("label expected after 'goto' !");
+	    stat=new I_Stat(lex, GOTO);
+	    stat.stringValue=(String)lex.tok_value;
+	    if (lex.GetToken()!=';') lex.error("';' expected after statement !");
+	} else
+	if (lex.expect(Lex.T_SWITCH))
+	{
+	    // Это команда switch
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'switch' !");
+	    stat=new I_Stat(lex, SWITCH);
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("expression expected !");
+	    if (lex.GetToken()!=')') lex.error("')' expected after expression !");
+	    
+	    if (lex.GetToken()!='{') lex.error("'{' expected after 'switch' !");
+	    
+	    stat.stats_list=new Vector();
+	    boolean was_default=false;
+	    while (true)
+	    {
+		if (lex.expect(Lex.T_CASE))
+		{
+		    // Нашли case
+		    lex.GetToken();
+		    if (was_default) lex.error("'default' must be the last label in 'switch' !");
+		    
+		    I_Stat st=new I_Stat(lex, SWITCH_CASE);
+		    st.expr=I_Expr.ParseExpr(lex);
+		    if (st.expr==null) lex.error("statement expected after 'case' !");
+		    
+		    if (lex.GetToken()!=':') lex.error("':' expected after 'case' !");
+		    
+		    stat.stats_list.add(st);
+		} else
+		if (lex.expect(Lex.T_DEFAULT))
+		{
+		    // Нашли default
+		    lex.GetToken();
+		    if (was_default) lex.error("'default' label already declared !");
+		    was_default=true;
+		    
+		    if (lex.GetToken()!=':') lex.error("':' expected after 'default' !");
+		    
+		    stat.stats_list.add(new I_Stat(lex, SWITCH_DEFAULT));
+		} else
+		{
+		    // Это либо команда, либо конец
+		    I_Stat st=I_Stat.ParseStat(lex);
+		    if (st==null) break;
+		    
+		    // Это просто команда
+		    stat.stats_list.add(st);
+		}
+	    }
+	    
+	    if (lex.GetToken()!='}') lex.error("'}' expected after switch statements !");
+	} else
+	if (lex.expect(Lex.T_SYNCHRONIZED))
+	{
+	    // Это команда synchronized
+	    lex.GetToken();
+	    
+	    if (lex.GetToken()!='(') lex.error("'(' expected after 'synchronized' !");
+	    stat=new I_Stat(lex, SYNCHRONIZED);
+	    stat.expr=I_Expr.ParseExpr(lex);
+	    if (stat.expr==null) lex.error("expression expected !");
+	    if (lex.GetToken()!=')') lex.error("')' expected after expression !");
+	    stat.stat=I_Stat.ParseStat(lex);
+	    if (stat.stat==null) lex.error("statement expected after 'synchronized' !");
+	} else
+	{
+	    // Это или метка или выражение
+	    if (lex.expect(Lex.T_VARIABLE))
+	    {
+		lex.GetToken();
+		String name=(String)lex.tok_value;
+		if (lex.expect(':'))
+		{
+		    // Это метка
+		    lex.GetToken();
+		    
+		    stat=new I_Stat(lex, LABEL);
+		    stat.stringValue=name;
+		    
+		    return stat;
+		}
+		lex.UngetToken();
+	    }
+	    
+	    I_Expr expr=I_Expr.ParseExprOrVarList(lex);
+	    
+	    if (expr==null) return null;	// Это не команда
+	    
+	    if (lex.GetToken()!=';') lex.error("';' expected after statement !");
+	    
+	    stat=new I_Stat(lex, EXPR);
+	    stat.expr=expr;
+	}
+	
+	return stat;
+    }
+}

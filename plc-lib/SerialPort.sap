@@ -1,0 +1,139 @@
+/**
+ * Предоставляет доступ к последовательным портам контроллера.<br/>
+ * Управление передатчиком RS485 берет на себя исполнительная система.
+ * При этом, для пользователя RS485 выглядит как обычный полудуплексный потоковый канал связи.<br/>
+ */
+class SerialPort implements Stream
+{
+    /**private**/
+    byte port;
+    
+    /**private**/
+    static SerialPort[] ports=new SerialPort[8];
+    
+    
+    static final byte PAR_NONE = 0;
+    static final byte PAR_EVEN = 1;
+    static final byte PAR_ODD = 2;
+    
+    
+    /**
+     * Получить объект, представляющий последовательный порт
+     */
+    static SerialPort getPort(int n)
+    {
+	if ( (n<0) || (n>=ports.length) ) return null;
+	
+	synchronized(ports)
+	{
+	    if (ports[n]==null)
+	    {
+	        ports[n]=new SerialPort();
+	        ports[n].port=(byte)n;
+	    }
+	}
+	
+	return ports[n];
+    }
+    
+    
+    /**
+     * Установить битовую скорость порта.
+     *
+     * Установить битовую скорость порта. При выполнении этой операции, опустошаются входные и выходные буфера.
+     *
+     * @param baud требуемая битовая скорость
+     */
+    native void setBaud(int baud);
+    
+    
+    /**
+     * Установить формат обмена данными.
+     *
+     * @param bits кол-во битов данных
+     * @param parity четность PAR_*
+     * @param stop кол-во стоп-битов
+     */
+    native void setFormat(byte bits, byte parity, byte stop);
+    
+    
+    /**
+     * Возвращает количество доступных для чтения байт.
+     *
+     * @return количество доступных для чтения байт
+     */
+    native int available();
+    
+    
+    /**
+     * Читает данные из порта
+     *
+     * @param buf буфер для чтения
+     * @param start начальный индекс в буфере для заполнения
+     * @param count размер читаемых данных
+     * @return количество прочитанных байт
+     */
+    native int readBytes(byte[] buf, int start, int count);
+    
+    
+    /**
+     * Записывает данные в порт
+     *
+     * @param buf буфер для записи
+     * @param start начальный индекс в буфере
+     * @param count размер записываемых данных
+     * @return количество записанных байт
+     */
+    native int writeBytes(byte[] buf, int start, int count);
+    
+    
+    /**private**/
+    void close() {}
+    
+    
+    /**
+     * Прочитать из порта строку, заканчивающуюся символом '\r' или '\n'.
+     * В случае, если строка прочитана раньше таймаута, она будет заканчиваться символом '\n' (даже при обнаружении '\r').
+     * При таймауте строка не будет иметь символа новой строки в конце.
+     *
+     * @param timeout таймаут чтения в миллисекундах
+     * @param max_len максимальная длина принимаемой строки
+     * @return принятая строка
+     */
+    native String readString(int timeout, int max_len);
+    
+    
+    /**
+     * Принять фрейм протокола Modbus-ASCII. В результате получается проверенный фрейм, не содержащий контрольной суммы.
+     *
+     * @param timeout таймаут приема в мс
+     * @return принятый фрейм или null в случае ошибки
+     */
+    native byte[] rxModbusASCII(int timeout);
+    
+    
+    /**
+     * Передать фрейм протокола Modbus-ASCII. Фрейм не должен содержать контрольную сумму.
+     *
+     * @param data фрейм
+     */
+    native void txModbusASCII(byte[] data);
+    
+    
+    /**
+     * Принять фрейм протокола Modbus-RTU. В результате получается проверенный фрейм, не содержащий контрольной суммы.
+     *
+     * @param timeout таймаут приема в мс
+     * @param frame_pause пауза между байтами, которая будет считаться разделителем фреймов
+     * @return принятый фрейм или null в случае ошибки
+     */
+    native byte[] rxModbusRTU(int timeout, int frame_pause);
+    
+    
+    /**
+     * Передать фрейм протокола Modbus-RTU. Фрейм не должен содержать контрольную сумму.
+     *
+     * @param data фрейм
+     */
+    native void txModbusRTU(byte[] data);
+}

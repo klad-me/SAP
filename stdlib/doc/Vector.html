@@ -1,0 +1,546 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса Vector</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>Vector</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Предоставляет возможность создания автоматически расширяемого массива (вектора) объектов.<br/>
+Хранимые элементы приводятся к типу Object.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>()<br/>
+Создает пустой вектор
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#trimToSize"><b>trimToSize</b></a>()<br/>
+Устанавливает размер вектора на количество реально использованных элементов.
+Это позволяет оптимизировать использование памяти.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#setSize"><b>setSize</b></a>(int&nbsp;newSize)<br/>
+Принудительно изменить размер вектора. Если новый размер больше старого, то
+новые элементы заполнятся значением null. Если новый размер меньше старого, то
+отрезанные элементы будут потеряны.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#size"><b>size</b></a>()<br/>
+Возвращает количество элементов в векторе
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#isEmpty"><b>isEmpty</b></a>()<br/>
+Проверить, пуст ли вектор
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">Object</td>
+  <td valign="top"><a href="#elementAt"><b>elementAt</b></a>(int&nbsp;index)<br/>
+Возвращает элемент вектора с номером index
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#setElementAt"><b>setElementAt</b></a>(Object&nbsp;obj, int&nbsp;index)<br/>
+Изменить элемент в позиции index на obj
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#removeElementAt"><b>removeElementAt</b></a>(int&nbsp;index)<br/>
+Удалить элемент, находящийся в указанной позиции. Элементы, находящиеся после него сдвинутся, чтобы не было пропуска.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#insertElementAt"><b>insertElementAt</b></a>(Object&nbsp;obj, int&nbsp;index)<br/>
+Вставить элемент в указанную позицию. Элементы после указанной позиции сдвигаются, чтобы освободить место для нового элемента
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#add"><b>add</b></a>(Object&nbsp;obj)<br/>
+Добавить элемент в конец вектора.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#removeAllElements"><b>removeAllElements</b></a>()<br/>
+Удалить все элементы вектора
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">Object</td>
+  <td valign="top"><a href="#set"><b>set</b></a>(int&nbsp;index, Object&nbsp;element)<br/>
+Установить элемент в указанную позицию и вернуть находящийся там в прошлом элемент
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">Object</td>
+  <td valign="top"><a href="#remove"><b>remove</b></a>(int&nbsp;index)<br/>
+Удалить элемент из указанной позиции и вернуть его
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#removeElement"><b>removeElement</b></a>(Object&nbsp;obj)<br/>
+Удалить первое вхождение указанного элемента в вектор
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#addAll"><b>addAll</b></a>(<a href="Vector.html"><b>Vector</b></a>&nbsp;v)<br/>
+Добавить все элементы вектора <code>v</code> в конец этого вектора
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#contains"><b>contains</b></a>(Object&nbsp;obj)<br/>
+Проверяет, содержит ли вектор элемент <code>obj</code>.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает пустой вектор
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'trimToSize' details -->
+<a name="trimToSize"/>
+<font size="+1"><b>Метод trimToSize</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>trimToSize</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Устанавливает размер вектора на количество реально использованных элементов.
+Это позволяет оптимизировать использование памяти.
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'setSize' details -->
+<a name="setSize"/>
+<font size="+1"><b>Метод setSize</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>setSize</b>(int&nbsp;newSize)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Принудительно изменить размер вектора. Если новый размер больше старого, то
+новые элементы заполнятся значением null. Если новый размер меньше старого, то
+отрезанные элементы будут потеряны.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+newSize&nbsp;-&nbsp;новый размер вектора<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'size' details -->
+<a name="size"/>
+<font size="+1"><b>Метод size</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>size</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает количество элементов в векторе
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество элементов в векторе
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'isEmpty' details -->
+<a name="isEmpty"/>
+<font size="+1"><b>Метод isEmpty</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>isEmpty</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Проверить, пуст ли вектор
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если вектор пуст, или false - если не пуст
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'elementAt' details -->
+<a name="elementAt"/>
+<font size="+1"><b>Метод elementAt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+Object <b>elementAt</b>(int&nbsp;index)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает элемент вектора с номером index
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+index&nbsp;-&nbsp;номер объекта для получения<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+элемент вектора с номером index
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'setElementAt' details -->
+<a name="setElementAt"/>
+<font size="+1"><b>Метод setElementAt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>setElementAt</b>(Object&nbsp;obj, int&nbsp;index)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Изменить элемент в позиции index на obj
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+obj&nbsp;-&nbsp;объект для сохранения<br/>
+index&nbsp;-&nbsp;позиция для сохранения<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'removeElementAt' details -->
+<a name="removeElementAt"/>
+<font size="+1"><b>Метод removeElementAt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>removeElementAt</b>(int&nbsp;index)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Удалить элемент, находящийся в указанной позиции. Элементы, находящиеся после него сдвинутся, чтобы не было пропуска.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+index&nbsp;-&nbsp;номер элемента для удаления<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'insertElementAt' details -->
+<a name="insertElementAt"/>
+<font size="+1"><b>Метод insertElementAt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>insertElementAt</b>(Object&nbsp;obj, int&nbsp;index)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Вставить элемент в указанную позицию. Элементы после указанной позиции сдвигаются, чтобы освободить место для нового элемента
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+obj&nbsp;-&nbsp;объект для вставки<br/>
+index&nbsp;-&nbsp;позиция для вставки<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'add' details -->
+<a name="add"/>
+<font size="+1"><b>Метод add</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>add</b>(Object&nbsp;obj)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Добавить элемент в конец вектора.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+obj&nbsp;-&nbsp;элемент для добавления<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'removeAllElements' details -->
+<a name="removeAllElements"/>
+<font size="+1"><b>Метод removeAllElements</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>removeAllElements</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Удалить все элементы вектора
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'set' details -->
+<a name="set"/>
+<font size="+1"><b>Метод set</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+Object <b>set</b>(int&nbsp;index, Object&nbsp;element)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить элемент в указанную позицию и вернуть находящийся там в прошлом элемент
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+index&nbsp;-&nbsp;позиция элемента<br/>
+element&nbsp;-&nbsp;новое значение для сохранения<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+элемент, ранее содержащийся в указанной позции
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'remove' details -->
+<a name="remove"/>
+<font size="+1"><b>Метод remove</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+Object <b>remove</b>(int&nbsp;index)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Удалить элемент из указанной позиции и вернуть его
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+index&nbsp;-&nbsp;позиция элемента<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+удаленный элемент
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'removeElement' details -->
+<a name="removeElement"/>
+<font size="+1"><b>Метод removeElement</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>removeElement</b>(Object&nbsp;obj)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Удалить первое вхождение указанного элемента в вектор
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+obj&nbsp;-&nbsp;элемент для удаления<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'addAll' details -->
+<a name="addAll"/>
+<font size="+1"><b>Метод addAll</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>addAll</b>(<a href="Vector.html"><b>Vector</b></a>&nbsp;v)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Добавить все элементы вектора <code>v</code> в конец этого вектора
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+v&nbsp;-&nbsp;вектор, из которого будут браться элементы для добавления<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'contains' details -->
+<a name="contains"/>
+<font size="+1"><b>Метод contains</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>contains</b>(Object&nbsp;obj)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Проверяет, содержит ли вектор элемент <code>obj</code>.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если элемент найден, или false - в ином случае
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

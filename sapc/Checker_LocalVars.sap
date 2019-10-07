@@ -1,0 +1,299 @@
+
+// Определить локальные переменные и параметры методов.
+// Учесть видимость переменных.
+// Вместо переменной указать адрес.
+// Разделить переменные на ссылки и на обычные переменные.
+class Checker_LocalVars
+{
+    // Параметры метода
+    static Vector params;	// of I_Var
+    static int params_size;
+    
+    // Локальные переменные
+    static Vector locals;	// of I_Var
+    static int refs_size;
+    static int refs_max_size;
+    static int locals_size;
+    static int locals_max_size;
+    
+    // Шаг проверки
+    static boolean FirstPass;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверим методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (!CheckMethod(m)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static I_Var FindLocal(String name)
+    {
+	// Ищем в параметрах
+	for (int i=0; i<params.size(); i++)
+	{
+	    I_Var v=(I_Var)params.elementAt(i);
+	    
+	    if (v.name.equals(name)) return v;
+	}
+	
+	// Ищем в локальных переменных
+	for (int i=0; i<locals.size(); i++)
+	{
+	    I_Var v=(I_Var)locals.elementAt(i);
+	    
+	    if (v.name.equals(name)) return v;
+	}
+	
+	// Не нашли
+	return null;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	// Инитим таблицы
+	params=new Vector();
+	params_size=0;
+	locals=new Vector();
+	refs_size=0;
+	refs_max_size=0;
+	locals_size=0;
+	locals_max_size=0;
+	
+	// Получим параметры метода
+	for (int i=0; i<m.params.size(); i++)
+	{
+	    I_Var v=(I_Var)m.params.elementAt(i);
+	    
+	    // Проверим переопределение
+	    I_Var v1=FindLocal(v.name);
+	    if (v1!=null)
+	    {
+		Redefined(v, v1);
+		return false;
+	    }
+	    
+	    params.add(v);
+	    v.addr=params_size+4;
+	    params_size=params_size+v.type.MemoryUsage();
+	}
+	
+	
+	////////////////////////////////////////////////////////////////////////
+	// Первый шаг. Тут определяем кол-во локальных ссылок
+	FirstPass=true;
+	
+	// Проверим вызов супер-метода
+	if (!CheckExprList(m.super_constructor_params)) return false;
+	locals.setSize(0);
+	refs_size=0;
+	locals_size=0;
+	
+	// Проверим код
+	if (!CheckStat(m.code)) return false;
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////
+	// Второй шаг. Тут рассставим адреса на переменные и поправим код
+	FirstPass=false;
+	locals.setSize(0);
+	refs_size=0;
+	locals_size=0;
+	
+	// Проверим вызов супер-метода
+	if (!CheckExprList(m.super_constructor_params)) return false;
+	locals.setSize(0);
+	refs_size=0;
+	locals_size=0;
+	
+	// Проверим код
+	if (!CheckStat(m.code)) return false;
+	
+	
+	// Ставим параметры стека для метода
+	m.params_size=params_size;
+	m.refs_size=refs_max_size;
+	m.locals_size=locals_max_size;
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	// Если это просто выражение - то его обрабатываем без обертки, чтоб определилась локальная переменная
+	if (s.type==I_Stat.EXPR)
+	{
+	    if (!CheckExpr(s.expr)) return false;
+	    return true;
+	}
+	
+	// Запоминаем состояние локальных переменных
+	int last_n_locals=locals.size();
+	int last_locals_size=locals_size;
+	int last_refs_size=refs_size;
+	
+	
+	// Обрабатываем все внутри в хитром порядке
+	if (!CheckExprList(s.exprlist1)) return false;
+	if (!CheckExpr(s.expr)) return false;
+	if (!CheckExprList(s.exprlist2)) return false;
+	
+	if (!CheckStat(s.stat)) return false;
+	if (!CheckStat(s.stat2)) return false;
+	
+	if (s.stats_list!=null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	
+	// Восстанавливаем состояние локальных переменных
+	locals.setSize(last_n_locals);
+	locals_size=last_locals_size;
+	refs_size=last_refs_size;
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	
+	if ( (e.type==I_Expr.VARIABLE) && (!FirstPass) )
+	{
+	    // Нашли обращение к переменной. Проверим ее
+	    I_Var v=FindLocal(e.stringValue);
+	    
+	    if (v!=null)
+	    {
+		// Это локальная переменная или параметр
+		e.type=I_Expr.LOCALVAR;
+		e.intValue=v.addr;
+		e.result_type=v.type;
+	    } else
+	    {
+		// Это или поле или неизвестно что. Оставим как VARIABLE
+	    }
+	    
+	    return true;
+	}
+	
+	if (!CheckVarList(e.varlist)) return false;
+	
+	if (!CheckExpr(e.left)) return false;
+	if (!CheckExpr(e.right)) return false;
+	if (!CheckExpr(e.cond)) return false;
+	
+	// Запоминаем состояние локальных переменных
+	int last_n_locals=locals.size();
+	int last_locals_size=locals_size;
+	int last_refs_size=refs_size;
+	
+	// Проверяем список выражений
+	if (!CheckExprList(e.exprlist)) return false;
+	
+	// Восстанавливаем состояние локальных переменных
+	locals.setSize(last_n_locals);
+	locals_size=last_locals_size;
+	refs_size=last_refs_size;
+	
+	return true;
+    }
+    
+    
+    static boolean CheckVarList(Vector v)
+    {
+	if (v==null) return true;
+	
+	for (int i=0; i<v.size(); i++)
+	{
+	    if (!CheckVar((I_Var)v.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckVar(I_Var v)
+    {
+	// Поищем такое же имя
+	I_Var v1=FindLocal(v.name);
+	if (v1!=null)
+	{
+	    Redefined(v, v1);
+	    return false;
+	}
+	
+	// Надо добавить к локальным переменным
+	if (v.type.isRef())
+	{
+	    // Это ссылка
+	    if (!FirstPass)
+	    {
+		v.addr=4+params_size+refs_size;
+	    }
+	    
+	    refs_size=refs_size+4;
+	    if (refs_size > refs_max_size)
+		refs_max_size=refs_size;
+	} else
+	{
+	    // Это просто переменная
+	    if (!FirstPass)
+	    {
+		v.addr=4+params_size+refs_max_size+locals_size;
+	    }
+	    
+	    locals_size=locals_size+4;
+	    if (locals_size > locals_max_size)
+		locals_max_size=locals_size;
+	}
+	
+	// Добавляем в список
+	locals.add(v);
+	
+	// Проверяем инициализатор
+	if (!CheckExpr(v.init)) return false;
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckExprList(I_ExprList l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    if (!CheckExpr((I_Expr)l.list.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    
+    static void Redefined(I_Var v1, I_Var v2)
+    {
+	sapc.error(v1.fname+":"+v1.line+":  Variable '"+v1.name+"' redefined (also found at "+v2.fname+":"+v2.line+") !\n");
+    }
+}

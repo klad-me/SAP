@@ -1,0 +1,308 @@
+
+// Загрузчик классов
+class ClassLoader
+{
+    static byte[] data;
+    static int pos;
+    
+    
+    static Class LoadClass(String name, Vector inc_dirs)
+    {
+	// Читаем файл в память (ищем по всем каталогам)
+	String fname=name+".sapclass";
+	boolean ok=false;
+	
+	for (int i=0; i<inc_dirs.size(); i++)
+	{
+	    String dir=(String)inc_dirs.elementAt(i);
+	    
+	    File F=new File(dir+fname, File.READ);
+	    if (F.ok())
+	    {
+		data=new byte[F.available()];
+		pos=0;
+		F.readBytes(data, 0, data.length);
+		F.close();
+		
+		// Все нормально
+		ok=true;
+		break;
+	    }
+	}
+	
+	if (!ok) return null;	// ошибка загрузки класса
+	
+	
+	System.print("Loading class '"+name+"'\n");
+	
+	// Проверяем сигнатуру и версию
+	int signature=readInt();
+	if (signature != 0x01504153)
+	{
+	    System.print(fname+": Incorrect signature: "+signature+" !\n");
+	    return null;
+	}
+	
+	// Читаем имя класса
+	if (!name.equals(readString()))
+	{
+	    System.print(fname+": Incorrect class name !\n");
+	    return null;
+	}
+	
+	// Читаем флаги
+	boolean is_interface=false;
+	if ( (readByte() & 0x01) != 0 ) is_interface=true;
+	
+	// Читаем зависимости (они не нужны)
+	int n_deps=readByte();
+	for (int i=0; i<n_deps; i++)
+	    readString();
+	
+	// Читаем имя суперкласса
+	String superclass_name=readString();
+	if (superclass_name.equals("")) superclass_name=null;
+	
+	// Читаем определяемые интерфейсы
+	int if_list_size=readByte();
+	Vector if_list=new Vector();
+	for (int i=0; i<if_list_size; i++)
+	{
+	    if_list.add(readString());
+	}
+	
+	// Читаем документацию на класс
+	String cls_doc=readString();
+	
+	// Читаем таблицу строк
+	short n_StringPool=readShort();
+	Vector StringPool=new Vector();
+	for (int i=0; i<n_StringPool; i++)
+	{
+	    StringPool.add(readString());
+	}
+	
+	// Создаем класс
+	Class cls=new Class();
+	cls.name=name;
+	cls.superclass=superclass_name;
+	cls.if_list=if_list;
+	cls.is_interface=is_interface;
+	cls.doc=cls_doc;
+	
+	// Читаем статические поля
+	int n_static_fields=readShort();
+	for (int i=0; i<n_static_fields; i++)
+	{
+	    Var v=new Var();
+	    v.is_static=true;
+	    
+	    // Читаем флаги
+	    if ( (readByte() & 0x02) != 0) v.is_final=true;
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Получаем имя поля и тип
+	    v.name=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+	    v.type=parseType(spec.substring(spec.indexOf(':')+1, spec.length()));
+	    
+	    // Читаем документацию
+	    v.doc=readString();
+	    if (v.doc.length()==0) v.doc=null;
+	    
+	    cls.fields.add(v);
+	}
+	
+	// Читаем поля
+	int n_fields=readShort();
+	for (int i=0; i<n_fields; i++)
+	{
+	    Var v=new Var();
+	    
+	    // Читаем флаги
+	    if ( (readByte() & 0x02) != 0) v.is_final=true;
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Получаем имя поля и тип
+	    v.name=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+	    v.type=parseType(spec.substring(spec.indexOf(':')+1, spec.length()));
+	    
+	    // Читаем документацию
+	    v.doc=readString();
+	    if (v.doc.length()==0) v.doc=null;
+	    
+	    cls.fields.add(v);
+	}
+	
+	// Читаем зависимости <staticinit>
+	int n_staticinit_deps=readByte();
+	for (int i=0; i<n_staticinit_deps; i++)
+	    readString();
+	
+	// Читаем имя исходника
+	readString();
+	
+	// Читаем методы
+	int n_methods=readByte();
+	for (int i=0; i<n_methods; i++)
+	{
+	    Method m=new Method();
+	    
+	    // Читаем флаги
+	    byte flags=readByte();
+	    if (flags & 0x01) m.is_static=true;
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Разбираем спецификатор
+	    m.name=spec.substring(spec.indexOf('.')+1, spec.indexOf('('));
+	    int pos=spec.indexOf('(')+1;
+	    while (spec.charAt(pos)!=')')
+	    {
+		Var v=new Var();
+		
+		// Получаем имя параметра
+		StringBuffer param_name=new StringBuffer();
+		while (spec.charAt(pos)!=':')
+		    param_name.appendChar(spec.charAt(pos++));
+		pos++;
+		v.name=param_name.toString();
+		
+		// Получаем тип
+		v.type=parseType(spec.substring(pos, spec.length()));
+		
+		// Готов
+		m.params.add(v);
+		
+		// Пропускаем параметр
+		if (spec.charAt(pos)=='L')
+		{
+		    // Надо пропустить имя ссылки
+		    while (spec.charAt(pos)!=';') pos++;
+		}
+		pos++;
+		while (spec.charAt(pos)=='[') pos++;
+	    }
+	    pos++;
+	    m.return_type=parseType(spec.substring(pos, spec.length()));
+	    
+	    // Размер фрейма
+	    readShort();
+	    
+	    // Начальный SP
+	    readShort();
+	    
+	    // Размер кода и сам код
+	    int code_size=readShort();
+	    this.pos+=code_size;
+	    
+	    // Размер таблицы строк и сама таблица строк
+	    int line_numbers_size=readShort();
+	    this.pos+=line_numbers_size;
+	    
+	    // Читаем документацию
+	    m.doc=readString();
+	    if (m.doc.length()==0) m.doc=null;
+	    
+	    // Добавляем метод к классу
+	    cls.methods.add(m);
+	}
+	
+	// Все нормально
+	return cls;
+    }
+    
+    
+    
+    static byte readByte()
+    {
+	return data[pos++];
+    }
+    
+    
+    static int readInt()
+    {
+	int value=Pack.r_int(data, pos);
+	pos=pos+4;
+	return value;
+    }
+    
+    
+    static short readShort()
+    {
+	short value=Pack.r_short(data, pos);
+	pos=pos+2;
+	return value;
+    }
+    
+    
+    static String readString()
+    {
+        int l=((int)data[pos++]) & 0xff;
+
+        if (l==0) return "";
+
+        if (l & 0x80)
+        {
+            // Размер - 2 байта
+            l=(l & 0x7f) << 8;
+            l|=((int)data[pos++]) & 0xff;
+        }
+
+        StringBuffer str=new StringBuffer();
+        for (int i=0; i<l; i++)
+        {
+            str.appendChar((char)data[pos++]);
+        }
+	
+        return str.toString();
+    }
+    
+    
+    static String parseType(String spec)
+    {
+	StringBuffer str=new StringBuffer();
+	int base;
+	String ClassName=null;
+	int pos=0;
+	
+	switch (spec.charAt(0))
+	{
+	    case 'B':
+		str.appendString("byte");
+		break;
+	    
+	    case 'S':
+		str.appendString("short");
+		break;
+	    
+	    case 'I':
+		str.appendString("int");
+		break;
+	    
+	    case 'F':
+		str.appendString("float");
+		break;
+	    
+	    case 'L':
+		str.appendString(spec.substring(1, spec.indexOf(';')));
+		pos=spec.indexOf(';');
+		break;
+	    
+	    case 'V':
+	    default:
+		str.appendString("void");
+		break;
+	}
+	
+	pos++;
+	while ( (pos<spec.length()) && (spec.charAt(pos++)=='[') )
+	    str.appendString("[]");
+	
+	return str.toString();
+    }
+}

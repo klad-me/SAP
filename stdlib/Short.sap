@@ -1,0 +1,78 @@
+/**
+ * Позволяет хранить число типа Short
+ */
+class Short implements Number, Compareable
+{
+    /**
+     * Минимально допустимое число для типа short
+     */
+    static final short MIN_VALUE = -32768;
+    
+    /**
+     * Максимально допустимое число для типа short
+     */
+    static final short MAX_VALUE = 32767;
+    
+    
+    /**private**/
+    short value;
+    
+    
+    /**
+     * Создает объект Short с начальным хранимым значением
+     *
+     * @param value хранимое значение
+     */
+    constructor(short value)
+    {
+	this.value=value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение
+     *
+     * @return хранимое значение
+     */
+    short shortValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение, приведенное к типу int
+     *
+     * @return хранимое значение, приведенное к типу int
+     */
+    int intValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение, приведенное к типу float
+     *
+     * @return хранимое значение, приведенное к типу float
+     */
+    float floatValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Сравнивает хранимое значение с указанным объектом используя метод Compareable.equals
+     *
+     * @param o объект, с которым будет произведено сравнение
+     * @return true, если значение объекта равно хранимому значению; false - в остальных случаях
+     */
+    boolean equals(Object o)
+    {
+	if (o==this) return true;
+	if (o instanceof Number)
+	    return value==((Number)o).intValue(); else
+	    return false;
+    }
+}

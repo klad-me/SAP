@@ -1,0 +1,303 @@
+
+// Оптимизатор математических выражений
+class Opt_Math
+{
+    static void CheckClass(I_Class cls)
+    {
+	// Проверим все поля
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var v=(I_Var)cls.fields.elementAt(i);
+	    
+	    CheckExpr(v.init);
+	}
+	
+	// Проверим все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    CheckStat( ((I_Method)cls.methods.elementAt(i)).code );
+	}
+    }
+    
+    
+    static void CheckStat(I_Stat s)
+    {
+	if (s==null) return;
+	
+	CheckExpr(s.expr);
+	CheckExprList(s.exprlist1);
+	CheckExprList(s.exprlist2);
+	
+	CheckStat(s.stat);
+	CheckStat(s.stat2);
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		CheckStat((I_Stat)s.stats_list.elementAt(i));
+	    }
+	}
+    }
+    
+    
+    static void CheckExprList(I_ExprList l)
+    {
+	if (l==null) return;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    CheckExpr((I_Expr)l.list.elementAt(i));
+	}
+    }
+    
+    
+    static void CheckExpr(I_Expr e)
+    {
+	if (e==null) return;
+	
+	// Проверим все внутри
+	CheckExpr(e.left);
+	CheckExpr(e.right);
+	CheckExpr(e.cond);
+	CheckExprList(e.exprlist);
+	CheckVarList(e.varlist);
+	
+	
+	// Проверим выражение
+	switch (e.type)
+	{
+	    case I_Expr.BIT_OR:
+	    case I_Expr.BIT_XOR:
+	    case I_Expr.BIT_AND:
+	    case I_Expr.SHIFT_LEFT:
+	    case I_Expr.SHIFT_RIGHT:
+	    case I_Expr.SHIFT_RIGHT_U:
+		// Битовая математика (только целые числа)
+		if ( (e.left.type==I_Expr.INT_NUMBER) &&
+		     (e.right.type==I_Expr.INT_NUMBER) )
+		{
+		    int left=e.left.intValue, right=e.right.intValue;
+		    int value=0;
+		    
+		    switch (e.type)
+		    {
+			case I_Expr.BIT_OR:
+			    value=left | right;
+			    break;
+			
+			case I_Expr.BIT_XOR:
+			    value=left ^ right;
+			    break;
+			
+			case I_Expr.BIT_AND:
+			    value=left & right;
+			    break;
+			
+			case I_Expr.SHIFT_LEFT:
+			    value=left << right;
+			    break;
+			
+			case I_Expr.SHIFT_RIGHT:
+			    value=left >> right;
+			    break;
+			
+			case I_Expr.SHIFT_RIGHT_U:
+			    value=left >>> right;
+			    break;
+		    }
+		    
+		    e.type=I_Expr.INT_NUMBER;
+		    e.intValue=value;
+		    e.left=null;
+		    e.right=null;
+		}
+		break;
+	    
+	    case I_Expr.ADD:
+	    case I_Expr.SUB:
+	    case I_Expr.MUL:
+	    case I_Expr.DIV:
+	    case I_Expr.REM:
+		// Математика
+		if ( ( (e.left.type==I_Expr.INT_NUMBER) ||
+		       (e.left.type==I_Expr.FLOAT_NUMBER) ) &&
+		     ( (e.right.type==I_Expr.INT_NUMBER) ||
+		       (e.right.type==I_Expr.FLOAT_NUMBER) ) )
+		{
+		    if ( (e.left.type==I_Expr.FLOAT_NUMBER) ||
+			 (e.right.type==I_Expr.FLOAT_NUMBER) )
+		    {
+			float left, right;
+			float value=0;
+			
+			if (e.left.type==I_Expr.FLOAT_NUMBER)
+			    left=e.left.floatValue; else
+			    left=e.left.intValue;
+			
+			if (e.right.type==I_Expr.FLOAT_NUMBER)
+			    right=e.right.floatValue; else
+			    right=e.right.intValue;
+			
+			switch (e.type)
+			{
+			    case I_Expr.ADD:
+				value=left + right;
+				break;
+			    
+			    case I_Expr.SUB:
+				value=left - right;
+				break;
+			    
+			    case I_Expr.MUL:
+				value=left * right;
+				break;
+			    
+			    case I_Expr.DIV:
+				value=left / right;
+				break;
+			    
+			    case I_Expr.REM:
+				value=left % right;
+				break;
+			}
+			
+			e.type=I_Expr.FLOAT_NUMBER;
+			e.floatValue=value;
+			e.left=null;
+			e.right=null;
+		    } else
+		    {
+			int left=e.left.intValue, right=e.right.intValue;
+			int value=0;
+			
+			switch (e.type)
+			{
+			    case I_Expr.ADD:
+				value=left + right;
+				break;
+			    
+			    case I_Expr.SUB:
+				value=left - right;
+				break;
+			    
+			    case I_Expr.MUL:
+				value=left * right;
+				break;
+			    
+			    case I_Expr.DIV:
+				value=left / right;
+				break;
+			    
+			    case I_Expr.REM:
+				value=left % right;
+				break;
+			}
+			
+			e.type=I_Expr.INT_NUMBER;
+			e.intValue=value;
+			e.left=null;
+			e.right=null;
+		    }
+		}
+		break;
+	    
+	    case I_Expr.U_MINUS:
+	    case I_Expr.BIT_NOT:
+		// Унарная операция
+		if (e.left.type==I_Expr.INT_NUMBER)
+		{
+		    // Целое
+		    switch (e.type)
+		    {
+			case I_Expr.U_MINUS:
+			    e.intValue=-e.left.intValue;
+			    break;
+			
+			case I_Expr.BIT_NOT:
+			    e.intValue=~e.left.intValue;
+			    break;
+		    }
+		    e.type=I_Expr.INT_NUMBER;
+		    e.left=null;
+		} else
+		if (e.left.type==I_Expr.FLOAT_NUMBER)
+		{
+		    // Вещественное
+		    if (e.type==I_Expr.U_MINUS)
+		    {
+			e.floatValue=-e.left.floatValue;
+			e.type=I_Expr.FLOAT_NUMBER;
+			e.left=null;
+		    }
+		}
+		break;
+	    
+	    case I_Expr.CAST:
+		// Приведение типа
+		if ( (e.left.type==I_Expr.INT_NUMBER) &&
+		     (e.result_type.isNumeric()) )
+		{
+		    e.type=I_Expr.INT_NUMBER;
+		    switch (e.result_type.type)
+		    {
+			case I_Type.BYTE:
+			    e.intValue=(byte)e.left.intValue;
+			    break;
+			
+			case I_Type.SHORT:
+			    e.intValue=(short)e.left.intValue;
+			    break;
+			
+			case I_Type.INT:
+			    e.intValue=(int)e.left.intValue;
+			    break;
+			
+			case I_Type.FLOAT:
+			    e.type=I_Expr.FLOAT_NUMBER;
+			    e.floatValue=(float)e.left.intValue;
+			    break;
+		    }
+		    e.left=null;
+		} else
+		if (e.left.type==I_Expr.FLOAT_NUMBER)
+		{
+		    e.type=I_Expr.INT_NUMBER;
+		    switch (e.result_type.type)
+		    {
+			case I_Type.BYTE:
+			    e.intValue=(byte)e.left.floatValue;
+			    break;
+			
+			case I_Type.SHORT:
+			    e.intValue=(short)e.left.floatValue;
+			    break;
+			
+			case I_Type.INT:
+			    e.intValue=(int)e.left.floatValue;
+			    break;
+			
+			case I_Type.FLOAT:
+			    e.type=I_Expr.FLOAT_NUMBER;
+			    e.floatValue=(float)e.left.floatValue;
+			    break;
+		    }
+		    e.left=null;
+		}
+		break;
+	}
+    }
+    
+    
+    static void CheckVarList(Vector l)
+    {
+	if (l==null) return;
+	
+	for (int i=0; i<l.size(); i++)
+	{
+	    I_Var v=(I_Var)l.elementAt(i);
+	    
+	    CheckExpr(v.init);
+	}
+    }
+}

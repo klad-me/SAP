@@ -1,0 +1,293 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса PLC</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>PLC</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Функции общие для всех PLC
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#ledOn"><b>ledOn</b></a>(int&nbsp;n)<br/>
+Включить лампочку
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#ledOff"><b>ledOff</b></a>(int&nbsp;n)<br/>
+Выключить лампочку
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#ledToggle"><b>ledToggle</b></a>(int&nbsp;n)<br/>
+Изменить состояние лампочки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static byte</td>
+  <td valign="top"><a href="#DI"><b>DI</b></a>(int&nbsp;n)<br/>
+Получить состояние дискретного входа
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#DO"><b>DO</b></a>(int&nbsp;n, byte&nbsp;state)<br/>
+Установить состояние дискретного выхода
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static float</td>
+  <td valign="top"><a href="#AI"><b>AI</b></a>(int&nbsp;n)<br/>
+Получить показание аналогового входа
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#AO"><b>AO</b></a>(int&nbsp;n, float&nbsp;value)<br/>
+Установить значение аналогового выхода
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'ledOn' details -->
+<a name="ledOn"/>
+<font size="+1"><b>Метод ledOn</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>ledOn</b>(int&nbsp;n)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Включить лампочку
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер лампочки (зависит от платформы)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'ledOff' details -->
+<a name="ledOff"/>
+<font size="+1"><b>Метод ledOff</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>ledOff</b>(int&nbsp;n)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Выключить лампочку
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер лампочки (зависит от платформы)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'ledToggle' details -->
+<a name="ledToggle"/>
+<font size="+1"><b>Метод ledToggle</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>ledToggle</b>(int&nbsp;n)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Изменить состояние лампочки
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер лампочки (зависит от платформы)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'DI' details -->
+<a name="DI"/>
+<font size="+1"><b>Метод DI</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static byte <b>DI</b>(int&nbsp;n)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить состояние дискретного входа
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер входа<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+состояние входа
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'DO' details -->
+<a name="DO"/>
+<font size="+1"><b>Метод DO</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>DO</b>(int&nbsp;n, byte&nbsp;state)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить состояние дискретного выхода
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер выхода<br/>
+state&nbsp;-&nbsp;состояние выхода<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'AI' details -->
+<a name="AI"/>
+<font size="+1"><b>Метод AI</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static float <b>AI</b>(int&nbsp;n)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить показание аналогового входа
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер входа<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+показание входа
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'AO' details -->
+<a name="AO"/>
+<font size="+1"><b>Метод AO</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>AO</b>(int&nbsp;n, float&nbsp;value)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить значение аналогового выхода
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+n&nbsp;-&nbsp;номер выхода<br/>
+value&nbsp;-&nbsp;значение выхода<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

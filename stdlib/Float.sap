@@ -1,0 +1,152 @@
+/**
+ * Позволяет хранить число типа float
+ */
+class Float implements Number, Compareable
+{
+    /**
+     * Максимально допустимое число для типа float
+     */
+    static final float MAX_VALUE = 3.4028235e+38;
+    
+    /**
+     * Минимально допустимое число для типа float
+     */
+    static final float MIN_VALUE = -1.4e-45;
+    
+    /**
+     * Значение "+бесконечность"
+     */
+    static final float NEGATIVE_INFINITY = -(1.0 / 0.0);
+    
+    /**
+     * Значение "-бесконечность"
+     */
+    static final float POSITIVE_INFINITY = 1.0 / 0.0;
+    
+    /**
+     * Значение "не число"
+     */
+    static final float NaN = 0.0 / 0.0;
+    
+    
+    /**private**/
+    float value;
+    
+    
+    /**
+     * Создает объект Float с начальным хранимым значением
+     *
+     * @param value хранимое значение
+     */
+    constructor(float value)
+    {
+	this.value=value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение, приведенное к типу int
+     *
+     * @return хранимое значение, приведенное к типу int
+     */
+    int intValue()
+    {
+	return (int)value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение
+     *
+     * @return хранимое значение
+     */
+    float floatValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Сравнивает хранимое значение с указанным объектом используя метод Compareable.equals
+     *
+     * @param o объект, с которым будет произведено сравнение
+     * @return true, если значение объекта равно хранимому значению; false - в остальных случаях
+     */
+    boolean equals(Object o)
+    {
+	if (o==this) return true;
+	if (o instanceof Number)
+	    return value==((Number)o).floatValue(); else
+	    return false;
+    }
+    
+    
+    /**
+     * Разбирает строку, содержащую вещественное число в число с типом float
+     *
+     * @param str входная строка
+     * @return полученное значение вещественного числа, или 0 в случае ошибки
+     */
+    static float parseFloat(String str)
+    {
+	return __parseFloat(str.getBytes());
+    }
+    
+    
+    /**
+     * Преобразует вещественное значение в строку.
+     *
+     * Преобразует вещественное значение в строку в формате [-]целая_часть.дробная_часть.
+     * Дробная часть преобразуется в 6 цифр.
+     *
+     * @param v входное значение
+     * @return строка, содержащая входное значение в печатном виде
+     */
+    static String toString(float v)
+    {
+	return new String(__toString(v));
+    }
+    
+    
+    /**
+     * Преобразует битовое представление целого числа в вещественное число.
+     *
+     * Преобразует битовое представление целого числа в вещественное число.<br/>
+     * Эта функция является обратной функции Float.floatToIntBits()<br/>
+     * На языке "Си" данная операция выглядела бы следующим образом:<br/>
+     * float intBitsToFloat(int value)<br/>
+     * {<br/>
+     * &nbsp;&nbsp;float *v=(float*)&value;<br/>
+     * &nbsp;&nbsp;return (*v);<br/>
+     * }
+     *
+     * @param value значение для преобразования
+     * @return преобразованное значение
+     */
+    native static float intBitsToFloat(int value);
+    
+    
+    /**
+     * Преобразует битовое представление вещественного числа в целое число.
+     *
+     * Преобразует битовое представление вещественного числа в целое число.<br/>
+     * Эта функция является обратной функции Float.intBitsToFloat()<br/>
+     * На языке "Си" данная операция выглядела бы следующим образом:<br/>
+     * int floatToIntBits(float value)<br/>
+     * {<br/>
+     * &nbsp;&nbsp;int *v=(int*)&value;<br/>
+     * &nbsp;&nbsp;return (*v);<br/>
+     * }
+     *
+     * @param value значение для преобразования
+     * @return преобразованное значение
+     */
+    native static int floatToIntBits(float f);
+    
+    
+    /**private**/
+    native static float __parseFloat(byte[] str);
+    
+    /**private**/
+    native static byte[] __toString(float v);
+}

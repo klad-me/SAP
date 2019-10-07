@@ -1,0 +1,434 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса DataStream</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>DataStream</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс DataStream представляет из себя оболочку над интерфейсом Stream.
+Данный класс позволяем использовать данные с приведением к конкретному типу
+(в отличии от интерфейса Stream, который оперирует лишь потоками байт).
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>(<a href="Stream.html"><b>Stream</b></a>&nbsp;s)<br/>
+Создает объект DataStream из указанного потока.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#readByte"><b>readByte</b></a>()<br/>
+Прочитать байт из потока
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">short</td>
+  <td valign="top"><a href="#readShort"><b>readShort</b></a>()<br/>
+Прочитать short (2 байта) из потока
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#readInt"><b>readInt</b></a>()<br/>
+Прочитать int (4 байта) из потока
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">float</td>
+  <td valign="top"><a href="#readFloat"><b>readFloat</b></a>()<br/>
+Прочитать float (4 байта) из потока
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#readString"><b>readString</b></a>()<br/>
+Прочитать строку из потока. Сначала читается длина (2 байта), потом 8-битные символы
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#writeByte"><b>writeByte</b></a>(byte&nbsp;v)<br/>
+Записать байт в поток
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#writeShort"><b>writeShort</b></a>(short&nbsp;v)<br/>
+Записать short (2 байта) в поток
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#writeInt"><b>writeInt</b></a>(int&nbsp;v)<br/>
+Записать int (4 байта) в поток
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#writeFloat"><b>writeFloat</b></a>(float&nbsp;v)<br/>
+Записать float (4 байта) в поток
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#writeString"><b>writeString</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Записать строку в поток. Сначала записывается длина (2 байта), после 8-битные символы
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#print"><b>print</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Записать строку в поток.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(<a href="Stream.html"><b>Stream</b></a>&nbsp;s)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает объект DataStream из указанного потока.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+s&nbsp;-&nbsp;поток для входных/выходных данных<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readByte' details -->
+<a name="readByte"/>
+<font size="+1"><b>Метод readByte</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>readByte</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать байт из потока
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное значение, или 0 в случае неудачи
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readShort' details -->
+<a name="readShort"/>
+<font size="+1"><b>Метод readShort</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+short <b>readShort</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать short (2 байта) из потока
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное значение, или 0 в случае неудачи
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readInt' details -->
+<a name="readInt"/>
+<font size="+1"><b>Метод readInt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>readInt</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать int (4 байта) из потока
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное значение, или 0 в случае неудачи
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readFloat' details -->
+<a name="readFloat"/>
+<font size="+1"><b>Метод readFloat</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+float <b>readFloat</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать float (4 байта) из потока
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное значение, или 0.0 в случае неудачи
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readString' details -->
+<a name="readString"/>
+<font size="+1"><b>Метод readString</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>readString</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать строку из потока. Сначала читается длина (2 байта), потом 8-битные символы
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанная строка или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeByte' details -->
+<a name="writeByte"/>
+<font size="+1"><b>Метод writeByte</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>writeByte</b>(byte&nbsp;v)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записать байт в поток
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+v&nbsp;-&nbsp;значение для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeShort' details -->
+<a name="writeShort"/>
+<font size="+1"><b>Метод writeShort</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>writeShort</b>(short&nbsp;v)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записать short (2 байта) в поток
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+v&nbsp;-&nbsp;значение для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeInt' details -->
+<a name="writeInt"/>
+<font size="+1"><b>Метод writeInt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>writeInt</b>(int&nbsp;v)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записать int (4 байта) в поток
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+v&nbsp;-&nbsp;значение для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeFloat' details -->
+<a name="writeFloat"/>
+<font size="+1"><b>Метод writeFloat</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>writeFloat</b>(float&nbsp;v)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записать float (4 байта) в поток
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+v&nbsp;-&nbsp;значение для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeString' details -->
+<a name="writeString"/>
+<font size="+1"><b>Метод writeString</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>writeString</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записать строку в поток. Сначала записывается длина (2 байта), после 8-битные символы
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'print' details -->
+<a name="print"/>
+<font size="+1"><b>Метод print</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>print</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записывает строку в поток.
+Запись производится в 8-битном формате в кодировке, используемой в языке. Обычно это cp1251.
+Никакие данные о размере или завершающий символ не записываются.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для записи<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

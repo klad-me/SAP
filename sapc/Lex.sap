@@ -1,0 +1,836 @@
+
+class Lex
+{
+    final static int T_VARIABLE		= 256;
+    final static int T_INT_NUMBER	= 257;
+    final static int T_FLOAT_NUMBER	= 258;
+    final static int T_STRING		= 259;
+    
+    
+    final static int T_LOGIC_AND	= 260;
+    final static int T_LOGIC_OR		= 261;
+    final static int T_IS_EQ		= 262;
+    final static int T_IS_NOT_EQ	= 263;
+    final static int T_IS_GE		= 264;
+    final static int T_IS_LE		= 265;
+    final static int T_SHIFT_RIGHT	= 266;
+    final static int T_SHIFT_RIGHT_U	= 267;
+    final static int T_SHIFT_LEFT	= 268;
+    final static int T_INC		= 269;
+    final static int T_DEC		= 270;
+    
+    final static int T_MUL_ASSIGN	= 271;
+    final static int T_DIV_ASSIGN	= 272;
+    final static int T_REM_ASSIGN	= 273;
+    final static int T_ADD_ASSIGN	= 274;
+    final static int T_SUB_ASSIGN	= 275;
+    final static int T_AND_ASSIGN	= 276;
+    final static int T_OR_ASSIGN	= 277;
+    final static int T_XOR_ASSIGN	= 278;
+    final static int T_SHL_ASSIGN	= 279;
+    final static int T_SHR_ASSIGN	= 280;
+    final static int T_SHRU_ASSIGN	= 281;
+    
+    
+    final static int T_CLASS		= 1001;
+    final static int T_INTERFACE	= 1002;
+    final static int T_EXTENDS		= 1003;
+    final static int T_IMPLEMENTS	= 1004;
+    
+    final static int T_STATIC		= 1005;
+    final static int T_FINAL		= 1006;
+    final static int T_NATIVE		= 1007;
+    
+    final static int T_CONSTRUCTOR	= 1008;
+    final static int T_VOID		= 1009;
+    final static int T_BYTE		= 1010;
+    final static int T_SHORT		= 1011;
+    final static int T_INT		= 1012;
+    final static int T_FLOAT		= 1013;
+    
+    final static int T_NULL		= 1014;
+    final static int T_THIS		= 1015;
+    final static int T_SUPER		= 1016;
+    
+    final static int T_NEW		= 1017;
+    final static int T_GOTO		= 1018;
+    final static int T_IF		= 1019;
+    final static int T_ELSE		= 1020;
+    final static int T_WHILE		= 1021;
+    final static int T_DO		= 1022;
+    final static int T_FOR		= 1023;
+    final static int T_BREAK		= 1024;
+    final static int T_CONTINUE		= 1025;
+    final static int T_RETURN		= 1026;
+    final static int T_SWITCH		= 1027;
+    final static int T_CASE		= 1028;
+    final static int T_DEFAULT		= 1029;
+    final static int T_INSTANCEOF	= 1030;
+    final static int T_SYNCHRONIZED	= 1031;
+    final static int T_ENUM		= 1032;
+    
+    final static int T_EOF		= 9999;
+    
+    
+    final static String[] tokens = new String
+    {
+	"variable",
+	"number",
+	"float-number",
+	"string",
+	
+	"&&",
+	"||",
+	"==",
+	"!=",
+	">=",
+	"<=",
+	">>",
+	">>>",
+	"<<",
+	"++",
+	"--",
+	
+	"*=",
+	"/=",
+	"%=",
+	"+=",
+	"-=",
+	"&=",
+	"|=",
+	"^=",
+	"<<=",
+	">>=",
+	">>>="
+    };
+    
+    final static String[] keywords = new String
+    {
+	"class",
+	"interface",
+	"extends",
+	"implements",
+	
+	"static",
+	"final",
+	"native",
+	
+	"constructor",
+	"void",
+	"byte",
+	"short",
+	"int",
+	"float",
+	
+	"null",
+	"this",
+	"super",
+	
+	"new",
+	"goto",
+	"if",
+	"else",
+	"while",
+	"do",
+	"for",
+	"break",
+	"continue",
+	"return",
+	"switch",
+	"case",
+	"default",
+	"instanceof",
+	"synchronized",
+	"enum"
+    };
+    
+    
+    
+    DataStream is;
+    char unget_char;
+    Object tok_value;
+    
+    int line_num=1;
+    String file_name=null;
+    
+    
+    int[] tok_hist;
+    Object[] tok_value_hist;
+    int hist_n;
+    
+    String last_doc;
+    
+    int cp;
+    
+    
+    Lex(DataStream is, String is_name, int cp)
+    {
+	this.is=is;
+	this.cp=cp;
+	unget_char=0;
+	tok_value=null;
+	
+	line_num=1;
+	file_name=is_name;
+	
+	hist_n=10;
+	tok_hist=new int[10];
+	tok_value_hist=new Object[10];
+    }
+    
+    
+    String GetTokenAsString()
+    {
+	int t=GetToken();
+	
+	if ( (t>0) && (t<256) )
+	{
+	    String s=new String(new byte{(byte)t});
+	    return "`"+s+"'";
+	} else
+	if ( (t>=256) && (t<256+tokens.length) )
+	{
+	    return "`"+tokens[t-256]+"'";
+	} else
+	if ( (t>=1001) && (t<1001+keywords.length) )
+	{
+	    return "`"+keywords[t-1001]+"'";
+	} else
+	if (t==T_EOF)
+	{
+	    return "`end-of-file'";
+	} else
+	{
+	    return "`unknown-token-"+t+"'";
+	}
+    }
+    
+    
+    int GetToken()
+    {
+	if (hist_n==tok_hist.length)
+	{
+	    // История заполнена - надо ее сдвинуть и положить новый элемент
+	    for (int i=1; i<tok_hist.length; i++)
+	    {
+		tok_hist[i-1]=tok_hist[i];
+		tok_value_hist[i-1]=tok_value_hist[i];
+	    }
+	    
+	    int t=NextToken();
+	    tok_hist[hist_n-1]=t;
+	    tok_value_hist[hist_n-1]=tok_value;
+	    return t;
+	}
+	
+	int t=tok_hist[hist_n];
+	tok_value=tok_value_hist[hist_n];
+	hist_n++;
+	
+	return t;
+    }
+    
+    
+    void UngetToken()
+    {
+	hist_n--;
+    }
+    
+    
+    String prepare_doc_string(String str)
+    {
+	// Удаляем пробелы вначале и в конце
+	str=str.trim();
+	
+	// Удаляем звездочки вначале, если они есть
+	int i=0;
+	for ( ; (i<str.length()) && (str.charAt(i)=='*'); i++);
+	str=str.substring(i, str.length());
+	
+	// Еще раз удаляем пробелы (может быть они были после звездочек
+	str=str.trim();
+	
+	return str;
+    }
+    
+    
+    int NextToken()
+    {
+	while (true)
+	{
+	    char c=getc();
+	    
+	    if (c==0) return T_EOF;
+	    
+	    if (c=='/')
+	    {
+		// Возможно начало комментария
+		char c1=getc();
+		if (c1=='/')
+		{
+		    // Начало комментария до конца строки
+		    while (true)
+		    {
+			c1=getc();
+			if (c1=='\n') break;
+		    }
+		} else
+		if (c1=='*')
+		{
+		    // Начало комментария до закрывающего блока
+		    
+		    // Проверим - может это документирование
+		    c=getc();
+		    if (c=='*')
+		    {
+			// Это документирование
+			StringBuffer doc=new StringBuffer();
+			Vector list=new Vector();
+			
+			// Читаем документацию
+			while (true)
+			{
+			    c=getc();
+			    if (c=='*')
+			    {
+				c1=getc();
+				if (c1=='/') break;	// конец
+				ungetc(c1);
+				doc.appendChar(c);
+			    } else
+			    if (c=='\r')
+			    {
+				// Пропускаем
+			    } else
+			    if (c=='\n')
+			    {
+				// Конец строки
+				list.add(prepare_doc_string(doc.toString()));
+				doc=new StringBuffer();
+			    } else
+			    {
+				// Это просто символ строки
+				doc.appendChar(c);
+			    }
+			}
+			
+			// Проверим буфер на последнюю строку
+			if (doc.length() > 0)
+			    list.add(prepare_doc_string(doc.toString()));
+			
+			// Удаляем пустые строки вначале
+			while ( (list.size() > 0) &&
+				( ((String)list.elementAt(0)).length() == 0 ) )
+			    list.remove(0);
+			
+			// Удаляем пустые строки в конце
+			while ( (list.size() > 0) &&
+				( ((String)list.elementAt(list.size()-1)).length() == 0 ) )
+			    list.remove(list.size()-1);
+			
+			// Создаем строку
+			if (list.size()>0)
+			{
+			    last_doc=(String)list.elementAt(0);
+			    for (int i=1; i<list.size(); i++)
+				last_doc+="\n"+(String)list.elementAt(i);
+			} else
+			{
+			    last_doc="";
+			}
+		    } else
+		    {
+			// Это просто комментарий
+			while (true)
+			{
+			    c=getc();
+			    
+			    if (c=='*')
+			    {
+				c1=getc();
+				if (c1=='/') break;
+				ungetc(c1);
+			    }
+			}
+		    }
+		} else
+		if (c1=='=')
+		{
+		    return T_DIV_ASSIGN;
+		} else
+		{
+		    // Это был просто слэш
+		    ungetc(c1);
+		    return '/';
+		}
+	    } else
+	    if (c=='&')
+	    {
+		char c1=getc();
+		
+		if (c1=='&') return T_LOGIC_AND; else
+		if (c1=='=') return T_AND_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='|')
+	    {
+		char c1=getc();
+		
+		if (c1=='|') return T_LOGIC_OR; else
+		if (c1=='=') return T_OR_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='^')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_XOR_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='=')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_IS_EQ;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='!')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_IS_NOT_EQ;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='>')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_IS_GE; else
+		if (c1=='>')
+		{
+		    c1=getc();
+		    if (c1=='>')
+		    {
+			c1=getc();
+			if (c1=='=') return T_SHRU_ASSIGN;
+			ungetc(c1);
+			return T_SHIFT_RIGHT_U;
+		    } else
+		    if (c1=='=') return T_SHR_ASSIGN; else
+		    {
+			ungetc(c1);
+			return T_SHIFT_RIGHT;
+		    }
+		}
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='<')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_IS_LE; else
+		if (c1=='<')
+		{
+		    c1=getc();
+		    if (c1=='=') return T_SHL_ASSIGN; else
+		    ungetc(c1);
+		    return T_SHIFT_LEFT;
+		}
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='+')
+	    {
+		char c1=getc();
+		
+		if (c1=='+') return T_INC; else
+		if (c1=='=') return T_ADD_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='-')
+	    {
+		char c1=getc();
+		
+		if (c1=='-') return T_DEC; else
+		if (c1=='=') return T_SUB_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='*')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_MUL_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='/')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_DIV_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if (c=='%')
+	    {
+		char c1=getc();
+		
+		if (c1=='=') return T_REM_ASSIGN;
+		ungetc(c1);
+		
+		return c;
+	    } else
+	    if ( (c=='_') || ( (c>='A') && (c<='Z') ) || ( (c>='a') && (c<='z') ) )
+	    {
+		// Начало идентификатора или ключевого слова
+		StringBuffer str=new StringBuffer();
+		
+		str.appendChar(c);
+		while (true)
+		{
+		    c=getc();
+		    
+		    if ( (c=='_') || ( (c>='A') && (c<='Z') ) || ( (c>='a') && (c<='z') ) || ( (c>='0') && (c<='9') ) )
+		    {
+			str.appendChar(c);
+		    } else
+		    {
+			ungetc(c);
+			break;
+		    }
+		}
+		
+		String ident=str.toString();
+		tok_value=(Object)ident;
+		
+		// Ищем среди ключевых слов
+		for (int i=0; i<keywords.length; i++)
+		{
+		    if (ident.equals(keywords[i])) return T_CLASS+i;
+		}
+		
+		// Ищем среди замен ключевых слов
+		if (ident.equals("boolean")) return T_BYTE; else	// boolean==byte
+		if (ident.equals("char")) return T_BYTE; else	// char==byte
+		if (ident.equals("false"))
+		{
+		    tok_value=new Integer(0);
+		    return T_INT_NUMBER;
+		} else
+		if (ident.equals("true"))
+		{
+		    tok_value=new Integer(1);
+		    return T_INT_NUMBER;
+		} else
+		
+		    return T_VARIABLE;
+	    } else
+	    if ( (c>='0') && (c<='9') )
+	    {
+		// Это число. Проверим систему счисления
+		if (c=='0')
+		{
+		    char c1=getc();
+		    
+		    if (c1=='x')
+		    {
+			// 16-ричная
+			int value=0;
+			
+	    	        while ( ( (c>='0') && (c<='9') ) ||
+				( (c>='a') && (c<='f') ) ||
+				( (c>='A') && (c<='F') ) )
+			{
+			    value=value*16;
+			    if ( (c>='a') && (c<='f') )
+				value=value+c-'a'+10; else
+			    if ( (c>='A') && (c<='F') )
+				value=value+c-'A'+10; else
+				value=value+c-'0';
+			    
+			    c=getc();
+			}
+			ungetc(c);
+			
+			tok_value=new Integer(value);
+			return T_INT_NUMBER;
+		    } else
+		    if (c1=='b')
+		    {
+			// 2-ичная
+			int value=0;
+			
+	    	        while ( (c=='0') && (c=='1') )
+			{
+			    value=value*2;
+			    value=value+c-'0';
+			    
+			    c=getc();
+			}
+			ungetc(c);
+			
+			tok_value=new Integer(value);
+			return T_INT_NUMBER;
+		    } else
+		    if ( (c1>='0') && (c1<='7') )
+		    {
+			// 8-ричная
+			int value=0;
+			
+	    	        while ( (c>='0') && (c<='7') )
+			{
+			    value=value*8;
+			    value=value+c-'0';
+			    
+			    c=getc();
+			}
+			ungetc(c);
+			
+			tok_value=new Integer(value);
+			return T_INT_NUMBER;
+		    } else
+		    {
+			// Просто число 0
+			ungetc(c1);
+		    }
+		}
+		
+		{
+		    // 10-ричная (может быть и вещественным)
+		    StringBuffer str=new StringBuffer();
+		    boolean is_float=false;
+		    
+		    while ( (c>='0') && (c<='9') )
+		    {
+			str.appendChar(c);
+			c=getc();
+		    }
+		    
+		    // Смотрим - есть ли дробная часть
+		    if (c=='.')
+		    {
+			// Есть дробная часть
+			str.appendChar('.');
+			is_float=true;
+			c=getc();
+		        while ( (c>='0') && (c<='9') )
+			{
+			    str.appendChar(c);
+			    c=getc();
+			}
+		    }
+		    
+		    // Смотрим - есть ли экспонента
+		    if ( (c=='e') || (c=='E') )
+		    {
+			// Есть экспонента
+			str.appendChar(c);
+			is_float=true;
+			
+			// Смотрим - может есть знак экспоненты
+			c=getc();
+			if ( (c=='+') || (c=='-') )
+			{
+			    str.appendChar(c);
+			    c=getc();
+			}
+			
+			while ( (c>='0') && (c<='9') )
+			{
+			    str.appendChar(c);
+			    c=getc();
+			}
+		    }
+		    
+		    ungetc(c);
+		    
+		    if (is_float)
+		    {
+			tok_value=new Float(Float.parseFloat(str.toString()));
+			return T_FLOAT_NUMBER;
+		    } else
+		    {
+			tok_value=new Integer(Integer.parseInt(str.toString()));
+			return T_INT_NUMBER;
+		    }
+		}
+	    } else
+	    if (c==0x27) // символ одинарной кавычки '
+	    {
+		// Символ
+		tok_value=new Integer((byte)parse_char(getc()));
+		
+		c=getc();
+		if (c!=0x27) ungetc(c);
+		
+		return T_INT_NUMBER;
+	    } else
+	    if (c=='"')
+	    {
+		// Строка
+		StringBuffer str=new StringBuffer();
+		
+		c=getc();
+		while (c!='"')
+		{
+		    str.appendChar(parse_char(c));
+		    
+		    c=getc();
+		}
+		
+		tok_value=str.toString();
+		return T_STRING;
+	    } else
+	    if (c=='@')
+	    {
+		// Команда компилятору
+		StringBuffer str=new StringBuffer();
+		while (true)
+		{
+		    c=getc();
+		    
+		    if ( (c=='_') || ( (c>='A') && (c<='Z') ) || ( (c>='a') && (c<='z') ) || ( (c>='0') && (c<='9') ) )
+		    {
+			str.appendChar(c);
+		    } else
+		    {
+			ungetc(c);
+			break;
+		    }
+		}
+		String cmd=str.toString();
+		if (cmd.length()==0) error("Compiler command expected after '@'");
+		
+		if ( (cmd.equals("warning")) || (cmd.equals("todo")) )
+		{
+		    str=new StringBuffer();
+		    while ( ((c=getc())!=0) && (c!='\n') ) str.appendChar(c);
+		    System.print(file_name+":"+line_num+": "+cmd.toUpperCase()+":"+str.toString()+"\n");
+		} else
+		{
+		    error("Incorrect compiler-command: '"+cmd+"'");
+		}
+		
+		// Пропускаем мимо синтаксического анализатора
+		continue;
+	    } else
+	    if ( (c==' ') || (c=='\t') || (c=='\n') )
+	    {
+		// Пропускаем лишнее
+		continue;
+	    } else
+	    {
+		// Просто какой-то символ
+		return c;
+	    }
+	}
+    }
+    
+    
+    char parse_char(char c)
+    {
+	if (c!='\\') return c;
+	
+	c=getc();
+	switch (c)
+	{
+	    case '\\':
+		return '\\';
+	    
+	    case 0x27:
+		return 0x27;
+	    
+	    case '"':
+		return '"';
+	    
+	    case 'n':
+		return '\n';
+	    
+	    case 'r':
+		return '\r';
+	    
+	    case 't':
+		return '\t';
+	}
+	
+	// Неизвестный символ
+	ungetc(c);
+	
+	return '\\';
+    }
+    
+    
+    char getc()
+    {
+	if (unget_char!=0)
+	{
+	    char c=unget_char;
+	    unget_char=0;
+	    if (c=='\n') line_num++;
+	    return c;
+	}
+	
+	
+	while (true)
+	{
+	    byte c=CodePage.xcode(is.readByte(), cp);
+	    
+	    if (c=='\t') c=' ';
+	    if (c=='\n') line_num++;
+	    if (c!='\r') return c;
+	}
+    }
+    
+    
+    void ungetc(char c)
+    {
+	unget_char=c;
+	if (c=='\n') line_num--;
+    }
+    
+    
+    
+    
+    
+    void error(String name)
+    {
+        sapc.error(file_name+":"+line_num+":  "+name+"\n");
+	System.exit(1);
+    }
+
+
+    void unexpected()
+    {
+        sapc.error(file_name+":"+line_num+":  unexpected token "+GetTokenAsString()+"\n");
+	System.exit(1);
+    }
+
+
+    boolean expect(int id)
+    {
+        int t=GetToken();
+
+        UngetToken();
+
+        return (t==id);
+    }
+}

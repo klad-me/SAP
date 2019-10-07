@@ -1,0 +1,278 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса Pack</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>Pack</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс Pack предназначен для паковки и распаковки базовых типов short, int и float в последовательность байт.<br/>
+При паковке используется формат little-endian (Intel-формат).
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static short</td>
+  <td valign="top"><a href="#r_short"><b>r_short</b></a>(byte[]&nbsp;b, int&nbsp;offs)<br/>
+Распаковать short (2 байта) из массива байт
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#w_short"><b>w_short</b></a>(short&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)<br/>
+Запаковать short (2 байта) в массив байт
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static int</td>
+  <td valign="top"><a href="#r_int"><b>r_int</b></a>(byte[]&nbsp;b, int&nbsp;offs)<br/>
+Распаковать int (4 байта) из массива байт
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#w_int"><b>w_int</b></a>(int&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)<br/>
+Запаковать int (4 байта) в массив байт
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static float</td>
+  <td valign="top"><a href="#r_float"><b>r_float</b></a>(byte[]&nbsp;b, int&nbsp;offs)<br/>
+Распаковать float (4 байта) из массива байт
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#w_float"><b>w_float</b></a>(float&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)<br/>
+Запаковать float (4 байта) в массив байт
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'r_short' details -->
+<a name="r_short"/>
+<font size="+1"><b>Метод r_short</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static short <b>r_short</b>(byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Распаковать short (2 байта) из массива байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массива, откуда следует читать данные<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное число типа short
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'w_short' details -->
+<a name="w_short"/>
+<font size="+1"><b>Метод w_short</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>w_short</b>(short&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Запаковать short (2 байта) в массив байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+x&nbsp;-&nbsp;число для паковки<br/>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массика, куда следует записать данные<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'r_int' details -->
+<a name="r_int"/>
+<font size="+1"><b>Метод r_int</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static int <b>r_int</b>(byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Распаковать int (4 байта) из массива байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массива, откуда следует читать данные<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное число типа int
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'w_int' details -->
+<a name="w_int"/>
+<font size="+1"><b>Метод w_int</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>w_int</b>(int&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Запаковать int (4 байта) в массив байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+x&nbsp;-&nbsp;число для паковки<br/>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массика, куда следует записать данные<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'r_float' details -->
+<a name="r_float"/>
+<font size="+1"><b>Метод r_float</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static float <b>r_float</b>(byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Распаковать float (4 байта) из массива байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массива, откуда следует читать данные<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+прочитанное число типа float
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'w_float' details -->
+<a name="w_float"/>
+<font size="+1"><b>Метод w_float</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>w_float</b>(float&nbsp;x, byte[]&nbsp;b, int&nbsp;offs)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Запаковать float (4 байта) в массив байт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+x&nbsp;-&nbsp;число для паковки<br/>
+b&nbsp;-&nbsp;массив байт<br/>
+offs&nbsp;-&nbsp;смещение относительно начала массика, куда следует записать данные<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

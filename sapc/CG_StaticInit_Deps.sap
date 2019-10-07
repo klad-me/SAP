@@ -1,0 +1,84 @@
+// Составить список зависимостей метода <staticinit>
+class CG_StaticInit_Deps
+{
+    static void Gen_StaticInit_Deps(I_Class cls)
+    {
+	// Ищем метод <staticinit>
+	I_Method m=cls.FindMethod("<staticinit>");
+	if (m==null) return;	// нет статической инициализации
+	
+	// Создаем список зависимостей
+	Vector deps=new Vector();
+	
+	// Всегда добавляем предка, т.к. он потенциально может иметь <staticinit>
+	deps.add(cls.superclass_name);
+	
+	// Обрабатываем код метода
+	int PC=0;
+	while (PC < m.compiled_code_size)
+	{
+	    byte op=m.compiled_code[PC++];
+	    
+	    switch (op)
+	    {
+		case OP.BYTE		| OP._LOAD_STATIC:
+		case OP.SHORT		| OP._LOAD_STATIC:
+		case OP.INT_OR_FLOAT	| OP._LOAD_STATIC:
+		case OP.R_LOAD_STATIC:
+		    // Чтение из статического поля
+		    {
+			int idx=CG_Stream.R_Short(m.compiled_code, PC);
+			String spec=CG_StringPool.StringAt(idx);
+			String ClassName=spec.substring(1, spec.indexOf('.'));
+			if (!ClassName.equals(cls.name)) addDep(deps, ClassName);
+		    }
+		    break;
+		
+		case OP.CALL_VIRTUAL:
+		case OP.CALL_METHOD:
+		    // Вызов метода (может быть и статического)
+		    {
+			int idx=CG_Stream.R_Short(m.compiled_code, PC+1);
+			String spec=CG_StringPool.StringAt(idx);
+			if (spec.charAt(0)=='M')
+			{
+			    String ClassName=spec.substring(1, spec.indexOf('.'));
+			    if (!ClassName.equals(cls.name)) addDep(deps, ClassName);
+			}
+		    }
+		    break;
+	    }
+	    
+	    // Пропускаем операнды
+	    int op_size=OP.op_size[ ((int)op) & 0xff ];
+	    if (op==OP.FILL_ARRAY_RAW)
+	    {
+		op_size=4+CG_Stream.R_Int(m.compiled_code, PC);
+	    }
+	    PC=PC+op_size;
+	}
+	
+	// Выводим список зависимостей
+	for (int i=0; i<deps.size(); i++)
+	{
+	    sapc.debug("<staticinit> dep: '"+((String)(deps.elementAt(i)))+"'\n");
+	}
+	
+	cls.staticinit_deps=deps;
+    }
+    
+    
+    static void addDep(Vector deps, String name)
+    {
+	// Ищем, может такой класс уже есть
+	for (int i=0; i<deps.size(); i++)
+	{
+	    String str=(String)deps.elementAt(i);
+	    
+	    if (str.equals(name)) return;
+	}
+	
+	// Добавляем
+	deps.add(name);
+    }
+}

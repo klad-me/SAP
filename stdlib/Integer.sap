@@ -1,0 +1,98 @@
+/**
+ * Позволяет хранить число типа int
+ */
+class Integer implements Number, Compareable
+{
+    /**
+     * Минимально допустимое число для типа int
+     */
+    static final int MIN_VALUE = 0x80000000;
+    
+    /**
+     * Максимально допустимое число для типа int
+     */
+    static final int MAX_VALUE = 0x7fffffff;
+    
+    
+    /**private**/
+    int value;
+    
+    
+    /**
+     * Создает объект Integer с начальным хранимым значением
+     *
+     * @param value хранимое значение
+     */
+    constructor(int value)
+    {
+	this.value=value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение
+     *
+     * @return хранимое значение
+     */
+    int intValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Возвращает хранимое значение, приведенное к типу float
+     *
+     * @return хранимое значение, приведенное к типу float
+     */
+    float floatValue()
+    {
+	return value;
+    }
+    
+    
+    /**
+     * Сравнивает хранимое значение с указанным объектом используя метод Compareable.equals
+     *
+     * @param o объект, с которым будет произведено сравнение
+     * @return true, если значение объекта равно хранимому значению; false - в остальных случаях
+     */
+    boolean equals(Object o)
+    {
+	if (o==this) return true;
+	if (o instanceof Number)
+	    return value==((Number)o).intValue(); else
+	    return false;
+    }
+    
+    
+    /**
+     * Разбирает строку, содержащую целое число в число с типом int
+     *
+     * @param str входная строка
+     * @return полученное значение целого числа, или 0 в случае ошибки
+     */
+    static int parseInt(String str)
+    {
+	return __parseInt(str.getBytes());
+    }
+    
+    
+    /**
+     * Преобразует целое число в строку.
+     *
+     * @param v входное значение
+     * @return строковое представление параметра
+     */
+    static String toString(int v)
+    {
+	return new String(__toString(v));
+    }
+    
+    
+    /**private**/
+    native static int __parseInt(byte[] str);
+    
+    /**private**/
+    native static byte[] __toString(int v);
+}

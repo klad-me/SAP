@@ -1,0 +1,64 @@
+/**
+ * Функции общие для всех PLC
+ */
+class PLC
+{
+    /**
+     * Включить лампочку
+     *
+     * @param n номер лампочки (зависит от платформы)
+     */
+    native static void ledOn(int n);
+    
+    
+    /**
+     * Выключить лампочку
+     *
+     * @param n номер лампочки (зависит от платформы)
+     */
+    native static void ledOff(int n);
+    
+    
+    /**
+     * Изменить состояние лампочки
+     *
+     * @param n номер лампочки (зависит от платформы)
+     */
+    native static void ledToggle(int n);
+    
+    
+    /**
+     * Получить состояние дискретного входа
+     *
+     * @param n номер входа
+     * @return состояние входа
+     */
+    native static boolean DI(int n);
+    
+    
+    /**
+     * Установить состояние дискретного выхода
+     *
+     * @param n номер выхода
+     * @param state состояние выхода
+     */
+    native static void DO(int n, boolean state);
+    
+    
+    /**
+     * Получить показание аналогового входа
+     *
+     * @param n номер входа
+     * @return показание входа
+     */
+    native static float AI(int n);
+    
+    
+    /**
+     * Установить значение аналогового выхода
+     *
+     * @param n номер выхода
+     * @param value значение выхода
+     */
+    native static void AO(int n, float value);
+}

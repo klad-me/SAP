@@ -1,0 +1,225 @@
+
+// Проверить зависимости
+class Checker_Deps
+{
+    static I_Class cur_class;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Создаем список зависимостей
+	cls.depends=new Vector();
+	
+	cur_class=cls;
+	
+	// Проверим суперкласс
+	cls.superclass=null;
+	if (cls.superclass_name != null)
+	{
+	    cls.superclass=sapc.prog.FindClass(cls.superclass_name);
+	    if (cls.superclass==null)
+	    {
+		NotFound(cls, cls.superclass_name);
+		return false;
+	    }
+	    if (cls.superclass.is_interface)
+	    {
+		sapc.error(cls.fname+":"+cls.line+":  Interface '"+cls.superclass_name+"' used as class !\n");
+		return false;
+	    }
+	    
+	    cur_class.addDep(cls.superclass_name);
+	}
+	
+	
+	// Проверим интерфейсы
+	if (cls.if_list != null)
+	{
+	    for (int i=0; i<cls.if_list.size(); i++)
+	    {
+		String name=(String)cls.if_list.elementAt(i);
+		I_Class iface=sapc.prog.FindClass(name);
+		
+		if (iface == null)
+		{
+		    NotFound(cls, name);
+		    return false;
+		}
+		
+		if (!iface.is_interface)
+		{
+		    sapc.error(cls.fname+":"+cls.line+":  Class '"+name+"' used as interface !\n");
+		    return false;
+		}
+		
+		cur_class.addDep(name);
+	    }
+	}
+	
+	
+	// Проверим поля
+	if (!CheckVarList(cls.fields)) return false;
+	
+	
+	// Проверим методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (!CheckMethod(m)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckVarList(Vector v)
+    {
+	if (v==null) return true;
+	
+	for (int i=0; i<v.size(); i++)
+	{
+	    if (!CheckVar((I_Var)v.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckVar(I_Var v)
+    {
+	// Проверим тип
+	if (!CheckType(v.type)) return false;
+	
+	// Проверим инициализатор
+	if (!CheckExpr(v.init)) return false;
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	// Проверим возвращаемый тип
+	if (!CheckType(m.return_type)) return false;
+	
+	// Проверим параметры
+	if (!CheckVarList(m.params)) return false;
+	
+	// Проверим параметры вызова конструктора
+	if (!CheckExprList(m.super_constructor_params)) return false;
+	
+	// Проверим код
+	if (!CheckStat(m.code)) return false;
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckType(I_Type t)
+    {
+	if (t==null) return true;
+	
+	if (t.type==I_Type.REF)
+	{
+	    if (sapc.prog.FindClass(t.ClassName) == null)
+	    {
+		NotFound(t, t.ClassName);
+		return false;
+	    }
+	    if (!t.ClassName.equals(cur_class.name))
+		cur_class.addDep(t.ClassName);
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	if (!CheckExpr(s.expr)) return false;
+	
+	if (!CheckExprList(s.exprlist1)) return false;
+	if (!CheckExprList(s.exprlist2)) return false;
+	
+	if (!CheckStat(s.stat)) return false;
+	if (!CheckStat(s.stat2)) return false;
+	
+	if (s.stats_list!=null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExprList(I_ExprList l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    if (!CheckExpr((I_Expr)l.list.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	
+	if (e.ClassName!=null)
+	{
+	    if (sapc.prog.FindClass(e.ClassName) == null)
+	    {
+		NotFound(e, e.ClassName);
+		return false;
+	    }
+	    if (!cur_class.name.equals(e.ClassName))
+		cur_class.addDep(e.ClassName);
+	}
+	
+	if (e.type==I_Expr.STRING)
+	{
+	    // Есть использование строк. Должен быть класс String
+	    if (sapc.prog.FindClass("String") == null)
+	    {
+		NotFound(e, "String");
+		return false;
+	    }
+	    if (!cur_class.name.equals("String"))
+		cur_class.addDep("String");
+	}
+	
+	if (!CheckVarList(e.varlist)) return false;
+	
+	if (!CheckExpr(e.left)) return false;
+	if (!CheckExpr(e.right)) return false;
+	if (!CheckExpr(e.cond)) return false;
+	
+	if (!CheckType(e.result_type)) return false;
+	if (!CheckType(e.instanceof_type)) return false;
+	
+	if (!CheckExprList(e.exprlist)) return false;
+	
+	return true;
+    }
+    
+    
+    
+    static void NotFound(I_SourceInfo src, String name)
+    {
+	sapc.error(src.fname+":"+src.line+":  Required class '"+name+"' not found !\n");
+    }
+}

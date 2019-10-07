@@ -1,0 +1,711 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса String</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>String</b> implements <a href="Compareable.html"><b>Compareable</b></a></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Позволяет хранить строку, состоящую из 8-битных символов. Также, описывает базовые операции над строками.<br/>
+Объект String можно создать двумя способами: обычным для классов и автоматическим.<br/>
+Обычное создание класса выглядит следующим образом:<br/>
+String s=new String(new byte{0x41, 0x42, 0x43}); // создает строку "ABC"<br/>
+Автоматическое создание класса выглядит следующим образом:<br/>
+String s="ABC";<br/>
+Оба приведенные выше примера генерируют один и тот же код.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>(byte[]&nbsp;data)<br/>
+Создает строку из массива байт.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#length"><b>length</b></a>()<br/>
+Возвращает размер строки в символах
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#charAt"><b>charAt</b></a>(int&nbsp;idx)<br/>
+Возвращает символ, содержащийся в строке на позиции idx
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte[]</td>
+  <td valign="top"><a href="#getBytes"><b>getBytes</b></a>()<br/>
+Возвращает массив байт, содержащий все символы строки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">short[]</td>
+  <td valign="top"><a href="#toUnicode"><b>toUnicode</b></a>()<br/>
+Возвращает массив байт, содержащий Unicode представление строки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#fromUnicode"><b>fromUnicode</b></a>(short[]&nbsp;data, int&nbsp;offs, int&nbsp;size)<br/>
+Создает строку из массива, содержащего Unicode представление строки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte[]</td>
+  <td valign="top"><a href="#toUTF8"><b>toUTF8</b></a>()<br/>
+Возвращает массив байт, содержащий UTF8 представление строки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#fromUTF8"><b>fromUTF8</b></a>(byte[]&nbsp;data, int&nbsp;offs, int&nbsp;size)<br/>
+Создает строку из массива байт, содержащего UTF8 представление строки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#equals"><b>equals</b></a>(Object&nbsp;o)<br/>
+Сравнивает хранимую строку и строку, представленную объектом o
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#compareTo"><b>compareTo</b></a>(<a href="String.html"><b>String</b></a>&nbsp;s)<br/>
+Сравнивает хранимую строку и параметр. Сравнение производится по кодам символов.
+При этом, короткая строка считается меньше длинной ("abc" < "abcd").
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#indexOf"><b>indexOf</b></a>(byte&nbsp;c)<br/>
+Определяет позицию символа <b>c</b> в строке
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#startsWith"><b>startsWith</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Определяет, начинается ли строка с указанной подстроки
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#endsWith"><b>endsWith</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Определяет, заканчивается ли строка указанной подстрокой
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#substring"><b>substring</b></a>(int&nbsp;begin, int&nbsp;end)<br/>
+Возвращает строку, содержащую указанную часть хранимой строки (подстроку)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#append"><b>append</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Добавляет к хранимой строке в конец другую строку
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#toLowerCase"><b>toLowerCase</b></a>()<br/>
+Преобразует хранимую строку к нижнему регистру.
+При преобразовании используется кодировка CP1251.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#toUpperCase"><b>toUpperCase</b></a>()<br/>
+Преобразует хранимую строку к верхнему регистру.
+При преобразовании используется кодировка CP1251.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#arg"><b>arg</b></a>(<a href="String.html"><b>String</b></a>&nbsp;value)<br/>
+Обрабатывает "аргумент" в строке
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top"><a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#trim"><b>trim</b></a>()<br/>
+Удаляет пробелы вначале и вконце строки
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(byte[]&nbsp;data)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает строку из массива байт.
+При этом, запоминается именно указатель, а не сама строка, т.е. при изменении массива-параметра, изменится и строка.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+data&nbsp;-&nbsp;массив байт, представляющий символы строки<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'length' details -->
+<a name="length"/>
+<font size="+1"><b>Метод length</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>length</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает размер строки в символах
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+размер строки в символах
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'charAt' details -->
+<a name="charAt"/>
+<font size="+1"><b>Метод charAt</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>charAt</b>(int&nbsp;idx)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает символ, содержащийся в строке на позиции idx
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+idx&nbsp;-&nbsp;позиция<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+символ, содержащийся в строке на указанной позиции
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'getBytes' details -->
+<a name="getBytes"/>
+<font size="+1"><b>Метод getBytes</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte[] <b>getBytes</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает массив байт, содержащий все символы строки
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив байт, содержащий все символы строки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'toUnicode' details -->
+<a name="toUnicode"/>
+<font size="+1"><b>Метод toUnicode</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+short[] <b>toUnicode</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает массив байт, содержащий Unicode представление строки.
+При кодировании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив, содержащий Unicode представление строки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'fromUnicode' details -->
+<a name="fromUnicode"/>
+<font size="+1"><b>Метод fromUnicode</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="String.html"><b>String</b></a> <b>fromUnicode</b>(short[]&nbsp;data, int&nbsp;offs, int&nbsp;size)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает строку из массива, содержащего Unicode представление строки. Разбор начинается с позиции offs, разбирается size байт.
+Также, разбор прекращается при обнаружении символа с кодом 0.
+При раскодировании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+data&nbsp;-&nbsp;массив байт, содержащий Unicode представление строки<br/>
+offs&nbsp;-&nbsp;смещение, относительно начала массиа, где начинается текст<br/>
+size&nbsp;-&nbsp;размер данных<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+раскодированная строка
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'toUTF8' details -->
+<a name="toUTF8"/>
+<font size="+1"><b>Метод toUTF8</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte[] <b>toUTF8</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает массив байт, содержащий UTF8 представление строки.
+Размер массива UTF8 может быть больше, чем количество символов в строке, т.к. UTF8 может генерировать более 1 байта на один символ.
+При кодировании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив байт, содержащий UTF8 представление строки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'fromUTF8' details -->
+<a name="fromUTF8"/>
+<font size="+1"><b>Метод fromUTF8</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="String.html"><b>String</b></a> <b>fromUTF8</b>(byte[]&nbsp;data, int&nbsp;offs, int&nbsp;size)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает строку из массива байт, содержащего UTF8 представление строки. Разбор UTF8 начинается с позиции offs, разбирается size байт.
+Также, разбор прекращается при обнаружении символа с кодом 0 или неверной последовательности байт UTF8.
+При раскодировании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+data&nbsp;-&nbsp;массив байт, содержащий UTF8 представление строки<br/>
+offs&nbsp;-&nbsp;смещение, относительно начала массиа, где начинается UTF8<br/>
+size&nbsp;-&nbsp;размер данных UTF8 в байтах<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+раскодированная строка
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'equals' details -->
+<a name="equals"/>
+<font size="+1"><b>Метод equals</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>equals</b>(Object&nbsp;o)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Сравнивает хранимую строку и строку, представленную объектом o
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+o&nbsp;-&nbsp;объект для сравнения<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если строки одинаковые или false - в остальных случаях
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'compareTo' details -->
+<a name="compareTo"/>
+<font size="+1"><b>Метод compareTo</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>compareTo</b>(<a href="String.html"><b>String</b></a>&nbsp;s)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Сравнивает хранимую строку и параметр. Сравнение производится по кодам символов.
+При этом, короткая строка считается меньше длинной ("abc" < "abcd").
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+s&nbsp;-&nbsp;строка для сравнения<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+0 в случае, если строки равны, <0 в случае, если хранимая строка стоит раньше параметра, >0 в случае, если хранимая стока стоит после параметра
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'indexOf' details -->
+<a name="indexOf"/>
+<font size="+1"><b>Метод indexOf</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>indexOf</b>(byte&nbsp;c)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Определяет позицию символа <b>c</b> в строке
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+c&nbsp;-&nbsp;искомый символ<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+позиция первого найденного символа или -1 в случае, если символ не найден
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'startsWith' details -->
+<a name="startsWith"/>
+<font size="+1"><b>Метод startsWith</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>startsWith</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Определяет, начинается ли строка с указанной подстроки
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для поиска<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если строка начинается с указанной подстроки, или false - в ином случае
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'endsWith' details -->
+<a name="endsWith"/>
+<font size="+1"><b>Метод endsWith</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>endsWith</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Определяет, заканчивается ли строка указанной подстрокой
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для поиска<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если строка заканчивается указанной подстрокой, или false - в ином случае
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'substring' details -->
+<a name="substring"/>
+<font size="+1"><b>Метод substring</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>substring</b>(int&nbsp;begin, int&nbsp;end)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает строку, содержащую указанную часть хранимой строки (подстроку)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+begin&nbsp;-&nbsp;начальный символ (войдет в подстроку)<br/>
+end&nbsp;-&nbsp;конечный символ (не войдет в подстроку)<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+подстрока, состоящая из символов хранимой строки с индексами от begin до end
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'append' details -->
+<a name="append"/>
+<font size="+1"><b>Метод append</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>append</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Добавляет к хранимой строке в конец другую строку.<br/>
+Например: "ABC".append("XYZ") получит в результате строку "ABCXYZ"
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для добавления<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+новая строка
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'toLowerCase' details -->
+<a name="toLowerCase"/>
+<font size="+1"><b>Метод toLowerCase</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>toLowerCase</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Преобразует хранимую строку к нижнему регистру.
+При преобразовании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+строка в нижнем регистре
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'toUpperCase' details -->
+<a name="toUpperCase"/>
+<font size="+1"><b>Метод toUpperCase</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>toUpperCase</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Преобразует хранимую строку к верхнему регистру.
+При преобразовании используется кодировка CP1251.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+строка в верхнем регистре
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'arg' details -->
+<a name="arg"/>
+<font size="+1"><b>Метод arg</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>arg</b>(<a href="String.html"><b>String</b></a>&nbsp;value)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Обрабатывает очередной аргумент в строке.
+"Аргумент" представляет из себя последовательность символов "%x", где x - любая цифра или буква (регистрозависимая).
+При вызове метода String.arg() ищется наименьший номер "аргумента" (используя при сравнении код символа) и заменяется на значение
+аргумента.<br/>
+Например: "Привет, %1 ! У тебя %2 сообщений.".arg("пользователь").arg("10") получится строка: "Привет, пользователь ! У тебя 10 сообщений."
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+value&nbsp;-&nbsp;значение "аргумента"<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+преобразованная строка
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'trim' details -->
+<a name="trim"/>
+<font size="+1"><b>Метод trim</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<a href="String.html"><b>String</b></a> <b>trim</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Удаляет пробелы вначале и вконце строки
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+строку без пробелов в начале и конце строки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

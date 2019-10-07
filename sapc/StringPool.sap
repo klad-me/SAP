@@ -1,0 +1,40 @@
+
+class StringPool
+{
+    Vector data;
+    
+    
+    StringPool()
+    {
+	data=new Vector();
+    }
+    
+    
+    short AddString(String str)
+    {
+	// Ищем, может такая строка уже есть
+	for (int i=0; i<data.size(); i++)
+	{
+	    String s=(String)data.elementAt(i);
+	    
+	    if (str.equals(s)) return (short)i;
+	}
+	
+	// Надо добавить строку
+	data.add(str);
+	
+	return (short)(data.size()-1);
+    }
+    
+    
+    String StringAt(int idx)
+    {
+	return (String)data.elementAt(idx);
+    }
+    
+    
+    int size()
+    {
+	return data.size();
+    }
+}

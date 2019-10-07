@@ -1,0 +1,3 @@
+#! /bin/bash
+
+../sapvm/vm sapc.sapexe -i ../stdlib/obj -i obj -o obj $*

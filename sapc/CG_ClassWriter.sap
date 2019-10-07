@@ -1,0 +1,185 @@
+class CG_ClassWriter
+{
+    static void WriteClass(I_Class cls)
+    {
+	// Создаем поток для кода класса
+	CG_Stream out=new CG_Stream();
+	
+	
+	// Пишем сигнатуру и версию
+	out.putInt(0x01504153);	// SAP<vv>
+	
+	// Пишем имя класса
+	out.putString(cls.name);
+	
+	// Пишем флаги (интерфейс или нет)
+	out.putByte(cls.is_interface?(byte)0x01:(byte)0x00);
+	
+	// Пишем зависимости
+	out.putByte((byte)cls.depends.size());
+	for (int i=0; i<cls.depends.size(); i++)
+	{
+	    out.putString((String)cls.depends.elementAt(i));
+	    sapc.debug("DEP: "+(String)cls.depends.elementAt(i)+"\n");
+	}
+	
+	// Пишем имя суперкласса
+	out.putString(cls.superclass_name);
+	
+	// Пишем определяемые интерфейсы
+	if (cls.if_list!=null)
+	{
+	    // Есть интерфейсы
+	    out.putByte((byte)cls.if_list.size());
+	    for (int i=0; i<cls.if_list.size(); i++)
+	    {
+		out.putString((String)cls.if_list.elementAt(i));
+	    }
+	} else
+	{
+	    // Нет интерфейсов
+	    out.putByte((byte)0);
+	}
+	
+	// Пишем документацию на класс
+	out.putString(cls.doc);
+	
+	// Добавляем поля в StringPool
+	int n_static_fields=0, n_fields=0;
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var field=(I_Var)cls.fields.elementAt(i);
+	    
+	    String spec;
+	    if (field.is_static)
+	    {
+		spec="F"+cls.name+"."+field.spec();
+		n_static_fields++;
+	    } else
+	    {
+		spec="f"+cls.name+"."+field.spec();
+		n_fields++;
+	    }
+	    field.spec_index=CG_StringPool.AddString(spec);
+	}
+	
+	// Добавляем методы в StringPool
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    String spec;
+	    if (m.is_static)
+		spec="M"+cls.name+"."+m.specWithParamNames(); else
+		spec="m"+cls.name+"."+m.specWithParamNames();
+	    m.spec_index=CG_StringPool.AddString(spec);
+	}
+	
+	// Пишем таблицу строк
+	out.putShort((short)CG_StringPool.size());
+	for (int i=0; i<CG_StringPool.size(); i++)
+	{
+	    out.putString(CG_StringPool.StringAt(i));
+	}
+	
+	// Пишем статические поля
+	out.putShort((short)n_static_fields);
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var field=(I_Var)cls.fields.elementAt(i);
+	    byte flags=0x00;
+	    flags=flags | 0x01;	// static
+	    if (field.is_final) flags=flags | 0x02;
+	    
+	    if (field.is_static)
+	    {
+		out.putByte(flags);
+		out.putShort((short)field.spec_index);
+		
+		out.putString(field.doc);
+	    }
+	}
+	
+	// Пишем поля
+	out.putShort((short)n_fields);
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var field=(I_Var)cls.fields.elementAt(i);
+	    byte flags=0x00;
+	    if (field.is_final) flags=flags | 0x02;
+	    
+	    if (!field.is_static)
+	    {
+		out.putByte(flags);
+		out.putShort((short)field.spec_index);
+		
+		out.putString(field.doc);
+	    }
+	}
+	
+	// Пишем зависимости <staticinit>
+	if (cls.staticinit_deps!=null)
+	{
+	    // Есть <staticinit>
+	    out.putByte((byte)cls.staticinit_deps.size());
+	    for (int i=0; i<cls.staticinit_deps.size(); i++)
+	    {
+		out.putString((String)cls.staticinit_deps.elementAt(i));
+	    }
+	} else
+	{
+	    // Нет <staticinit>
+	    out.putByte((byte)0);
+	}
+	
+	// Пишем имя исходника
+	out.putString(cls.fname);
+	
+	// Пишем методы
+	out.putByte((byte)cls.methods.size());
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    // Флаги
+	    byte flags=0x00;
+	    if (m.is_static) flags=flags | 0x01;
+	    if (m.is_native) flags=(byte)(flags | 0x80);
+	    out.putByte(flags);
+	    
+	    // Спецификатор
+	    out.putShort((short)m.spec_index);
+	    
+	    // Размер фрейма
+	    out.putShort((short)m.frame_size);
+	    
+	    // Начальный SP
+	    out.putShort((short)m.start_SP);
+	    
+	    // Размер кода и сам код
+	    out.putShort((short)m.compiled_code_size);
+	    out.putBytes(m.compiled_code, m.compiled_code_size);
+	    
+	    // Размер таблицы строк и сама таблица строк
+	    out.putShort((short)m.line_numbers_size);
+	    out.putBytes(m.line_numbers, m.line_numbers_size);
+	    
+	    // Документация
+	    out.putString(m.doc);
+	}
+	
+	// Все готово !
+	sapc.debug("File size for class '"+cls.name+"': "+out.size()+"\n");
+	
+	// Записываем данные в файл
+	File fout=new File(sapc.prog.OUT_DIR+cls.name+".sapclass", File.WRITE);
+	if (!fout.ok())
+	{
+	    sapc.error("Can't save class "+cls.name+" !\n");
+	} else
+	{
+	    fout.writeBytes(out.bytes(), 0, out.size());
+	    fout.close();
+	}
+    }
+}

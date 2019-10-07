@@ -1,0 +1,102 @@
+class L_CalcFields
+{
+    static void CalcFields()
+    {
+	// Считаем размер статических полей
+	int static_len=0;
+	int n_refs=0;
+	
+	// Обрабатываем сначала ссылки
+	sapc.debug("static refs:\n");
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    // Проверяем все статические поля
+	    for (int j=0; j<cls.fields.size(); j++)
+	    {
+		I_Var v=(I_Var)cls.fields.elementAt(j);
+		
+		if ( (v.is_static) && (v.type.isRef()) )
+		{
+		    v.L_address=static_len;
+		    sapc.debug("  "+v.name+": "+v.L_address+"\n");
+		    static_len=static_len+v.type.MemoryUsage();
+		    n_refs++;
+		}
+	    }
+	}
+	
+	// Теперь обрабатываем не ссылки
+	sapc.debug("static vars:\n");
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    // Проверяем все статические поля
+	    for (int j=0; j<cls.fields.size(); j++)
+	    {
+		I_Var v=(I_Var)cls.fields.elementAt(j);
+		
+		if ( (v.is_static) && (!v.type.isRef()) )
+		{
+		    v.L_address=static_len;
+		    sapc.debug("  "+v.name+": "+v.L_address+"\n");
+		    static_len=static_len+v.type.MemoryUsage();
+		}
+	    }
+	}
+	
+	sapc.prog.L_static_fields_size=static_len;
+	sapc.prog.L_n_static_refs=n_refs;
+	
+	
+	
+	// Снимаем со всех классов отметки
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    cls.L_mark=false;
+	}
+	
+	// Теперь рекурсивно присвоим всем обычным полям адреса и для каждого класса укажем размер полей в байтах
+        // Просчитанные классы будем помечать mark-ом
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    CalcFields_Class(cls);
+	}
+    }
+    
+    
+    static void CalcFields_Class(I_Class cls)
+    {
+	// Проверим - может мы уже этот класс проверили
+	if (cls.L_mark) return;
+	
+	int len=0;
+	
+	// Сначала проверяем родителя
+	if (cls.superclass!=null)
+	{
+	    CalcFields_Class(cls.superclass);
+	    len=cls.superclass.L_fields_size;	// наши поля будут после полей родителя
+	}
+	
+	// Работаем со своими полями
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var v=(I_Var)cls.fields.elementAt(i);
+	    
+	    if (!v.is_static)
+	    {
+		v.L_address=len;
+		len=len+v.type.MemoryUsage();
+	    }
+	}
+	
+	// Устанавливаем для себя длину полей и флаг, что этот класс проверили
+	cls.L_fields_size=len;
+	cls.L_mark=true;
+    }
+}

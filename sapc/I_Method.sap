@@ -1,0 +1,182 @@
+
+class I_Method extends I_SourceInfo
+{
+    // Флаги
+    boolean is_static;
+    boolean is_native;
+    
+    // Возвращаемый тип
+    I_Type return_type;
+    
+    // Имя
+    String name;
+    
+    // Параметры
+    Vector params;
+    
+    // Параметры для вызова конструктора предка
+    I_ExprList super_constructor_params;
+    
+    // Код
+    I_Stat code;
+    
+    // Документация
+    String doc;
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    // Размер параметров, локальных переменных и локальных ссылок
+    int params_size;
+    int refs_size;
+    int locals_size;
+    int opstack_size;	// размер стека под операнды
+    
+    int frame_size;
+    int start_SP;
+    
+    byte[] compiled_code;
+    int compiled_code_size;
+    
+    byte[] line_numbers;
+    int line_numbers_size;
+    
+    int spec_index;
+    
+    ////////////////////////////////////////////////////////////////////////////
+    I_Class L_ParentClass;
+    int L_MethodNumber;
+    
+    
+    
+    I_Method(Lex lex, I_Type return_type, String name, boolean is_static, boolean is_native) : super(lex)
+    {
+	this.return_type=return_type;
+	this.name=name;
+	this.is_static=is_static;
+	this.is_native=is_native;
+	params=new Vector();
+    }
+    
+    
+    String spec()
+    {
+	String str=name+"(";
+	
+	for (int i=0; i<params.size(); i++)
+	{
+	    I_Var param=(I_Var)params.elementAt(i);
+	    
+	    str=str+param.type.spec();
+	}
+	
+	str=str+")"+return_type.spec();
+	
+	return str;
+    }
+    
+    
+    String specWithParamNames()
+    {
+	String str=name+"(";
+	
+	for (int i=0; i<params.size(); i++)
+	{
+	    I_Var param=(I_Var)params.elementAt(i);
+	    
+	    str=str+param.name+":"+param.type.spec();
+	}
+	
+	str=str+")"+return_type.spec();
+	
+	return str;
+    }
+    
+    
+    // Проверить, что наш метод равен указанному (переопределяет)
+    boolean equals(I_Method m)
+    {
+	// Проверим флаги
+	if (m.is_static != is_static) return false;
+	//if (m.is_native != is_native) return false;
+	
+	// Проверим типы
+	if (!m.return_type.equals(return_type)) return false;
+	
+	// Проверим параметры
+	if (m.params.size() != params.size()) return false;
+	for (int i=0; i<params.size(); i++)
+	{
+	    I_Var v1=(I_Var)params.elementAt(i);
+	    I_Var v2=(I_Var)m.params.elementAt(i);
+	    
+	    if (!v1.type.equals(v2.type)) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static I_Method ParseMethod(Lex lex, I_Type return_type, String name, boolean is_static, boolean is_native, boolean is_iface_method)
+    {
+	if (lex.GetToken()!='(') lex.error("'(' expected after method name !");
+	
+	// Создаем метод
+	I_Method m=new I_Method(lex, return_type, name, is_static, is_native);
+	
+	// Парсим параметры (если они есть)
+	if (!lex.expect(')'))
+	{
+	    // Есть параметры
+	    while (true)
+	    {
+		I_Type type=I_Type.ParseType(lex);
+		if (type==null) lex.error("parameter type expected !");
+		
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("parameter name expected !");
+		
+	        I_Var v=new I_Var(lex, type, (String)lex.tok_value, null);
+		m.params.add(v);
+		
+		if (!lex.expect(',')) break;	// конец параметров
+		lex.GetToken();
+	    }
+	}
+	
+	// Проверим на закрывающую скобку после параметров
+	if (lex.GetToken()!=')') lex.error("')' expected after method parameters !");
+	
+	// Если это нативный метод или метод интерфейса - у него не должно быть кода
+	if ( (is_native) || (is_iface_method) )
+	{
+	    if (lex.GetToken()!=';') lex.error("';' expected after native or interface method prototype !");
+	    return m;	// все нормально
+	}
+	
+	
+	// Может быть вызов конструктора-предка, если это конструктор
+	if (name.equals("<init>"))
+	{
+	    if (lex.expect(':'))
+	    {
+		// Будет вызов конструктора-предка
+		lex.GetToken();
+		
+		if (lex.GetToken()!=Lex.T_SUPER) lex.error("'super' expected after constructor prototype !");
+		if (lex.GetToken()!='(') lex.error("'(' expected after 'super' !");
+		m.super_constructor_params=I_ExprList.ParseExprList(lex);
+		if (lex.GetToken()!=')') lex.error("')' expected after calling parent constructor !");
+	    }
+	}
+	
+	
+	// Должен быть код
+	if (!lex.expect('{')) lex.error("method body expected !");
+	
+	// Парсим код
+	m.code=I_Stat.ParseStat(lex);
+	
+	return m;
+    }
+}

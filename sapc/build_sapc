@@ -1,0 +1,3 @@
+#! /bin/bash
+
+sapc -i ../stdlib/obj -i obj -o obj -l sapc *.sap -debug

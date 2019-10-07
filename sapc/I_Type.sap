@@ -1,0 +1,292 @@
+class I_Type extends I_SourceInfo
+{
+    final static int VOID	= 0;
+    final static int REF	= 1;
+    final static int BYTE	= 2;
+    final static int SHORT	= 3;
+    final static int INT	= 4;
+    final static int FLOAT	= 5;
+    
+    int type, n_array;
+    String ClassName;
+    
+    
+    
+    I_Type(Lex lex, int tok_type, int n_array, String ClassName) : super(lex)
+    {
+	switch (tok_type)
+	{
+	    case Lex.T_VOID:
+	    case VOID:
+		type=VOID;
+		break;
+	    
+	    case Lex.T_VARIABLE:
+	    case REF:
+		type=REF;
+		this.ClassName=ClassName;
+		break;
+	    
+	    case Lex.T_BYTE:
+	    case BYTE:
+		type=BYTE;
+		break;
+	    
+	    case Lex.T_SHORT:
+	    case SHORT:
+		type=SHORT;
+		break;
+	    
+	    case Lex.T_INT:
+	    case INT:
+		type=INT;
+		break;
+	    
+	    case Lex.T_FLOAT:
+	    case FLOAT:
+		type=FLOAT;
+		break;
+	}
+	
+	this.n_array=n_array;
+    }
+    
+    
+    String spec()
+    {
+	String s;
+	
+	switch (type)
+	{
+	    case BYTE:
+		s="B";
+		break;
+	    
+	    case SHORT:
+		s="S";
+		break;
+	    
+	    case INT:
+		s="I";
+		break;
+	    
+	    case FLOAT:
+		s="F";
+		break;
+	    
+	    case REF:
+		if (ClassName==null)
+		    s="LObject;"; else
+		    s="L"+ClassName+";";
+		break;
+	    
+	    case VOID:
+	    default:
+		s="V";
+		break;
+	}
+	
+	for (int i=0; i<n_array; i++)
+	{
+	    s=s+"[";
+	}
+	
+	return s;
+    }
+    
+    
+    I_Type dup()
+    {
+	I_Type t=new I_Type(null, type, n_array, ClassName);
+	t.fname=fname;
+	t.line=line;
+	
+	return t;
+    }
+    
+    
+    String toString()
+    {
+	String value="";
+	
+	// Базовый тип
+	switch (type)
+	{
+	    case VOID:
+		value="void";
+		break;
+	    
+	    case BYTE:
+		value="byte";
+		break;
+	    
+	    case SHORT:
+		value="short";
+		break;
+	    
+	    case INT:
+		value="int";
+		break;
+	    
+	    case FLOAT:
+		value="float";
+		break;
+	    
+	    case REF:
+		if (ClassName==null)
+		    value="null"; else
+		    value=ClassName;
+		break;
+	}
+	
+	// Модификаторы массива
+	for (int i=0; i<n_array; i++)
+	{
+	    value=value + "[]";
+	}
+	
+	return value;
+    }
+    
+    
+    boolean equals(I_Type t)
+    {
+	if ( (t.type != type) ||
+	     (t.n_array != n_array) ) return false;
+	
+	if (type==REF)
+	{
+	    if (!t.ClassName.equals(ClassName)) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    int MemoryUsage()
+    {
+	if (n_array>0) return 4;
+	
+	switch (type)
+	{
+	    case BYTE:
+		return 1;
+	    
+	    case SHORT:
+		return 2;
+	    
+	    case INT:
+	    case FLOAT:
+	    case REF:
+	    default:
+		return 4;
+	}
+    }
+    
+    
+    boolean isRef()
+    {
+	return ( (n_array>0) || (type==REF) );
+    }
+    
+    
+    boolean isInteger()
+    {
+	if (n_array>0) return false;
+	
+	switch (type)
+	{
+	    case BYTE:
+	    case SHORT:
+	    case INT:
+		return true;
+	    
+	    default:
+		return false;
+	}
+    }
+    
+    
+    boolean isFloat()
+    {
+	if (n_array>0) return false;
+	
+	switch (type)
+	{
+	    case FLOAT:
+		return true;
+	    
+	    default:
+		return false;
+	}
+    }
+    
+    
+    boolean isNumeric()
+    {
+	return isInteger() || isFloat();
+    }
+    
+    
+    int weight()
+    {
+	// Получить вес типа (какое максимальное число в нем может содержаться)
+	switch (type)
+	{
+	    case BYTE:
+		return 0;
+	    
+	    case SHORT:
+		return 1;
+	    
+	    case INT:
+		return 2;
+	    
+	    case FLOAT:
+		return 3;
+	    
+	    default:
+		return -1;
+	}
+    }
+    
+    
+    static I_Type ParseType(Lex lex)
+    {
+	// Получаем базовый тип
+	int t=lex.GetToken();
+	String cls=null;
+	
+	switch (t)
+	{
+	    case Lex.T_VARIABLE:
+		cls=(String)lex.tok_value;
+	    case Lex.T_BYTE:
+	    case Lex.T_SHORT:
+	    case Lex.T_INT:
+	    case Lex.T_FLOAT:
+		break;
+	    
+	    default:
+		lex.UngetToken();
+		return null;
+	}
+	
+	// Далее могут быть модификаторы массива
+	int n_array=0;
+	while (lex.expect('['))
+	{
+	    lex.GetToken();
+	    if (lex.GetToken()!=']')
+	    {
+		// Конец определения типа
+		lex.UngetToken();
+		lex.UngetToken();
+		break;
+	    }
+	    n_array++;
+	}
+	
+	return new I_Type(lex, t, n_array, cls);
+    }
+}

@@ -1,0 +1,342 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=koi8-r" />
+  <title>Описание класса SerialPort</title>
+</head>
+<body>
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>SerialPort</b> implements <b><a href="Stream.html"><b>Stream</a></b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс SerialPort предоставляет доступ к COM-портам.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">&nbsp;</td><td valign="top"><a href="#constructor"><b>constructor</b></a>(<b><a href="String.html"><b>String</a></b>&nbsp;devname, int&nbsp;baud)
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Создает объект SerialPort и открывает COM-порт. Результат открытия COM-порта возвращает функция ok().
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">byte</td><td valign="top"><a href="#ok"><b>ok</b></a>()
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Проверить результат открытия COM-порта.
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">int</td><td valign="top"><a href="#available"><b>available</b></a>()
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Возвращает количество доступных для чтения байт.
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">int</td><td valign="top"><a href="#readBytes"><b>readBytes</b></a>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Читает данные из порта
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">int</td><td valign="top"><a href="#writeBytes"><b>writeBytes</b></a>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Записывает данные в порт
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">void</td><td valign="top"><a href="#setDTR"><b>setDTR</b></a>(byte&nbsp;on)
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Изменяет состояние линии DTR
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">byte</td><td valign="top"><a href="#getCD"><b>getCD</b></a>()
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Получает состояние линии CD
+  </td></tr>
+</table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%">
+  <tr>
+<td width="100" valign="top">void</td><td valign="top"><a href="#close"><b>close</b></a>()
+  </td></tr>
+  <tr><td width="100">&nbsp;</td><td>
+Закрывает COM-порт
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(<b><a href="String.html"><b>String</a></b>&nbsp;devname, int&nbsp;baud)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает объект SerialPort и открывает COM-порт. Результат открытия COM-порта возвращает функция ok().
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+devname&nbsp;-&nbsp;имя устройства (для Windows - COM*, для Unix - /dev/tty*)<br/>
+baud&nbsp;-&nbsp;требуемая битовая скорость<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'ok' details -->
+<a name="ok"/>
+<font size="+1"><b>Метод ok</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>ok</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Проверить результат открытия COM-порта.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если порт был открыт, false - в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'available' details -->
+<a name="available"/>
+<font size="+1"><b>Метод available</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>available</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Возвращает количество доступных для чтения байт.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество доступных для чтения байт
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readBytes' details -->
+<a name="readBytes"/>
+<font size="+1"><b>Метод readBytes</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>readBytes</b>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Читает данные из порта
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+buf&nbsp;-&nbsp;буфер для чтения<br/>
+start&nbsp;-&nbsp;начальный индекс в буфере для заполнения<br/>
+count&nbsp;-&nbsp;размер читаемых данных<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество прочитанных байт, или -1 в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeBytes' details -->
+<a name="writeBytes"/>
+<font size="+1"><b>Метод writeBytes</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>writeBytes</b>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записывает данные в порт
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+buf&nbsp;-&nbsp;буфер для записи<br/>
+start&nbsp;-&nbsp;начальный индекс в буфере<br/>
+count&nbsp;-&nbsp;размер записываемых данных<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество записанных байт, или -1 в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'setDTR' details -->
+<a name="setDTR"/>
+<font size="+1"><b>Метод setDTR</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>setDTR</b>(byte&nbsp;on)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Изменяет состояние линии DTR
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+on&nbsp;-&nbsp;новое состояние линии DTR<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'getCD' details -->
+<a name="getCD"/>
+<font size="+1"><b>Метод getCD</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>getCD</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получает состояние линии CD
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+состояние линии CD
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'close' details -->
+<a name="close"/>
+<font size="+1"><b>Метод close</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>close</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Закрывает COM-порт
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</body>
+</html>

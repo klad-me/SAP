@@ -1,0 +1,47 @@
+
+class L_InterfaceTab
+{
+    static void CreateInterfaceTab()
+    {
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    MakeTab(cls);
+	}
+    }
+    
+    
+    static void MakeTab(I_Class cls)
+    {
+	// Смотрим - может у этого класса уже есть таблица
+	if (cls.L_InterfaceTab != null) return;
+	
+	// Создаем таблицу
+	cls.L_InterfaceTab=new Vector();
+	
+	// Копируем таблицу предка
+	if (cls.superclass != null)
+	{
+	    // Создадим таблицу у предка
+	    MakeTab(cls.superclass);
+	    
+	    // Копируем его таблицу себе
+	    cls.L_InterfaceTab.addAll(cls.superclass.L_InterfaceTab);
+	}
+	
+	// Добавляем в таблицу методы своих интерфейсов
+	if (cls.if_list != null)
+	{
+	    for (int i=0; i<cls.if_list.size(); i++)
+	    {
+		I_Class iface=sapc.prog.FindClass((String)cls.if_list.elementAt(i));
+		
+		for (int j=0; j<iface.methods.size(); j++)
+		{
+		    cls.L_InterfaceTab.add(iface.methods.elementAt(j));
+		}
+	    }
+	}
+    }
+}

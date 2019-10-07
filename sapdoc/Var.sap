@@ -1,0 +1,8 @@
+class Var
+{
+    String name;
+    String type;
+    String doc;
+    boolean is_static;
+    boolean is_final;
+}

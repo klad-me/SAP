@@ -1,0 +1,58 @@
+/**
+ * Описывает интерфейс обратного вызова от Modbus-функции
+ */
+interface Modbus_Slave_CallBack
+{
+    /**
+     * Прочитать значение COIL-а (r/w бита)
+     *
+     * @param id номер бита (считая с 1)
+     * @return значение бита
+     */
+    boolean ReadCOIL(int id);
+    
+    
+    /**
+     * Прочитать значение INPUT-а (r/o бита)
+     *
+     * @param id номер бита (считая с 1)
+     * @return значение бита
+     */
+    boolean ReadINPUT(int id);
+    
+    
+    /**
+     * Прочитать значение INPUT REGISTER-а (r/o регистра)
+     *
+     * @param id номер регистра (считая с 1)
+     * @return значение регистра
+     */
+    short ReadINPUT_REGISTER(int id);
+    
+    
+    /**
+     * Прочитать значение HOLDING REGISTER-а (r/w регистра)
+     *
+     * @param id номер регистра (считая с 1)
+     * @return значение регистра
+     */
+    short ReadHOLDING_REGISTER(int id);
+    
+    
+    /**
+     * Записать значение COIL-а (r/w бита)
+     *
+     * @param id номер бита (считая с 1)
+     * @param value значение для записи
+     */
+    void WriteCOIL(int id, boolean value);
+    
+    
+    /**
+     * Записать значение HOLDING REGISTER-а (r/w регистра)
+     *
+     * @param id номер регистра (считая с 1)
+     * @param value значение для записи
+     */
+    void WriteHOLDING_REGISTER(int id, short value);
+}

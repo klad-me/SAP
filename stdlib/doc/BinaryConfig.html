@@ -1,0 +1,300 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса BinaryConfig</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>BinaryConfig</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс реализует менеджер бинарных конфигураций.<br/>
+Фактически этот класс ничего не считывает и не записывает - просто поддерживает хранилище.<br/>
+Функции чтения/записи должна реализовывать внешняя оболочка.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Fields section -->
+<a name="FIELDS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Поля</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="Vector.html"><b>Vector</b></a></td>
+  <td valign="top"><a href="#config"><b>config</b></a><br/>
+Конфигурации. Элемент - byte[]. В каждом элементе хранится контрольная сумма
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static int</td>
+  <td valign="top"><a href="#version"><b>version</b></a><br/>
+Идентификатор конфигурации. Инкрементирутся каждый раз, когда конфигурацию сохраняют.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static int</td>
+  <td valign="top"><a href="#alloc"><b>alloc</b></a>(int&nbsp;size)<br/>
+Выделить конфигурацию.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static byte</td>
+  <td valign="top"><a href="#dataOk"><b>dataOk</b></a>(int&nbsp;id)<br/>
+Определить, корректны ли данные в конфигурации (проверка контрольной суммы).
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="DataStream.html"><b>DataStream</b></a></td>
+  <td valign="top"><a href="#read"><b>read</b></a>(int&nbsp;id)<br/>
+Получить поток данных для чтения конфигурации.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="DataStream.html"><b>DataStream</b></a></td>
+  <td valign="top"><a href="#write"><b>write</b></a>(int&nbsp;id)<br/>
+Получить поток данных для записи конфигурации. Конфигурация блокируется до вызова commit()
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#commit"><b>commit</b></a>(int&nbsp;id)<br/>
+Сохранить конфигурацию. Конфигурация подтверждается контрольной суммой.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание полей</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Field 'config' details -->
+<a name="config"/>
+<font size="+1"><b>Поле config</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static <a href="Vector.html"><b>Vector</b></a> <b>config</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Конфигурации. Элемент - byte[]. В каждом элементе хранится контрольная сумма
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'version' details -->
+<a name="version"/>
+<font size="+1"><b>Поле version</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static int <b>version</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Идентификатор конфигурации. Инкрементирутся каждый раз, когда конфигурацию сохраняют.
+  </td></tr>
+</table>
+<hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'alloc' details -->
+<a name="alloc"/>
+<font size="+1"><b>Метод alloc</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static int <b>alloc</b>(int&nbsp;size)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Выделить конфигурацию.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+size&nbsp;-&nbsp;размер конфигурации в байтах<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+идентификатор конфигурации
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'dataOk' details -->
+<a name="dataOk"/>
+<font size="+1"><b>Метод dataOk</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static byte <b>dataOk</b>(int&nbsp;id)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Определить, корректны ли данные в конфигурации (проверка контрольной суммы).
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+id&nbsp;-&nbsp;идентификатор конфигурации<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если конфигурация корректна
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'read' details -->
+<a name="read"/>
+<font size="+1"><b>Метод read</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="DataStream.html"><b>DataStream</b></a> <b>read</b>(int&nbsp;id)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить поток данных для чтения конфигурации.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+id&nbsp;-&nbsp;идентификатор конфигурации<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+поток данных для чтения
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'write' details -->
+<a name="write"/>
+<font size="+1"><b>Метод write</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="DataStream.html"><b>DataStream</b></a> <b>write</b>(int&nbsp;id)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить поток данных для записи конфигурации. Конфигурация блокируется до вызова commit()
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+id&nbsp;-&nbsp;идентификатор конфигурации<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+поток данных для записи
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'commit' details -->
+<a name="commit"/>
+<font size="+1"><b>Метод commit</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>commit</b>(int&nbsp;id)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Сохранить конфигурацию. Конфигурация подтверждается контрольной суммой.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+id&nbsp;-&nbsp;идентификатор конфигурации<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

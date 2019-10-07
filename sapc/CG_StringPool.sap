@@ -1,0 +1,29 @@
+
+class CG_StringPool
+{
+    static StringPool pool;
+    
+    
+    static void init()
+    {
+	pool=new StringPool();
+    }
+    
+    
+    static short AddString(String str)
+    {
+	return pool.AddString(str);
+    }
+    
+    
+    static String StringAt(int idx)
+    {
+	return pool.StringAt(idx);
+    }
+    
+    
+    static int size()
+    {
+	return pool.size();
+    }
+}

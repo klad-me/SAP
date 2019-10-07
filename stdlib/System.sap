@@ -1,0 +1,158 @@
+/**
+ * Предоставляет некоторые базовые функции исполнительной системы
+ */
+class System
+{
+    /**private**/
+    static byte print_enabled=true;
+    
+    
+    /**
+     * Напечатать строку на стандартный вывод.
+     *
+     * Напечатать строку на стандартный вывод. В зависимости от устройства, стандартный вывод может быть направлен на разные порты.
+     * В случае, если стандартный вывод пересекается с портом ввода/вывода, можно воспользоваться функциями System.disable_print() и
+     * System.enable_print(), чтобы избежать перемешивания данных и стандартного вывода при работе с портом ввода/вывода.
+     *
+     * @param str строка для печати
+     */
+    static void print(String str)
+    {
+	if (print_enabled)
+	    __print(str.getBytes());
+    }
+    
+    
+    /**
+     * Отключить стандартный вывод. System.print() при этом ничего выводить не будет.
+     */
+    static void disable_print()
+    {
+	print_enabled=false;
+    }
+    
+    
+    /**
+     * Включить стандартный вывод. System.print() возобновит свою работу.
+     */
+    static void enable_print()
+    {
+	print_enabled=true;
+    }
+    
+    
+    /**
+     * Получить аргументы командной строки.
+     *
+     * @return массив аргументов командной строки
+     */
+    static String[] args()
+    {
+	String[] args=new String[__argc()];
+	
+	for (int i=0; i<__argc(); i++)
+	{
+	    args[i]=new String(__argv(i));
+	}
+	
+	return args;
+    }
+    
+    
+    /**
+     * Получить значение именованного свойства
+     *
+     * Получить значение именованного свойства. Именованное свойство - это аналог переменных окружения.
+     *
+     * @param name имя свойства
+     * @return значение свойства, или null если свойство с указанным именем отсутствует
+     */
+    static String getProperty(String name)
+    {
+	byte[] value=__getProperty(name.getBytes());
+	if (value!=null)
+	    return new String(value); else
+	    return null;
+    }
+    
+    
+    /**
+     * Установить значение именованного свойства
+     *
+     * Установить значение именованного свойства. Именованное свойство - это аналог переменных окружения.
+     *
+     * @param name имя свойства
+     * @param value новое значение для свойства (при указании пустой строки, свойство удаляется)
+     */
+    static void setProperty(String name, String value)
+    {
+	__setProperty(name.getBytes(), value.getBytes());
+    }
+    
+    
+    /**
+     * Быстрое копирование элементов массивов.
+     *
+     * Быстрое копирование элементов массивов. Оба массива должны иметь одинаковый базовый тип и размерности.
+     * Источник и приемник могут быть одним и тем же массивом. Перекрестные индексы обрабатываются корректно.
+     *
+     * @param src массив-источник
+     * @param srcOffs смещение данных в массиве-источнике
+     * @param dst массив-приемник
+     * @param dstOffs смещение данных в массиве-приемнике
+     * @param len размер копируемых данных (в элементах, а не в байтах!)
+     */
+    native static void arrayCopy(Object src, int srcOffs, Object dst, int dstOffs, int len);
+    
+    
+    /**
+     * Получить текущее время в Unixtime
+     *
+     * @return текущее время в Unixtime
+     */
+    native static int currentTime();
+    
+    
+    /**
+     * Установить текущее время в Unixtime
+     *
+     * @param ut текущее время в Unixtime
+     */
+    native static void setCurrentTime(int ut);
+    
+    
+    /**
+     * Получить текущий счетчик миллисекунд.
+     *
+     * Получить текущий счетчик миллисекунд.
+     * Счетчик миллисекунд считает прошедшее время в миллисекундах используя беззнаковый 32-битный счетчик.
+     * Значение этого счетчика можно использовать для измерения временных интервалов до 49 суток.
+     *
+     * @return текущий счетчик миллисекунд
+     */
+    native static int currentTick();
+    
+    
+    /**
+     * Выйти из программы с указанием кода возврата
+     *
+     * @param code код возврата (обычно используется следующим образом: 0=корректное завершение, положительное значение=корректное завершение+информация о завершении, отрицательное значение=некорректное завершение+информация об ошибке)
+     */
+    native static void exit(int code);
+    
+    
+    /**private**/
+    native static void __print(byte[] str);
+    
+    /**private**/
+    native static int __argc();
+    
+    /**private**/
+    native static byte[] __argv(int n);
+    
+    /**private**/
+    native static byte[] __getProperty(byte[] name);
+    
+    /**private**/
+    native static void __setProperty(byte[] name, byte[] value);
+}

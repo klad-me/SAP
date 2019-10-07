@@ -1,0 +1,357 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса DateTime</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>DateTime</b> implements <a href="Compareable.html"><b>Compareable</b></a></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс DateTime предназначен для хранения даты и времени в распакованном формате,
+а также для различных преобразований даты и времени.<br/>
+Для хранения даты и времени используются два типа: DateTime (распакованная дата/время) и
+int (unixtime - количество секунд с 00:00:00 1 янв 1970).<br/>
+DateTime следует использовать, когда необходимо знать отдельные части даты/времени, а
+unixtime - в случае, если необходимо сравнить дату/время или вычислить промежуток времени.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>()<br/>
+Создает пустой объект DateTime
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Fields section -->
+<a name="FIELDS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Поля</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">short</td>
+  <td valign="top"><a href="#year"><b>year</b></a><br/>
+Год (1970 -> ...)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#month"><b>month</b></a><br/>
+Месяц (1..12 - янв..дек)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#day"><b>day</b></a><br/>
+День месяца (1..31)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#wday"><b>wday</b></a><br/>
+День недели (0..6 - Пон..Вск)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#hour"><b>hour</b></a><br/>
+Часы (0..23)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#min"><b>min</b></a><br/>
+Минуты (0..59)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#sec"><b>sec</b></a><br/>
+Секунды (0..59)
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#to_unixtime"><b>to_unixtime</b></a>()<br/>
+Преобразует хранимую дату/время в unixtime
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#from_unixtime"><b>from_unixtime</b></a>(int&nbsp;ut)<br/>
+Распаковывет unixtime в объект DateTime
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#equals"><b>equals</b></a>(Object&nbsp;o)<br/>
+Сравнить два объекта DateTime.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание полей</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Field 'year' details -->
+<a name="year"/>
+<font size="+1"><b>Поле year</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">short <b>year</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Год (1970 -> ...)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'month' details -->
+<a name="month"/>
+<font size="+1"><b>Поле month</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>month</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Месяц (1..12 - янв..дек)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'day' details -->
+<a name="day"/>
+<font size="+1"><b>Поле day</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>day</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+День месяца (1..31)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'wday' details -->
+<a name="wday"/>
+<font size="+1"><b>Поле wday</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>wday</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+День недели (0..6 - Пон..Вск)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'hour' details -->
+<a name="hour"/>
+<font size="+1"><b>Поле hour</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>hour</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Часы (0..23)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'min' details -->
+<a name="min"/>
+<font size="+1"><b>Поле min</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>min</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Минуты (0..59)
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'sec' details -->
+<a name="sec"/>
+<font size="+1"><b>Поле sec</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">byte <b>sec</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Секунды (0..59)
+  </td></tr>
+</table>
+<hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает пустой объект DateTime
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'to_unixtime' details -->
+<a name="to_unixtime"/>
+<font size="+1"><b>Метод to_unixtime</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>to_unixtime</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Преобразует хранимую дату/время в unixtime
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+unixtime, соответствующий хранимой дате/времени
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'from_unixtime' details -->
+<a name="from_unixtime"/>
+<font size="+1"><b>Метод from_unixtime</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>from_unixtime</b>(int&nbsp;ut)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Распаковывет unixtime в объект DateTime
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+ut&nbsp;-&nbsp;unixtime, который необходимо распаковать<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'equals' details -->
+<a name="equals"/>
+<font size="+1"><b>Метод equals</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>equals</b>(Object&nbsp;o)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Сравнить два объекта DateTime.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+o&nbsp;-&nbsp;объект, с которым производится сравнение<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если дата и время сходятся, или false - в остальных случаях
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

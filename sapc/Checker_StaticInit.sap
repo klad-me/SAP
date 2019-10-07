@@ -1,0 +1,62 @@
+
+// Создать метод <staticinit>, чтоб в нем инитить все статические поля
+class Checker_StaticInit
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	if (cls.is_interface) return true;	// интерфейсы мы не проверяем
+	
+	
+	Vector init_stats=new Vector();
+	
+	// Проходим по всем полям
+	for (int i=0; i<cls.fields.size(); i++)
+	{
+	    I_Var v=(I_Var)cls.fields.elementAt(i);
+	    
+	    if (!v.is_static) continue;	// простые переменные тут не инитим
+	    if (v.init==null) continue;	// нет инициализатора
+	    
+	    // Добавляем команду инициализации
+	    I_Stat s=new I_Stat(null, I_Stat.EXPR);
+	    s.fname=v.init.fname;
+	    s.line=v.init.line;
+	    
+	    I_Expr _this=new I_Expr(null, I_Expr.THIS, null, null);
+	    _this.fname=v.init.fname;
+	    _this.line=v.init.line;
+	    
+	    I_Expr left=new I_Expr(null, I_Expr.FIELD, _this, null);	// потом поменяется на STATIC_FIELD
+	    left.stringValue=v.name;
+	    left.fname=v.init.fname;
+	    left.line=v.init.line;
+	    
+	    s.expr=new I_Expr(null, I_Expr.ASSIGN, left, v.init);
+	    s.expr.first_init=true;
+	    s.expr.fname=v.init.fname;
+	    s.expr.line=v.init.line;
+	    
+	    init_stats.add(s);
+	    
+	    //v.init=null;
+	}
+	
+	// Смотрим - есть ли инициализация
+	if (init_stats.size()==0) return true;	// нечего инитить
+	
+	
+	// Создаем метод <staticinit>
+        I_Method init=new I_Method(null, new I_Type(null, I_Type.VOID, 0, null), "<staticinit>", true, false);
+        init.fname=cls.fname;
+        init.line=cls.line;
+        init.code=new I_Stat(null, I_Stat.BLOCK);
+        init.code.stats_list=init_stats;
+        init.code.fname=cls.fname;
+        init.code.line=cls.line;
+	
+	cls.methods.add(init);
+	
+	// Все готово
+	return true;
+    }
+}

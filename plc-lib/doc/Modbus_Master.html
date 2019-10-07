@@ -1,0 +1,340 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса Modbus_Master</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>Modbus_Master</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Реализует функцию Modbus-мастера. Позволяет выполнять базовые запросы.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>(<a href="Modbus.html"><b>Modbus</b></a>&nbsp;modbus)<br/>
+Создает Modbus-мастер
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#Force_COILS"><b>Force_COILS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, byte[]&nbsp;data, int&nbsp;timeout)<br/>
+Установить значение COIL-ов (r/w битов)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#Preset_REGISTERS"><b>Preset_REGISTERS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, short[]&nbsp;data, int&nbsp;timeout)<br/>
+Установить значение HOLDING REGISTER-ов (r/w регистров)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte[]</td>
+  <td valign="top"><a href="#Read_COILS"><b>Read_COILS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)<br/>
+Прочитать значения COIL-ов (r/w битов)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte[]</td>
+  <td valign="top"><a href="#Read_INPUTS"><b>Read_INPUTS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)<br/>
+Прочитать значения INPUT-ов (r/o битов)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">short[]</td>
+  <td valign="top"><a href="#Read_INPUT_REGISTERS"><b>Read_INPUT_REGISTERS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)<br/>
+Прочитать значения INPUT REGISTER-ов (r/o регистров)
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">short[]</td>
+  <td valign="top"><a href="#Read_HOLDING_REGISTERS"><b>Read_HOLDING_REGISTERS</b></a>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)<br/>
+Прочитать значения HOLDING REGISTER-ов (r/w регистров)
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(<a href="Modbus.html"><b>Modbus</b></a>&nbsp;modbus)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает Modbus-мастер
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+modbus&nbsp;-&nbsp;используемый драйвер Modbus<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Force_COILS' details -->
+<a name="Force_COILS"/>
+<font size="+1"><b>Метод Force_COILS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>Force_COILS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, byte[]&nbsp;data, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить значение COIL-ов (r/w битов)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество битов<br/>
+data&nbsp;-&nbsp;данные для записи<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если запрос выполнен успешно, или false - в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Preset_REGISTERS' details -->
+<a name="Preset_REGISTERS"/>
+<font size="+1"><b>Метод Preset_REGISTERS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>Preset_REGISTERS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, short[]&nbsp;data, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить значение HOLDING REGISTER-ов (r/w регистров)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество регистров<br/>
+data&nbsp;-&nbsp;данные для записи<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если запрос выполнен успешно, или false - в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Read_COILS' details -->
+<a name="Read_COILS"/>
+<font size="+1"><b>Метод Read_COILS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte[] <b>Read_COILS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать значения COIL-ов (r/w битов)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество битов<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив прочитанных битов или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Read_INPUTS' details -->
+<a name="Read_INPUTS"/>
+<font size="+1"><b>Метод Read_INPUTS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte[] <b>Read_INPUTS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать значения INPUT-ов (r/o битов)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество битов<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив прочитанных битов или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Read_INPUT_REGISTERS' details -->
+<a name="Read_INPUT_REGISTERS"/>
+<font size="+1"><b>Метод Read_INPUT_REGISTERS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+short[] <b>Read_INPUT_REGISTERS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать значения INPUT REGISTER-ов (r/o регистров)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество регистров<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив прочитанных регистор или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'Read_HOLDING_REGISTERS' details -->
+<a name="Read_HOLDING_REGISTERS"/>
+<font size="+1"><b>Метод Read_HOLDING_REGISTERS</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+short[] <b>Read_HOLDING_REGISTERS</b>(byte&nbsp;addr, int&nbsp;start, int&nbsp;count, int&nbsp;timeout)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Прочитать значения HOLDING REGISTER-ов (r/w регистров)
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+addr&nbsp;-&nbsp;адрес устройства<br/>
+start&nbsp;-&nbsp;начальный адрес (считая от 1)<br/>
+count&nbsp;-&nbsp;количество регистров<br/>
+timeout&nbsp;-&nbsp;таймаут выполнения запроса<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив прочитанных регистор или null в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

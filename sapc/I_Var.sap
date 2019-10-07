@@ -1,0 +1,91 @@
+
+class I_Var extends I_SourceInfo
+{
+    // Флаги
+    boolean is_static;
+    boolean is_final;
+    
+    // Тип
+    I_Type type;
+    
+    // Имя
+    String name;
+    
+    // Инициализатор
+    I_Expr init;
+    
+    // Документация
+    String doc;
+    
+    
+    
+    ///////////////////////////////////////////
+    
+    // Адрес. Для локальной переменной - от начала стека, для поля - от начала области полей
+    int addr;
+    
+    // Индекс положения спецификатора в таблице строк
+    int spec_index;
+    
+    
+    ///////////////////////////////////////////
+    // Адрес поля
+    int L_address;
+    
+    
+    
+    I_Var(Lex lex, I_Type type, String name, I_Expr init) : super(lex)
+    {
+	this.type=type;
+	this.name=name;
+	this.init=init;
+    }
+    
+    
+    String spec()
+    {
+	return name+":"+type.spec();
+    }
+    
+    
+    
+    static Vector ParseVarList(Lex lex, I_Type type, String name, boolean is_static, boolean is_final)
+    {
+	Vector list=new Vector();
+	I_Expr init=null;
+	
+	while (true)
+	{
+	    int t=lex.GetToken();
+	    
+	    if (t=='=')
+	    {
+		// Есть инициализатор
+		init=I_Expr.ParseExpr(lex);
+		if (init==null) lex.error("expression expected after '=' in variable declaration !");
+		
+		t=lex.GetToken();
+	    }
+	    
+	    // Добавляем переменную
+	    I_Var v=new I_Var(lex, type, name, init);
+	    v.is_static=is_static;
+	    v.is_final=is_final;
+	    list.add(v);
+	    
+	    // Смотрим, что там дальше идет
+	    if (t==',')
+	    {
+		// Есть еще переменные
+		if (lex.GetToken()!=Lex.T_VARIABLE) lex.error("variable expected after ',' in variables list !");
+		name=(String)lex.tok_value;
+		init=null;
+	    } else
+	    {
+		// Наверное, конец
+		lex.UngetToken();
+		return list;
+	    }
+	}
+    }
+}

@@ -1,0 +1,260 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса Thread</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>Thread</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Предоставляет возможность создавать потоки (Threads), позволяющие параллельное выполнение нескольких методов.<br/>
+Для создания потока, необходимо создать класс, определяеющий метод интерфейса Runnable.run().
+Тело этого метода и будет являться кодом для исполнения потока.<br/>
+Например:<br/>
+class my_thread implements Runnable<br/>
+{<br/>
+&nbsp;&nbsp;void run()<br/>
+&nbsp;&nbsp;{<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;for (int i=0; i<10; i++)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ System.print("This is thread\n"); Thread.sleep(500); }<br/>
+&nbsp;&nbsp;}<br/>
+}<br/>
+Для запуска метода my_thread.run() в отдельном потоке, необходимо создать поток и запустить его:<br/>
+Thread thr=new Thread(new my_thread(), "my_thread");<br/>
+thr.start();<br/>
+thr.join();<br/>
+Код выше создает отдельный поток (new Thread()), запускает его (Thread.start()) для выполнения метода my_thread.run() и дожидается его завершения (Thread.join()).
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>(<a href="Runnable.html"><b>Runnable</b></a>&nbsp;thr, <a href="String.html"><b>String</b></a>&nbsp;name)<br/>
+Создает новый поток исполнения
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#start"><b>start</b></a>()<br/>
+Запускает поток на выполнение. Вызывающий поток при этом не блокируется.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#isRunning"><b>isRunning</b></a>()<br/>
+Проверяет, работает ли еще поток
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#join"><b>join</b></a>()<br/>
+Ожидает завершения выполнения потока. Выполняющий поток при этом блокируется до завершения указанного потока.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#sleep"><b>sleep</b></a>(int&nbsp;ms)<br/>
+Приостанавливает выполнение вызывающего потока на заданное количество миллисекунд
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#yield"><b>yield</b></a>()<br/>
+Передает управление с вызывающего потока на следующий поток в очереди.
+Используется, если задержка в 1мс слишком велика.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(<a href="Runnable.html"><b>Runnable</b></a>&nbsp;thr, <a href="String.html"><b>String</b></a>&nbsp;name)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает новый поток исполнения. Запуска потока при этом не происходит.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+thr&nbsp;-&nbsp;класс, определяющий метод Runnable.run() для запуска в новом потоке<br/>
+name&nbsp;-&nbsp;строковое имя потока<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'start' details -->
+<a name="start"/>
+<font size="+1"><b>Метод start</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>start</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Запускает поток на выполнение. Вызывающий поток при этом не блокируется.
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'isRunning' details -->
+<a name="isRunning"/>
+<font size="+1"><b>Метод isRunning</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>isRunning</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Проверяет, работает ли еще поток
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если поток все еще выполняется, или false - в случае, если поток завершил свое исполнение (произошел выход из метода Runnable.run())
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'join' details -->
+<a name="join"/>
+<font size="+1"><b>Метод join</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>join</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Ожидает завершения выполнения потока. Выполняющий поток при этом блокируется до завершения указанного потока.
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'sleep' details -->
+<a name="sleep"/>
+<font size="+1"><b>Метод sleep</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>sleep</b>(int&nbsp;ms)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Приостанавливает выполнение вызывающего потока на заданное количество миллисекунд
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+ms&nbsp;-&nbsp;время, на которое требуется приостановить выполнение вызывающего потока<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'yield' details -->
+<a name="yield"/>
+<font size="+1"><b>Метод yield</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>yield</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Передает управление с вызывающего потока на следующий поток в очереди.
+Используется, если задержка в 1мс слишком велика.
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

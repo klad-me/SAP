@@ -1,0 +1,489 @@
+/**
+ * Реализует функцию Modbus-мастера. Позволяет выполнять базовые запросы.
+ */
+class Modbus_Master
+{
+    /**private**/
+    Modbus modbus;
+    
+    /**private**/
+    Timer timer;
+    
+    
+    /**
+     * Создает Modbus-мастер
+     *
+     * @param modbus используемый драйвер Modbus
+     */
+    constructor(Modbus modbus)
+    {
+	this.modbus=modbus;
+	timer=new Timer();
+    }
+    
+    
+    /**private
+     * Прочитать word из массива данных
+     */
+    int Rword(byte[] data, int offs)
+    {
+	return ((((int)data[offs]) & 0xff) << 8) | (((int)data[offs+1]) & 0xff);
+    }
+    
+    
+    /**private
+     * Записать word в массив данных
+     */
+    void Wword(byte[] data, int offs, int value)
+    {
+	data[offs+0]=(byte)(value>>8);
+	data[offs+1]=(byte)(value & 0xff);
+    }
+    
+    
+    /**
+     * Установить значение COIL-ов (r/w битов)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество битов
+     * @param data данные для записи
+     * @param timeout таймаут выполнения запроса
+     * @return true, если запрос выполнен успешно, или false - в случае ошибки
+     */
+    boolean Force_COILS(byte addr, int start, int count, boolean[] data, int timeout)
+    {
+	byte cmd;
+	
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>2040) ) return false;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+        
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// В зависимости от кол-ва определяем команду
+	if (count==1)
+	{
+	    // Используем 05 FORCE SINGLE COIL
+	    byte[] tx=new byte[6];
+	    
+	    tx[0]=addr;
+	    tx[1]=0x05;
+	    Wword(tx, 2, start);
+	    Wword(tx, 4, data[0] ? 0xff00 : 0x0000);
+	    
+	    // Отправляем пакет
+	    modbus.send(tx);
+	    
+	    cmd=0x05;
+	} else
+	{
+	    // Используем 15 FORCE MULTIPLE COILS
+	    byte[] tx=new byte[7+(count+7)/8];
+	    
+	    tx[0]=addr;
+	    tx[1]=0x0f;
+	    Wword(tx, 2, start);
+	    Wword(tx, 4, count);
+	    tx[6]=(byte)((count+7)/8);
+	    
+	    // Заполняем данные нулями
+	    for (int i=0; i<(count+7)/8; i++)
+	        tx[7+i]=0x00;
+	    
+    	    // Устанавливаем единицы в требуемых битах
+    	    for (int i=0; i<count; i++)
+    	    {
+        	if (data[i])
+            	    tx[7+i/8]=(byte)(tx[7+i/8] | (1<<(i%8)));
+    	    }
+	    
+	    // Отправляем пакет
+	    modbus.send(tx);
+	    
+	    cmd=0x0f;
+	}
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=cmd) )
+		 continue;	// не тот ответ принят
+	    
+	    switch (cmd)
+	    {
+		case 0x05:
+		    // Ответ на команду 05 FORCE SINGLE COIL
+		    if ( (rx.length!=6) || (start!=Rword(rx, 2)) ) continue;
+		    
+		    // Все нормально !
+		    return true;
+		
+		case 0x0f:
+		    // Ответ на команду 15 FORCE MULTIPLE COILS
+		    if ( (rx.length!=6) || (start!=Rword(rx, 2)) ) continue;
+		    
+		    // Все нормально !
+		    return true;
+	    }
+	}
+	
+	return false;
+    }
+    
+    
+    /**
+     * Установить значение HOLDING REGISTER-ов (r/w регистров)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество регистров
+     * @param data данные для записи
+     * @param timeout таймаут выполнения запроса
+     * @return true, если запрос выполнен успешно, или false - в случае ошибки
+     */
+    boolean Preset_REGISTERS(byte addr, int start, int count, short[] data, int timeout)
+    {
+	byte cmd;
+	
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>127) ) return false;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+	
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// В зависимости от кол-ва определяем команду
+	if (count==1)
+	{
+	    // Используем 06 FORCE SINGLE REGISTER
+	    byte[] tx=new byte[6];
+	    
+	    tx[0]=addr;
+	    tx[1]=0x06;
+	    Wword(tx, 2, start);
+	    Wword(tx, 4, data[0]);
+	    
+	    // Отправляем пакет
+	    modbus.send(tx);
+	    
+	    cmd=0x06;
+	} else
+	{
+	    // Используем 16 PRESET MULTIPLE REGISTERS
+	    byte[] tx=new byte[7+count*2];
+	    
+	    tx[0]=addr;
+	    tx[1]=0x10;
+	    Wword(tx, 2, start);
+	    Wword(tx, 4, count);
+	    tx[6]=(byte)(count*2);
+	    
+	    // Заполняем данные
+    	    for (int i=0; i<count; i++)
+    	    {
+    		Wword(tx, 7+i*2, data[i]);
+    	    }
+	    
+	    // Отправляем пакет
+	    modbus.send(tx);
+	    
+	    cmd=0x10;
+	}
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=cmd) )
+		 continue;	// не тот ответ принят
+	    
+	    switch (cmd)
+	    {
+		case 0x06:
+		    // Ответ на команду 06 PRESET SINGLE REGISTER
+		    if ( (rx.length!=6) || (start!=Rword(rx, 2)) ) continue;
+		    
+		    // Все нормально !
+		    return true;
+		
+		case 0x10:
+		    // Ответ на команду 16 PRESET MULTIPLE REGISTERS
+		    if ( (rx.length!=6) || (start!=Rword(rx, 2)) || (count!=Rword(rx, 4)) ) continue;
+		    
+		    // Все нормально !
+		    return true;
+	    }
+	}
+	
+	return false;
+    }
+    
+    
+    /**
+     * Прочитать значения COIL-ов (r/w битов)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество битов
+     * @param timeout таймаут выполнения запроса
+     * @return массив прочитанных битов или null в случае ошибки
+     */
+    boolean[] Read_COILS(byte addr, int start, int count, int timeout)
+    {
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>2040) ) return null;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+	
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// Используем 01 READ COIL STATUS
+	byte[] tx=new byte[6];
+	
+	tx[0]=addr;
+	tx[1]=0x01;
+	Wword(tx, 2, start);
+	Wword(tx, 4, count);
+	
+	// Отправляем пакет
+	modbus.send(tx);
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=0x01) )
+		 continue;	// не тот ответ принят
+	    
+	    // Ответ на команду 01 READ COIL STATUS
+	    if ( (rx.length!=3+(count+7)/8) || (rx[2]!=(count+7)/8) ) continue;
+	    
+            // Заполняем массив данных
+	    boolean[] data=new boolean[count];
+	    
+            for (int i=0; i<count; i++)
+            {
+                if ( (rx[3+i/8] & (1<<(i%8)))!=0 )
+                    data[i]=true; else
+                    data[i]=false;
+            }
+	    
+	    // Все нормально !
+	    return data;
+	}
+	
+	return null;
+    }
+    
+    
+    /**
+     * Прочитать значения INPUT-ов (r/o битов)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество битов
+     * @param timeout таймаут выполнения запроса
+     * @return массив прочитанных битов или null в случае ошибки
+     */
+    boolean[] Read_INPUTS(byte addr, int start, int count, int timeout)
+    {
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>2040) ) return null;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+        
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// Используем 02 READ INPUT STATUS
+	byte[] tx=new byte[6];
+	
+	tx[0]=addr;
+	tx[1]=0x02;
+	Wword(tx, 2, start);
+	Wword(tx, 4, count);
+	
+	// Отправляем пакет
+	modbus.send(tx);
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=0x02) )
+		 continue;	// не тот ответ принят
+	    
+	    // Ответ на команду 02 READ INPUT STATUS
+	    if ( (rx.length!=3+(count+7)/8) || (rx[2]!=(count+7)/8) ) continue;
+	    
+            // Заполняем массив данных
+	    boolean[] data=new boolean[count];
+	    
+            for (int i=0; i<count; i++)
+            {
+                if ( (rx[3+i/8] & (1<<(i%8)))!=0 )
+                    data[i]=true; else
+                    data[i]=false;
+            }
+	    
+	    // Все нормально !
+	    return data;
+	}
+	
+	return null;
+    }
+    
+    
+    /**
+     * Прочитать значения INPUT REGISTER-ов (r/o регистров)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество регистров
+     * @param timeout таймаут выполнения запроса
+     * @return массив прочитанных регистор или null в случае ошибки
+     */
+    short[] Read_INPUT_REGISTERS(byte addr, int start, int count, int timeout)
+    {
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>127) ) return null;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+        
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// Используем 04 READ INPUT REGISTERS
+	byte[] tx=new byte[6];
+	
+	tx[0]=addr;
+	tx[1]=0x04;
+	Wword(tx, 2, start);
+	Wword(tx, 4, count);
+	
+	// Отправляем пакет
+	modbus.send(tx);
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=0x04) )
+		 continue;	// не тот ответ принят
+	    
+	    // Ответ на команду 04 READ INPUT REGISTERS
+	    if ( (rx.length!=3+count*2) || (rx[2]!=count*2) ) continue;
+	    
+            // Заполняем массив данных
+	    short[] data=new short[count];
+	    
+            for (int i=0; i<count; i++)
+            {
+        	data[i]=(short)Rword(rx, 3+i*2);
+            }
+	    
+	    // Все нормально !
+	    return data;
+	}
+	
+	return null;
+    }
+    
+    
+    /**
+     * Прочитать значения HOLDING REGISTER-ов (r/w регистров)
+     *
+     * @param addr адрес устройства
+     * @param start начальный адрес (считая от 1)
+     * @param count количество регистров
+     * @param timeout таймаут выполнения запроса
+     * @return массив прочитанных регистор или null в случае ошибки
+     */
+    short[] Read_HOLDING_REGISTERS(byte addr, int start, int count, int timeout)
+    {
+	// Проверим колво данных
+	if ( (start<1) || (start>65536) || (count<1) || (count>127) ) return null;
+	
+        // Опустошаем входной буфер (чтобы вдруг не прочитать старый ответ)
+        modbus.clearInput();
+        
+	// Приводим начальный адрес к нулю
+	start--;
+	
+	// Используем 03 READ HOLDING REGISTERS
+	byte[] tx=new byte[6];
+	
+	tx[0]=addr;
+	tx[1]=0x03;
+	Wword(tx, 2, start);
+	Wword(tx, 4, count);
+	
+	// Отправляем пакет
+	modbus.send(tx);
+	
+	// Ждем ответа
+	timer.set(timeout);
+	while (timer.read()>0)
+	{
+	    byte[] rx=modbus.receive(timer.read());
+	    
+	    if (rx==null) continue;	// не принято
+	    
+	    if ( (rx[0]!=addr) ||
+		 (rx[1]!=0x03) )
+		 continue;	// не тот ответ принят
+	    
+	    // Ответ на команду 03 READ HOLDING REGISTERS
+	    if ( (rx.length!=3+count*2) || (rx[2]!=count*2) ) continue;
+	    
+            // Заполняем массив данных
+	    short[] data=new short[count];
+	    
+            for (int i=0; i<count; i++)
+            {
+        	data[i]=(short)Rword(rx, 3+i*2);
+            }
+	    
+	    // Все нормально !
+	    return data;
+	}
+	
+	return null;
+    }
+}

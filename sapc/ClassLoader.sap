@@ -1,0 +1,347 @@
+
+// Загрузчик классов
+class ClassLoader
+{
+    static byte[] data;
+    static int pos;
+    
+    
+    static boolean LoadClassWithDeps(I_Program prog, String name)
+    {
+	// Читаем файл в память (ищем по всем каталогам)
+	String fname=name+".sapclass";
+	boolean ok=false;
+	
+	for (int i=0; i<prog.INC_DIRS.size(); i++)
+	{
+	    String dir=(String)prog.INC_DIRS.elementAt(i);
+	    
+	    File F=new File(dir+fname, File.READ);
+	    if (F.ok())
+	    {
+		data=new byte[F.available()];
+		pos=0;
+		F.readBytes(data, 0, data.length);
+		F.close();
+		
+		// Все нормально
+		sapc.debug("Using "+dir+fname+"\n");
+		ok=true;
+		break;
+	    }
+	}
+	
+	if (!ok) return false;	// ошибка загрузки класса
+	
+	
+	sapc.debug("Loading class '"+name+"'\n");
+	
+	// Проверяем сигнатуру и версию
+	if (readInt() != 0x01504153)
+	{
+	    sapc.error(fname+": Incorrect signature !\n");
+	    return false;
+	}
+	
+	// Читаем имя класса
+	if (!name.equals(readString()))
+	{
+	    sapc.error(fname+": Incorrect class name !\n");
+	    return false;
+	}
+	
+	// Читаем флаги
+	boolean is_interface=false;
+	if ( (readByte() & 0x01) != 0 ) is_interface=true;
+	
+	// Читаем зависимости
+	int n_deps=readByte();
+	Vector deps=new Vector();
+	for (int i=0; i<n_deps; i++)
+	{
+	    deps.add(readString());
+	}
+	
+	// Читаем имя суперкласса
+	String superclass_name=readString();
+	if (superclass_name.equals("")) superclass_name=null;
+	
+	// Читаем определяемые интерфейсы
+	int if_list_size=readByte();
+	Vector if_list=new Vector();
+	for (int i=0; i<if_list_size; i++)
+	{
+	    if_list.add(readString());
+	}
+	
+	// Читаем документацию на класс
+	String cls_doc=readString();
+	
+	// Читаем таблицу строк
+	short n_StringPool=readShort();
+	Vector StringPool=new Vector();
+	for (int i=0; i<n_StringPool; i++)
+	{
+	    StringPool.add(readString());
+	}
+	
+	// Создаем класс
+	I_Class cls=new I_Class(null, name, superclass_name, if_list);
+	cls.is_interface=is_interface;
+	cls.depends=deps;
+	cls.StringPool=StringPool;
+	cls.doc=cls_doc;
+	
+	// Читаем статические поля
+	int n_static_fields=readShort();
+	for (int i=0; i<n_static_fields; i++)
+	{
+	    // Читаем флаги
+	    boolean is_final=false;
+	    if ( (readByte() & 0x02) != 0) is_final=true;
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Получаем имя поля и тип
+	    String field_name=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+	    I_Type t=parseType(spec.substring(spec.indexOf(':')+1, spec.length()));
+	    
+	    // Читаем документацию
+	    String doc=readString();
+	    
+	    // Создаем поле
+	    I_Var v=new I_Var(null, t, field_name, null);
+	    v.is_static=true;
+	    v.is_final=is_final;
+	    v.doc=doc;
+	    
+	    cls.fields.add(v);
+	}
+	
+	// Читаем поля
+	int n_fields=readShort();
+	for (int i=0; i<n_fields; i++)
+	{
+	    // Читаем флаги
+	    boolean is_final=false;
+	    if ( (readByte() & 0x02) != 0) is_final=true;
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Получаем имя поля и тип
+	    String field_name=spec.substring(spec.indexOf('.')+1, spec.indexOf(':'));
+	    I_Type t=parseType(spec.substring(spec.indexOf(':')+1, spec.length()));
+	    
+	    // Читаем документацию
+	    String doc=readString();
+	    
+	    // Создаем поле
+	    I_Var v=new I_Var(null, t, field_name, null);
+	    v.is_final=is_final;
+	    v.doc=doc;
+	    
+	    cls.fields.add(v);
+	}
+	
+	// Читаем зависимости <staticinit>
+	int n_staticinit_deps=readByte();
+	Vector staticinit_deps=new Vector();
+	for (int i=0; i<n_staticinit_deps; i++)
+	{
+	    staticinit_deps.add(readString());
+	}
+	cls.staticinit_deps=staticinit_deps;
+	
+	// Читаем имя исходника
+	cls.fname=readString();
+	
+	// Читаем методы
+	int n_methods=readByte();
+	for (int i=0; i<n_methods; i++)
+	{
+	    // Читаем флаги
+	    byte flags=readByte();
+	    
+	    // Читаем спецификатор
+	    String spec=(String)StringPool.elementAt(readShort());
+	    
+	    // Разбираем спецификатор
+	    String method_name=spec.substring(spec.indexOf('.')+1, spec.indexOf('('));
+	    int pos=spec.indexOf('(')+1;
+	    Vector params=new Vector();
+	    while (spec.charAt(pos)!=')')
+	    {
+		// Получаем имя параметра
+		StringBuffer param_name=new StringBuffer();
+		while (spec.charAt(pos)!=':')
+		    param_name.appendChar(spec.charAt(pos++));
+		pos++;
+		
+		// Получаем тип
+		I_Type t=parseType(spec.substring(pos, spec.length()));
+		
+		// Создаем переменную
+		I_Var v=new I_Var(null, t, param_name.toString(), null);
+		params.add(v);
+		
+		// Пропускаем параметр
+		if (spec.charAt(pos)=='L')
+		{
+		    // Надо пропустить имя ссылки
+		    while (spec.charAt(pos)!=';') pos++;
+		}
+		pos++;
+		while (spec.charAt(pos)=='[') pos++;
+	    }
+	    pos++;
+	    I_Type return_type=parseType(spec.substring(pos, spec.length()));
+	    
+	    I_Method m=new I_Method(null, return_type, method_name, ((flags & 0x01)!=0)?true:false, ((flags & 0x80)!=0)?true:false);
+	    m.params=params;
+	    
+	    // Размер фрейма
+	    m.frame_size=readShort();
+	    
+	    // Начальный SP
+	    m.start_SP=readShort();
+	    
+	    // Размер кода и сам код
+	    m.compiled_code_size=((int)readShort()) & 0xffff;
+	    m.compiled_code=new byte[m.compiled_code_size];
+	    for (int j=0; j<m.compiled_code_size; j++)
+	    {
+		m.compiled_code[j]=readByte();
+	    }
+	    
+	    // Размер таблицы строк и сама таблица строк
+	    m.line_numbers_size=readShort();
+	    m.line_numbers=new byte[m.line_numbers_size];
+	    for (int j=0; j<m.line_numbers_size; j++)
+	    {
+		m.line_numbers[j]=readByte();
+	    }
+	    
+	    // Читаем документацию
+	    m.doc=readString();
+	    
+	    // Добавляем метод к классу
+	    cls.methods.add(m);
+	}
+	
+	// Добавляем этот класс в список загруженных
+	prog.classes.add(cls);
+	
+	// Читаем все зависимости
+	for (int i=0; i<n_deps; i++)
+	{
+	    name=(String)deps.elementAt(i);
+	    if (prog.FindClass(name)!=null) continue;	// класс уже загружен
+	    
+	    // Загружаем
+	    if (!LoadClassWithDeps(prog, name))
+	    {
+		sapc.error("Required class '"+name+"' not loaded ! (required for class '"+cls.name+"')\n");
+		return false;
+	    }
+	}
+	
+	// Ресолвим суперкласс
+	if (superclass_name!=null)
+	    cls.superclass=prog.FindClass(superclass_name);
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    
+    static byte readByte()
+    {
+	return data[pos++];
+    }
+    
+    
+    static int readInt()
+    {
+	int value=CG_Stream.R_Int(data, pos);
+	pos=pos+4;
+	return value;
+    }
+    
+    
+    static short readShort()
+    {
+	short value=CG_Stream.R_Short(data, pos);
+	pos=pos+2;
+	return value;
+    }
+    
+    
+    static String readString()
+    {
+	int l=((int)data[pos++]) & 0xff;
+	
+	if (l==0) return "";
+	
+	if (l & 0x80)
+	{
+	    // Размер - 2 байта
+	    l=(l & 0x7f) << 8;
+	    l|=((int)data[pos++]) & 0xff;
+	}
+	
+	StringBuffer str=new StringBuffer();
+	for (int i=0; i<l; i++)
+	{
+	    str.appendChar((char)data[pos++]);
+	}
+	
+	return str.toString();
+    }
+    
+    
+    static I_Type parseType(String spec)
+    {
+	int base;
+	String ClassName=null;
+	int pos=0;
+	
+	switch (spec.charAt(0))
+	{
+	    case 'B':
+		base=I_Type.BYTE;
+		break;
+	    
+	    case 'S':
+		base=I_Type.SHORT;
+		break;
+	    
+	    case 'I':
+		base=I_Type.INT;
+		break;
+	    
+	    case 'F':
+		base=I_Type.FLOAT;
+		break;
+	    
+	    case 'L':
+		base=I_Type.REF;
+		ClassName=spec.substring(1, spec.indexOf(';'));
+		pos=spec.indexOf(';');
+		break;
+	    
+	    case 'V':
+	    default:
+		base=I_Type.VOID;
+		break;
+	}
+	
+	pos++;
+	int n_array=0;
+	while ( (pos<spec.length()) && (spec.charAt(pos++)=='[') ) n_array++;
+	
+	return new I_Type(null, base, n_array, ClassName);
+    }
+}

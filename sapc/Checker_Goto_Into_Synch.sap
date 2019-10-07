@@ -1,0 +1,115 @@
+
+// Проверить, что goto не ссылается на метку, определенную глубже в synchronized()
+class Checker_Goto_Into_Synch
+{
+    static Vector labels=new Vector();
+    static I_Stat guard;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверяем все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	return CheckStat(m.code, m.code);
+    }
+    
+    
+    static boolean CheckStat(I_Stat code, I_Stat s)
+    {
+	if (s==null) return true;
+	
+	// Ищем synchronized()
+	if (s.type==I_Stat.SYNCHRONIZED)
+	{
+	    // Это синхронизированный блок. Ищем в нем метки
+	    labels.setSize(0);
+	    FindLabels(s.stat);
+	    guard=s;
+	    if (!CheckGoto(code)) return false;
+	}
+	
+	// Проверим все внутри
+	if (!CheckStat(code, s.stat)) return false;
+	if (!CheckStat(code, s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat(code, (I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static void FindLabels(I_Stat s)
+    {
+	if (s==null) return;
+	
+	if (s.type==I_Stat.LABEL)
+	{
+	    labels.add(s.stringValue);
+	    return;
+	}
+	
+	FindLabels(s.stat);
+	FindLabels(s.stat2);
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		FindLabels((I_Stat)s.stats_list.elementAt(i));
+	    }
+	}
+    }
+    
+    
+    static boolean CheckGoto(I_Stat s)
+    {
+	if (s==null) return true;
+	if (s==guard) return true;
+	
+	if (s.type==I_Stat.GOTO)
+	{
+	    // Это переход. Ищем, может это метка внутри синхронизированного блока
+	    for (int i=0; i<labels.size(); i++)
+	    {
+		if (s.stringValue.equals((String)labels.elementAt(i)))
+		{
+		    // Нельзя !
+		    sapc.error(s.fname+":"+s.line+":  Trying to 'goto' to inside of synchronized block !\n");
+		    return false;
+		}
+	    }
+	}
+	
+	// Проверяем все внутри
+	if (!CheckGoto(s.stat)) return false;
+	if (!CheckGoto(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckGoto((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+}

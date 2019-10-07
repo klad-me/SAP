@@ -1,0 +1,143 @@
+
+// Для каждого выражения GOTO и RETURN установить в intValue кол-во вызовов monitor_exit
+class Checker_Goto_From_Synch
+{
+    static Vector labels=new Vector();
+    static int depth;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверяем все методы
+	//sapc.debug("Checker_Goto_From_Synch class '"+cls.name+"'\n");
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    CheckMethod((I_Method)cls.methods.elementAt(i));
+	}
+	
+	return true;
+    }
+    
+    
+    static void CheckMethod(I_Method m)
+    {
+	// Ищем все метки и присваиваем им значение глубины
+	labels.setSize(0);
+	depth=0;
+	FindLabels(m.code);
+	
+	// Правим код
+	depth=0;
+	CheckStat(m.code);
+    }
+    
+    
+    static void FindLabels(I_Stat s)
+    {
+	if (s==null) return;
+	
+	//sapc.debug("stat "+s.type+"\n");
+	
+	if (s.type==I_Stat.LABEL)
+	{
+	    // Описание переменной
+	    //sapc.debug("label '"+s.stringValue+"' depth '"+depth+"\n");
+	    labels.add(s);
+	    s.intValue=depth;
+	    return;
+	} else
+	if ( (s.type==I_Stat.WHILE) ||
+	     (s.type==I_Stat.DO_WHILE) ||
+	     (s.type==I_Stat.FOR) )
+	{
+	    // Циклы описывают <break>N и <continue>N
+	    I_Stat brk=new I_Stat(null, I_Stat.LABEL);
+	    brk.stringValue="<break>"+s.cycle_num;
+	    brk.intValue=depth;
+	    labels.add(brk);
+	    
+	    I_Stat cont=new I_Stat(null, I_Stat.LABEL);
+	    cont.stringValue="<continue>"+s.cycle_num;
+	    cont.intValue=depth;
+	    labels.add(cont);
+	} else
+	if (s.type==I_Stat.SWITCH)
+	{
+	    // switch описывает только <break>N
+	    I_Stat brk=new I_Stat(null, I_Stat.LABEL);
+	    brk.stringValue="<break>"+s.cycle_num;
+	    brk.intValue=depth;
+	    labels.add(brk);
+	} else
+	if (s.type==I_Stat.SYNCHRONIZED)
+	{
+	    depth++;
+	    FindLabels(s.stat);
+	    depth--;
+	    return;
+	}
+	
+	// Проверим все внутри
+	FindLabels(s.stat);
+	FindLabels(s.stat2);
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		FindLabels((I_Stat)s.stats_list.elementAt(i));
+	    }
+	}
+    }
+    
+    
+    static void CheckStat(I_Stat s)
+    {
+	if (s==null) return;
+	
+	if (s.type==I_Stat.SYNCHRONIZED)
+	{
+	    depth++;
+	    CheckStat(s.stat);
+	    depth--;
+	    return;
+	} else
+	if (s.type==I_Stat.GOTO)
+	{
+	    int d=0;
+	    
+	    //sapc.debug("goto "+s.stringValue+"\n");
+	    
+	    for (int i=0; i<labels.size(); i++)
+	    {
+		I_Stat label=(I_Stat)labels.elementAt(i);
+		
+		if (s.stringValue.equals(label.stringValue))
+		{
+		    d=label.intValue;
+		    break;
+		}
+	    }
+	    
+	    s.intValue=depth-d;
+	    return;
+	} else
+	if (s.type==I_Stat.RETURN)
+	{
+	    s.intValue=depth;
+	    return;
+	}
+	
+	// Проверим все внутри
+	CheckStat(s.stat);
+	CheckStat(s.stat2);
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		CheckStat((I_Stat)s.stats_list.elementAt(i));
+	    }
+	}
+    }
+}

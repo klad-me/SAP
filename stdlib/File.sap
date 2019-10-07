@@ -1,0 +1,127 @@
+/**
+ * Класс File предназначен для чтения и записи файлов.
+ */
+class File implements Stream
+{
+    // Режимы доступа к файлу
+    
+    /**
+     * Рержим доступа к файлу: для чтения
+     */
+    static final byte READ = 0;
+    
+    /**
+     * Рержим доступа к файлу: для записи
+     */
+    static final byte WRITE = 1;
+    
+    
+    /**
+     * private
+     *
+     * Дескриптор файла
+     */
+    int fd=-1;
+    
+    
+    /**
+     * Создает объект File и открывает файл на чтение или запись.
+     * Результат выполнения операции открытия файла возвращается методом ok()
+     *
+     * @param fname имя файла
+     * @param mode режим доступа к файлу: File.READ или File.WRITE
+     */
+    constructor(String fname, byte mode)
+    {
+	fd=__open(fname.getBytes(), mode);
+    }
+    
+    
+    /**
+     * Проверить статус открытия файла.
+     *
+     * @return true, если файл открыт успешно, или false - в случае ошибки
+     */
+    boolean ok()
+    {
+	return (fd >= 0);
+    }
+    
+    
+    /**
+     * Перейти к указанной позиции в файле
+     */
+    void seek(int pos)
+    {
+	__seek(fd, pos);
+    }
+    
+    
+    /**
+     * Получить количество доступных байт для чтения.
+     *
+     * @return количество доступных байт для чтения (только для режима чтения)
+     */
+    int available()
+    {
+	return __available(fd);
+    }
+    
+    
+    /**
+     * Прочитать данные из файла.
+     *
+     * Читает данные из файла в массив buf.
+     *
+     * @param buf массив, в который будут помещены прочитанные данные
+     * @param start начальный индекс массива для заполнения
+     * @param count количество байт для чтения
+     * @return количество фактически прочитанных байт, или -1 в случае ошибки ввода/вывода
+     */
+    int readBytes(byte[] buf, int start, int count)
+    {
+	return __read(fd, buf, start, count);
+    }
+    
+    
+    /**
+     * Записать данные в файл.
+     *
+     * Записывает данные в файл из массива buf.
+     *
+     * @param buf массив, из которого будут взяты данные для записи
+     * @param start начальный индекс массива для записи
+     * @param count количество байт для записи
+     * @return количество фактически записанных байт, или -1 в случае ошибки ввода/вывода
+     */
+    int writeBytes(byte[] buf, int start, int count)
+    {
+	return __write(fd, buf, start, count);
+    }
+    
+    
+    /**
+     * Закрыть файл.
+     *
+     * Закрывает файл. При этом сбрасываются все буфера. Дальнейшие операции над файлом будут невозможны.
+     */
+    void close()
+    {
+	__close(fd);
+    }
+    
+    
+    
+    /**private**/
+    native int __open(byte[] fname, byte mode);
+    /**private**/
+    native void __seek(int fd, int pos);
+    /**private**/
+    native int __available(int fd);
+    /**private**/
+    native int __read(int fd, byte[] buf, int start, int count);
+    /**private**/
+    native int __write(int fd, byte[] buf, int start, int count);
+    /**private**/
+    native void __close(int fd);
+}

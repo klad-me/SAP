@@ -1,0 +1,296 @@
+/**
+ * Реализую простую Modbus-функцию. Для работы этого класса требуется создать класс, определяющий интерфейс Modbus_Slave_CallBack.
+ */
+class Modbus_Slave
+{
+    /**private**/
+    Modbus modbus;
+    
+    /**private**/
+    byte Address;
+    
+    /**private**/
+    Modbus_Slave_CallBack cb;
+    
+    
+    /**
+     * Создает Modbus-функцию и задает обратный вызов для получения и установки значений регистров.
+     *
+     * @param mbus используемый драйвер Modbus
+     * @param addr адрес устройства, на который должна откливаться данная Modbus-функция
+     * @param c обратный вызов для получения и установки значений регистров
+     */
+    constructor(Modbus mbus, byte addr, Modbus_Slave_CallBack c)
+    {
+	modbus=mbus;
+	Address=addr;
+	cb=c;
+    }
+    
+    
+    /**
+     * private
+     *
+     * Преобразовать ubyte в int (из byte получить число 0..255)
+     */
+    int b2i(byte b)
+    {
+	return ((int)b) & 0xff;
+    }
+    
+    
+    /**
+     * Опросить драйвер Modbus на предмет запроса к Modbus-функции, обработать запрос и отправить ответ.
+     *
+     * @param bufsize максимально допустимый размер пакета для приема
+     * @param timeout время, которое следует ждать запрос
+     * @return true, если запрос принят и обработан, или false - в случае таймаута приема запроса
+     */
+    boolean Poll(int timeout)
+    {
+	// Ожидаем прием пакета, обрабатываем его и если требуется отправляем ответ
+	int start, number;
+	byte[] rx, tx;
+	
+	// Принимаем пакет
+	rx=modbus.receive(timeout);
+	if (rx==null) return false;	// ничего не принято
+	
+	// Принят пакет
+	
+	// Проверяем адрес (первый байт пакета)
+	if (rx[0]!=Address) return false;	// пакет не нам
+	
+	
+	// Обрабатываем команды - второй байт пакета
+	switch (rx[1])
+	{
+	    case 0x01:	// 01 READ COIL STATUS (сост дискр выходов)
+			// PI_MBUS_300.pdf page 24: 01 Read Coil Status
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Собираем пакет на отправку
+			tx=new byte[((number+7)/8)+3];
+			tx[0]=Address;
+			tx[1]=rx[1];
+			
+			// Вычисляем кол-во байт ответа
+			tx[2]=(byte)((number+7)/8);
+			
+			// Заполняем ответ нулями. Потом где надо поставим единицы
+            		for (int i=0; i<tx[2]; i++)
+	                {
+		    	    tx[3+i]=0x00;
+			}
+			
+			// Заполняем ответ
+			for (int i=0; i<number; i++)
+			{
+			    if (cb.ReadCOIL(start+i+1))
+				tx[3+(i/8)]=(byte)(tx[3+(i/8)] | (1<<(i%8)));
+			}
+			break;
+	    
+	    
+	    case 0x02:	// 02 READ INPUT STATUS (сост дискр входов)
+			// PI_MBUS_300.pdf page 26: 02 Read Input Status
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Собираем пакет на отправку
+			tx=new byte[((number+7)/8)+3];
+			tx[0]=Address;
+			tx[1]=rx[1];
+			
+			// Вычисляем кол-во байт ответа
+			tx[2]=(byte)((number+7)/8);
+			
+			// Заполняем ответ нулями. Потом где надо поставим единицы
+            		for (int i=0; i<tx[2]; i++)
+	                {
+		    	    tx[3+i]=0x00;
+			}
+			
+			// Заполняем ответ
+			for (int i=0; i<number; i++)
+			{
+			    if (cb.ReadINPUT(start+i+1))
+				tx[3+(i/8)]=(byte)(tx[3+(i/8)] | (1<<(i%8)));
+			}
+			break;
+	    
+	    
+	    case 0x03:	// 03 READ HOLDING REGISTERS (сост 16-битных управляющих регистров)
+			// PI_MBUS_300.pdf page 28: 03 Read Holding Registers
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Собираем пакет на отправку
+			tx=new byte[number*2+3];
+			tx[0]=Address;
+			tx[1]=rx[1];
+			
+			// Вычисляем кол-во байт ответа
+			tx[2]=(byte)(number*2);
+			
+    			// Заполняем ответ
+    			for (int i=0; i<number; i++)
+    			{
+        		    short tmp;
+			    
+        		    tmp=cb.ReadHOLDING_REGISTER(start+i+1);
+        		    tx[3+(i*2)]=(byte)((tmp>>8)&0xff);
+        		    tx[3+(i*2)+1]=(byte)(tmp&0xff);
+    			}
+			break;
+	    
+	    
+	    case 0x04:	// 04 READ INPUT REGISTERS (сост 16-битных входных регистров)
+			// PI_MBUS_300.pdf page 30: 04 Read Input Registers
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Собираем пакет на отправку
+			tx=new byte[number*2+3];
+			tx[0]=Address;
+			tx[1]=rx[1];
+			
+			// Вычисляем кол-во байт ответа
+			tx[2]=(byte)(number*2);
+			
+    			// Заполняем ответ
+    			for (int i=0; i<number; i++)
+    			{
+        		    short tmp;
+			    
+        		    tmp=cb.ReadINPUT_REGISTER(start+i+1);
+        		    tx[3+(i*2)]=(byte)((tmp>>8)&0xff);
+        		    tx[3+(i*2)+1]=(byte)(tmp&0xff);
+    			}
+			break;
+	    
+	    
+	    case 0x05:	// 05 FORCE SINGLE COIL (установить сост выхода)
+			// PI_MBUS_300.pdf page 32: 05 Force Single Coil
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем адрес ячейки и значение
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Устанавливаем состояние выхода
+			if (number==0xFF00)
+			{
+			    // Требуется установить выход
+			    cb.WriteCOIL(start+1,true);
+			} else
+			if (number==0x0000)
+			{
+			    // Требуется сбросить выход
+			    cb.WriteCOIL(start+1,false);
+			}
+			
+			// Ответом является пакет без изменений
+			tx=new byte[6];
+			System.arrayCopy(rx,0, tx,0, 6);
+			break;
+	    
+	    
+	    case 0x06:	// 06 PRESET SINGLE REGISTER (установить сост 16-битного выходного регистра)
+			// PI_MBUS_300.pdf page 34: 06 Preset Single Register
+			// Проверяем размер пакета - он должен быть 6 байт
+			if (rx.length!=6) return false;	// неверный пакет
+			
+			// Получаем адрес ячейки и значение
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Устанавливаем состояние регистра
+			cb.WriteHOLDING_REGISTER(start+1,(short)number);
+			
+			// Ответом является пакет без изменений
+			tx=new byte[6];
+			System.arrayCopy(rx,0, tx,0, 6);
+			break;
+	    
+	    
+	    case 0x0F:	// 15 FORCE MULTIPLE COILS (установить сост выходов)
+			// PI_MBUS_300.pdf page 44: 15 Force Multiple Coils
+			// Проверяем размер пакета
+			if (rx.length!=rx[6]+7) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			for (int i=0; i<number; i++)
+			{
+			    if ( (rx[7+i/8] & (1<<(i%8)))!=0 )
+			    {
+				// Требуется установить выход
+				cb.WriteCOIL(start+i+1,true);
+			    } else
+			    {
+				// Требуется сбросить выход
+				cb.WriteCOIL(start+i+1,false);
+			    }
+			}
+			
+			// Ответом является пакет, содержащий только начальный адрес и кол-во (первые 6 байт)
+			tx=new byte[6];
+			System.arrayCopy(rx,0, tx,0, 6);
+			break;
+	    
+	    
+	    case 0x10:	// 16 PRESET MULTIPLE REGISTERS (установить сост 16-битных выходных регистров)
+			// PI_MBUS_300.pdf page 46: 16 Preset Multiple Registers
+			// Проверяем размер пакета
+			if (rx.length!=rx[6]+7) return false;	// неверный пакет
+			
+			// Получаем начальный адрес ячейки и их количество
+			start  = (b2i(rx[2]) << 8) | b2i(rx[3]);
+			number = (b2i(rx[4]) << 8) | b2i(rx[5]);
+			
+			// Устанавливаем состояние регистра
+    			for (int i=0; i<number; i++)
+    			{
+        		    short tmp;
+			    
+        		    tmp=(short)( (b2i(rx[7+i*2]) << 8) | b2i(rx[7+i*2+1]) );
+			    cb.WriteHOLDING_REGISTER(start+i+1,tmp);
+    			}
+			
+			// Ответом является пакет, содержащий только начальный адрес и кол-во (первые 6 байт)
+			tx=new byte[6];
+			System.arrayCopy(rx,0, tx,0, 6);
+			break;
+	    
+	    
+	    default:	// Неизвестная команда
+			return false;
+        }
+	
+	// Отправляем ответ
+	modbus.send(tx);
+	
+	return true;
+    }
+}

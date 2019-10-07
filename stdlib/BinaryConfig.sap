@@ -1,0 +1,104 @@
+/**
+ * Класс реализует менеджер бинарных конфигураций.<br/>
+ * Фактически этот класс ничего не считывает и не записывает - просто поддерживает хранилище.<br/>
+ * Функции чтения/записи должна реализовывать внешняя оболочка.
+ */
+class BinaryConfig
+{
+    /**
+     * Конфигурации. Элемент - byte[]. В каждом элементе хранится контрольная сумма
+     */
+    static Vector config=new Vector();
+    
+    
+    /**
+     * Идентификатор конфигурации. Инкрементирутся каждый раз, когда конфигурацию сохраняют.
+     */
+    static int version=0;
+    
+    
+    /**
+     * Выделить конфигурацию.
+     *
+     * @param size размер конфигурации в байтах
+     * @return идентификатор конфигурации
+     */
+    static int alloc(int size)
+    {
+	int n=config.size();
+	config.add(new byte[size+2]);
+	return n;
+    }
+    
+    
+    /**
+     * Определить, корректны ли данные в конфигурации (проверка контрольной суммы).
+     *
+     * @param id идентификатор конфигурации
+     * @return true, если конфигурация корректна
+     */
+    static boolean dataOk(int id)
+    {
+	synchronized(config)
+	{
+	    if ( (id<0) || (id>=config.size()) ) return false;
+	    byte[] data=(byte[])(config.elementAt(id));
+	    return CRC16.CRC16(CRC16.CRC_INIT, data, 0, data.length)==CRC16.CRC_OK;
+	}
+    }
+    
+    
+    /**
+     * Получить поток данных для чтения конфигурации.
+     *
+     * @param id идентификатор конфигурации
+     * @return поток данных для чтения
+     */
+    static DataStream read(int id)
+    {
+	synchronized(config)
+	{
+	    if ( (id<0) || (id>=config.size()) ) return null;
+	    byte[] data=(byte[])(config.elementAt(id));
+	    return new DataStream(new ByteStream(data, 0, data.length-2));
+	}
+    }
+    
+    
+    /**
+     * Получить поток данных для записи конфигурации. Конфигурация блокируется до вызова commit()
+     *
+     * @param id идентификатор конфигурации
+     * @return поток данных для записи
+     */
+    static DataStream write(int id)
+    {
+	synchronized(config)
+	{
+	    if ( (id<0) || (id>=config.size()) ) return null;
+	    byte[] data=(byte[])(config.elementAt(id));
+	    IPC.lock(data);
+	    return new DataStream(new ByteStream(data, 0, data.length-2));
+	}
+    }
+    
+    
+    /**
+     * Сохранить конфигурацию. Конфигурация подтверждается контрольной суммой.
+     *
+     * @param id идентификатор конфигурации
+     */
+    static void commit(int id)
+    {
+	synchronized(config)
+	{
+	    if ( (id<0) || (id>=config.size()) ) return;
+	    byte[] data=(byte[])(config.elementAt(id));
+	    short crc=CRC16.CRC16(CRC16.CRC_INIT, data, 0, data.length-2);
+	    Pack.w_short(crc, data, data.length-2);
+	    IPC.unlock(data);
+	    
+	    version++;
+	}
+    }
+}

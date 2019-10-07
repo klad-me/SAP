@@ -1,0 +1,111 @@
+
+// Проверить, что все используемые метки определены
+class Checker_Labels
+{
+    static Vector labels=new Vector();
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверяем все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	// Для начала ищем определенные метки
+	labels.setSize(0);
+	if (!FindLabels(m.code)) return false;
+	
+	// Проверим использование меток
+	return CheckLabels(m.code);
+    }
+    
+    
+    static boolean FindLabels(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	if (s.type==I_Stat.LABEL)
+	{
+	    // Это определение метки
+	    
+	    // Ищем, может есть переопределение
+	    for (int i=0; i<labels.size(); i++)
+	    {
+		if (s.stringValue.equals((String)labels.elementAt(i)))
+		{
+		    sapc.error(s.fname+":"+s.line+":  Label '"+s.stringValue+"' redefined !\n");
+		    return false;
+		}
+	    }
+	    
+	    // Добавляем метку
+	    labels.add(s.stringValue);
+	    
+	    return true;
+	}
+	
+	// Проверяем рекурсивно
+	if (!FindLabels(s.stat)) return false;
+	if (!FindLabels(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!FindLabels((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+    
+    
+    static boolean CheckLabels(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	if (s.type==I_Stat.GOTO)
+	{
+	    // Это переход
+	    
+	    // Ищем метку
+	    for (int i=0; i<labels.size(); i++)
+	    {
+		if (s.stringValue.equals((String)labels.elementAt(i)))
+		{
+		    // Есть такая метка
+		    return true;
+		}
+	    }
+	    
+	    // Нет такой метки !
+	    sapc.error(s.fname+":"+s.line+":  Label '"+s.stringValue+"' undefined !\n");
+	    return false;
+	}
+	
+	// Проверяем рекурсивно
+	if (!CheckLabels(s.stat)) return false;
+	if (!CheckLabels(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckLabels((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	// Все нормально
+	return true;
+    }
+}

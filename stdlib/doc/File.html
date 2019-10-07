@@ -1,0 +1,346 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса File</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>File</b> implements <a href="Stream.html"><b>Stream</b></a></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс File предназначен для чтения и записи файлов.
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Constructor section -->
+<a name="CONSTRUCTOR"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Конструктор</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">&nbsp;</td>
+  <td valign="top"><a href="#constructor"><b>constructor</b></a>(<a href="String.html"><b>String</b></a>&nbsp;fname, byte&nbsp;mode)<br/>
+Создает объект File и открывает файл на чтение или запись.
+Результат выполнения операции открытия файла возвращается методом ok()
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Fields section -->
+<a name="FIELDS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Поля</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static final byte</td>
+  <td valign="top"><a href="#READ"><b>READ</b></a><br/>
+Рержим доступа к файлу: для чтения
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static final byte</td>
+  <td valign="top"><a href="#WRITE"><b>WRITE</b></a><br/>
+Рержим доступа к файлу: для записи
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">byte</td>
+  <td valign="top"><a href="#ok"><b>ok</b></a>()<br/>
+Проверить статус открытия файла.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#seek"><b>seek</b></a>(int&nbsp;pos)<br/>
+Перейти к указанной позиции в файле
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#available"><b>available</b></a>()<br/>
+Получить количество доступных байт для чтения.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#readBytes"><b>readBytes</b></a>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)<br/>
+Прочитать данные из файла.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">int</td>
+  <td valign="top"><a href="#writeBytes"><b>writeBytes</b></a>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)<br/>
+Записать данные в файл.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">void</td>
+  <td valign="top"><a href="#close"><b>close</b></a>()<br/>
+Закрыть файл.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание полей</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Field 'READ' details -->
+<a name="READ"/>
+<font size="+1"><b>Поле READ</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static final byte <b>READ</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Рержим доступа к файлу: для чтения
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'WRITE' details -->
+<a name="WRITE"/>
+<font size="+1"><b>Поле WRITE</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static final byte <b>WRITE</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Рержим доступа к файлу: для записи
+  </td></tr>
+</table>
+<hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Constructor details -->
+<a name="constructor"/>
+<font size="+1"><b>Конструктор</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+<b>constructor</b>(<a href="String.html"><b>String</b></a>&nbsp;fname, byte&nbsp;mode)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Создает объект File и открывает файл на чтение или запись.
+Результат выполнения операции открытия файла возвращается методом ok()
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+fname&nbsp;-&nbsp;имя файла<br/>
+mode&nbsp;-&nbsp;режим доступа к файлу: File.READ или File.WRITE<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'ok' details -->
+<a name="ok"/>
+<font size="+1"><b>Метод ok</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+byte <b>ok</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Проверить статус открытия файла.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+true, если файл открыт успешно, или false - в случае ошибки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'seek' details -->
+<a name="seek"/>
+<font size="+1"><b>Метод seek</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>seek</b>(int&nbsp;pos)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Перейти к указанной позиции в файле
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'available' details -->
+<a name="available"/>
+<font size="+1"><b>Метод available</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>available</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить количество доступных байт для чтения.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество доступных байт для чтения (только для режима чтения)
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'readBytes' details -->
+<a name="readBytes"/>
+<font size="+1"><b>Метод readBytes</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>readBytes</b>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Читает данные из файла в массив buf.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+buf&nbsp;-&nbsp;массив, в который будут помещены прочитанные данные<br/>
+start&nbsp;-&nbsp;начальный индекс массива для заполнения<br/>
+count&nbsp;-&nbsp;количество байт для чтения<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество фактически прочитанных байт, или -1 в случае ошибки ввода/вывода
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'writeBytes' details -->
+<a name="writeBytes"/>
+<font size="+1"><b>Метод writeBytes</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+int <b>writeBytes</b>(byte[]&nbsp;buf, int&nbsp;start, int&nbsp;count)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Записывает данные в файл из массива buf.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+buf&nbsp;-&nbsp;массив, из которого будут взяты данные для записи<br/>
+start&nbsp;-&nbsp;начальный индекс массива для записи<br/>
+count&nbsp;-&nbsp;количество байт для записи<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+количество фактически записанных байт, или -1 в случае ошибки ввода/вывода
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'close' details -->
+<a name="close"/>
+<font size="+1"><b>Метод close</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+void <b>close</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Закрывает файл. При этом сбрасываются все буфера. Дальнейшие операции над файлом будут невозможны.
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

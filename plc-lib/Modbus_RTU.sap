@@ -1,0 +1,140 @@
+/**
+ * Реализация драйвера протокола Modbus-RTU
+ */
+class Modbus_RTU extends Modbus
+{
+    /**
+     * private
+     *
+     * Выдержка фрейма в мс
+     */
+    int fd;
+    
+    /**
+     * private
+     *
+     * Таймер приема и таймер фрейма
+     */
+    Timer timer,frame_timer;
+    
+    /**private**/
+    final int max_size=128;
+    
+    
+    /**
+     * Создает драйвер Modbus-RTU
+     *
+     * @param s поток ввода/вывода
+     * @param fd задержка приема фрейма в миллисекундах (если столько времени будет тишина на линии, то считается начало/конец фрейма)
+     */
+    constructor(Stream s, int fd) : super(s)
+    {
+	this.fd=fd;
+	timer=new Timer();
+	frame_timer=new Timer();
+    }
+    
+    
+    /**
+     * Передать фрейм. Фрейм должен содержать только адрес, команду и данные (без заголовка и контрольной суммы).
+     *
+     * @param data данные для передачи
+     */
+    void send(byte[] data)
+    {
+        if (s instanceof SerialPort)
+        {
+            ((SerialPort)s).txModbusRTU(data);
+            return;
+        }
+        
+	short crc;
+	
+	// Считаем контрольку
+	crc=CRC16.CRC16(CRC16.CRC_INIT, data, 0, data.length);
+	
+	// Создаем пакет
+	byte[] buf=new byte[data.length+2];
+	System.arrayCopy(data,0,buf,0,data.length);
+	Pack.w_short(crc, buf, data.length);
+	
+	// Отправляем
+	s.writeBytes(buf, 0, buf.length);
+    }
+    
+    
+    /**
+     * Передать фрейм. Фрейм должен содержать только адрес, команду и данные (без заголовка и контрольной суммы).
+     *
+     * @param data данные для передачи
+     */
+    byte[] receive(int timeout)
+    {
+        if (s instanceof SerialPort)
+        {
+            return ((SerialPort)s).rxModbusRTU(timeout, fd);
+        }
+        
+	int recvpos=0;
+	
+	// Выделяем буфер под данные
+	byte[] data=new byte[max_size];
+	
+	// Выделяем буфер приема
+	byte[] buf=new byte[32];
+	
+	// Таймер приема
+	timer.set(timeout);
+	
+	// Взводим таймер фрейма
+	frame_timer.set(fd);
+	
+	// Принимаем пакет
+	while (timer.read()>0)
+	{
+	    // Проверяем таймер фрейма
+	    if (frame_timer.read()==0)
+	    {
+		// Кончилось время фрейма
+		frame_timer.set(fd);
+		if (recvpos>=4)
+		{
+		    // Приняты какие-то данные
+		    
+		    // Проверим их. Если нормальные - то хорошо. Если нет - продолжаем прием
+		    short crc=CRC16.CRC16(CRC16.CRC_INIT, data, 0, recvpos);
+		    if (crc==CRC16.CRC_OK)
+		    {
+			// Нормальные данные
+			byte[] recvdata=new byte[recvpos-2];
+			
+			System.arrayCopy(data,0,recvdata,0,recvdata.length);
+			
+			return recvdata;
+		    }
+		}
+		recvpos=0;
+	    }
+	    
+	    // Читаем данные
+	    int sz=s.readBytes(buf, 0, buf.length);
+	    if (sz<1)
+	    {
+		Thread.sleep(1);
+		continue;
+	    }
+	    
+	    for (int i=0; i<sz; i++)
+	    {
+		if (recvpos>=max_size) recvpos=0;
+		data[recvpos++]=buf[i];
+	    }
+	    
+	    // Перевзводим таймер фрейма
+	    frame_timer.set(fd);
+	}
+	
+	// Ничего не принято
+	return null;
+    }
+}

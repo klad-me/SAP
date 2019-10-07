@@ -1,0 +1,31 @@
+
+class L_InterfaceMethodsTab
+{
+    static void CreateInterfaceMethodsTab()
+    {
+	// Проходим по всем интерфейсам
+	Vector tab=new Vector();
+	int n=0;
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    if (!cls.is_interface) continue;	// нам нужны только интерфейсы
+	    for (int j=0; j<cls.methods.size(); j++)
+	    {
+		I_Method m=(I_Method)cls.methods.elementAt(j);
+		
+		// Ставим методу родителя
+		m.L_ParentClass=cls;
+		
+		// Ставим сквозной номер
+		m.L_MethodNumber=n++;
+		
+		// Добавляем в таблицу методов
+		tab.add(m);
+	    }
+	}
+	
+	// Устанавливаем таблицу
+	sapc.prog.L_InterfaceMethodsTab=tab;
+    }
+}

@@ -1,0 +1,3 @@
+#! /bin/bash
+
+sapc -i ../stdlib/obj -o obj *.sap -l sapdoc

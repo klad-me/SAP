@@ -1,0 +1,67 @@
+/**
+ * Предоставляет методы для работы с IP-адресами.
+ *
+ * Предоставляет методы для работы с IP-адресами.<br/>
+ * IP-адрес представляется в виде массива из 4 байт (byte[4]).<br/>
+ * Также, существует строковое представление адреса: "aaa.bbb.ccc.ddd".<br/>
+ * Класс IP_Address занимается конверсией между бинарным и строковым представлением IP-адресов.
+ */
+class IP_Address
+{
+    /**
+     * Преобразует бинарный IP-адрес в строку.
+     *
+     * @param addr IP-адрес в бинарном виде
+     * @return строковое представление IP-адреса
+     */
+    static String toString(byte[] addr)
+    {
+	return ""+(((int)addr[0]) & 0xff)+
+	    "."+(((int)addr[1]) & 0xff)+
+	    "."+(((int)addr[2]) & 0xff)+
+	    "."+(((int)addr[3]) & 0xff);
+    }
+    
+    
+    /**
+     * Преобразует строковое представление IP-адреса в бинарную форму.
+     *
+     * @param str строковое представление IP-адреса
+     * @return бинарный IP-адрес, или null в случае ошибки
+     */
+    static byte[] parseAddress(String str)
+    {
+	byte[] addr=new byte{0,0,0,0};
+	byte[] s=str.getBytes();
+	int p=0, n=0;
+	boolean was_digit=false;
+	
+	while (p < s.length)
+	{
+	    if (s[p]=='.')
+	    {
+		if (!was_digit) return null;	// ошибка. появилась точка без цифры
+		n++;
+		p++;
+		if (n>=4) return null;	// после адреса обнаружилась точка
+		was_digit=false;
+	    } else
+	    if ( (s[p]>='0') && (s[p]<='9') )
+	    {
+		// Цифра
+		int x=((int)addr[n]) & 0xff;
+		x=x*10 + (s[p++]-'0');
+		if (x>255) return null;	// неверный адрес
+		addr[n]=(byte)x;
+		was_digit=true;
+	    } else
+	    {
+		// Неверный символ
+		return null;
+	    }
+	}
+	
+	if ( (n!=3) || (!was_digit) ) return null;	// незаконченный адрес
+	return addr;
+    }
+}

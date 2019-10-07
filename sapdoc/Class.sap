@@ -1,0 +1,12 @@
+class Class
+{
+    boolean is_interface;
+    String name;
+    String superclass;
+    Vector if_list;
+    
+    String doc;
+    
+    Vector fields=new Vector();
+    Vector methods=new Vector();
+}

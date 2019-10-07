@@ -1,0 +1,142 @@
+class CG
+{
+    static CG_Stream bytecode;
+    static I_Class cur_class;
+    static I_Method cur_method;
+    static int opstack_depth, opstack_max_depth;
+    
+    
+    static boolean GenClass(I_Class cls)
+    {
+	cur_class=cls;
+	
+	sapc.debug("CG class '"+cls.name+"'\n");
+	
+	
+	// Инитим генератор класса
+        CG_StringPool.init();
+	
+	// Обрабатываем все методы класса
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    I_Method m=(I_Method)cls.methods.elementAt(i);
+	    
+	    if (m.code==null) continue;	// нет кода
+	    
+	    // Инитим все системы
+	    bytecode=new CG_Stream();
+	    CG_Labels.init();
+	    CG_LineNumbers.init();
+	    cur_method=m;
+	    opstack_depth=0;
+	    opstack_max_depth=0;
+	    
+	    // Генерим метод
+	    if (!GenMethod(m)) return false;
+	    
+	    sapc.debug(cls.name+"."+m.name+" bytecode size="+bytecode.size()+"\n");
+	}
+	
+	// Ищем зависимости <staticinit>
+	CG_StaticInit_Deps.Gen_StaticInit_Deps(cls);
+	
+	// Пишем класс в файл
+	CG_ClassWriter.WriteClass(cls);
+	
+	return true;
+    }
+    
+    
+    static boolean GenMethod(I_Method m)
+    {
+	// Генерим код
+	if (!CG_Stat.GenStat(m.code)) return false;
+	
+	if (m.return_type.type==I_Type.VOID)
+	{
+	    // Это void-метод
+	    CG_Labels.DefineLabel("<return>");
+	    // Возвращаемое значение
+	    bytecode.putByte(OP.I_PUSH_0);
+    	    ST(4);
+	} else
+	{
+	    // Это не-void метод
+	    
+	    // Возвращаемое значение, если последней инструкцией не был return
+	    bytecode.putByte(OP.I_PUSH_0);
+    	    ST(4);
+	    
+	    CG_Labels.DefineLabel("<return>");
+	}
+	
+	// В конец метода добавляем обнуление всех локальных ссылок и параметров-ссылок, чтобы было проще сборщику мусора
+	int n_param_refs=0;
+	for (int i=0; i<m.params.size(); i++)
+	{
+	    I_Var param=(I_Var)m.params.elementAt(i);
+	    
+	    if (param.type.isRef()) n_param_refs++;
+	}
+	int n_refs=m.refs_size/4;
+	if ( (n_refs > 0) || (n_param_refs > 0) )
+	{
+    	    bytecode.putByte(OP.I_PUSH_0);
+	    ST(4);
+	    for (int i=0; i<m.params.size(); i++)
+	    {
+		I_Var param=(I_Var)m.params.elementAt(i);
+		
+		if (param.type.isRef())
+		{
+		    bytecode.putByte(OP.R_STORE);
+		    bytecode.putShort( (short)param.addr );
+		}
+	    }
+	    for (int i=0; i<n_refs; i++)
+	    {
+		bytecode.putByte(OP.R_STORE);
+		bytecode.putShort( (short)(i*4+4+m.params_size) );
+	    }
+	    bytecode.putByte(OP.R_POP);
+	    ST(-4);
+	}
+	
+	// Добавляем команду возврата
+	bytecode.putByte(OP.RETURN);
+	if (m.return_type.type==I_Type.VOID)
+	{
+	    ST(-4);
+	}
+	
+	// Получаем размер стека для операндов
+	m.opstack_size=opstack_max_depth;
+	
+	// Устанавливаем код
+	m.compiled_code=bytecode.bytes();
+	m.compiled_code_size=bytecode.size();
+	
+	// Устанавливаем отладочную инфу
+	m.line_numbers=CG_LineNumbers.data.bytes();
+	m.line_numbers_size=CG_LineNumbers.data.size();
+	
+	// Получаем размер фрейма и начальный SP
+	m.frame_size=4/*this*/+m.params_size+m.refs_size+m.locals_size+m.opstack_size;
+	m.start_SP=4/*this*/+m.params_size+m.refs_size+m.locals_size;
+	
+	sapc.debug("Method "+cur_class.name+"."+m.name+": frame_size="+m.frame_size+" start_SP="+m.start_SP+"(params_size="+m.params_size+" refs_size="+m.refs_size+" locals_size="+m.locals_size+")\n");
+	
+	// Дизассемблер для проверки
+	if (sapc.disasm) CG_DisAsm.DisAsm(bytecode.bytes(), bytecode.size(), CG_LineNumbers.data.bytes(), CG_LineNumbers.data.size());
+	
+	return true;
+    }
+    
+    
+    static void ST(int x)
+    {
+	opstack_depth=opstack_depth+x;
+	if (opstack_depth > opstack_max_depth)
+	    opstack_max_depth=opstack_depth;
+    }
+}

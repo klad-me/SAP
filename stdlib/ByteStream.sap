@@ -1,0 +1,106 @@
+/**
+ * Класс для чтения/записи массива байт как потока
+ */
+class ByteStream implements Stream
+{
+    /**
+     * Создает объект ByteStream
+     *
+     * @param data массив входных/выходных данных
+     * @param start начальный индекс массива
+     * @param size размер данных
+     */
+    constructor(byte[] data, int start, int size)
+    {
+	_data=data;
+	_start=start;
+	_size=size;
+	_offset=0;
+    }
+    
+    
+    /**
+     * Получить количество доступных для чтения/записи байт
+     *
+     * @return количество доступных для чтения/записи байт
+     */
+    int available()
+    {
+	return _size - _offset;
+    }
+    
+    
+    /**
+     * Прочитать данные
+     *
+     * @param buf массив, в который будут помещены прочитанные данные
+     * @param start начальный индекс массива для заполнения
+     * @param count количество байт для чтения
+     * @return количество фактически прочитанных байт, или -1 в случае ошибки ввода/вывода
+     */
+    int readBytes(byte[] buf, int start, int count)
+    {
+	if ( count > (_size - _offset) )
+	    count=(_size - _offset);
+	if (count<=0) return 0;
+	
+	System.arrayCopy(_data, _start + _offset, buf, start, count);
+	_offset+=count;
+	return count;
+    }
+    
+    
+    /**
+     * Записать данные
+     *
+     * @param buf массив, из которого будут взяты данные для записи
+     * @param start начальный индекс массива для записи
+     * @param count количество байт для записи
+     * @return количество фактически записанных байт, или -1 в случае ошибки ввода/вывода
+     */
+    int writeBytes(byte[] buf, int start, int count)
+    {
+	if ( count > (_size - _offset) )
+	    count=(_size - _offset);
+	if (count<=0) return 0;
+	
+	System.arrayCopy(buf, start, _data, _start + _offset, count);
+	_offset+=count;
+	return count;
+    }
+    
+    
+    /**
+     * Закрыть поток ввода/вывода
+     */
+    void close()
+    {
+    }
+    
+    
+    /**
+     * Установить позицию в массиве данных для следующей операции чтения/записи
+     *
+     * @param offset позиция
+     */
+    void seek(int offset)
+    {
+	_offset=offset;
+    }
+    
+    
+    /**
+     * Получить позицию в массиве данных для следующей операции чтения/записи
+     */
+    int getOffset()
+    {
+	return _offset;
+    }
+    
+    
+    
+    /**private**/ byte[] _data;
+    /**private**/ int _start;
+    /**private**/ int _size;
+    /**private**/ int _offset;
+}

@@ -1,0 +1,235 @@
+
+// Проверить поля классов
+// VARIABLE.field заменить на STATIC_FIELD, если var является классом
+// VARIABLE.method заменить на STATIC_METHOD, если var является классом
+// VARIABLE заменить на STATIC_FIELD или this.FIELD, в зависимости от типа поля
+class Checker_Fields
+{
+    static I_Class cur_class;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверим все методы
+	cur_class=cls;
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	return CheckStat(m.code);
+    }
+    
+    
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	if (!CheckExpr(s.expr)) return false;
+	if (!CheckExprList(s.exprlist1)) return false;
+	if (!CheckExprList(s.exprlist2)) return false;
+	
+	if (!CheckStat(s.stat)) return false;
+	if (!CheckStat(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExprList(I_ExprList l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.list.size(); i++)
+	{
+	    if (!CheckExpr((I_Expr)l.list.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckExpr(I_Expr e)
+    {
+	if (e==null) return true;
+	
+	if (e.type==I_Expr.VARIABLE)
+	{
+	    // Либо поле, либо статическое поле
+	    I_Var v=cur_class.FindField(e.stringValue);
+	    
+	    if (v==null)
+	    {
+		// Поле не найдено !
+		sapc.error(e.fname+":"+e.line+":  Field '"+cur_class.name+"."+e.stringValue+"' not found !\n");
+		return false;
+	    }
+	    
+	    if (v.is_static)
+	    {
+		// Это статическое поле
+		e.ClassName=cur_class.name;
+		e.type=I_Expr.STATIC_FIELD;
+	    } else
+	    {
+		// Это просто поле
+		e.left=new I_Expr(null, I_Expr.THIS, null, null);
+		e.left.fname=e.fname;
+		e.left.line=e.line;
+		e.type=I_Expr.FIELD;
+	    }
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.FIELD)
+	{
+	    // Либо поле, либо статическое поле
+	    
+	    // Проверим левое выражение
+	    if (e.left.type==I_Expr.VARIABLE)
+	    {
+		// Слева переменная. Проверим - может быть это название класса
+		if (sapc.prog.FindClass(e.left.stringValue) != null)
+		{
+		    // Это имя класса - значит это обращение к статическому полю
+		    e.ClassName=e.left.stringValue;
+		    e.type=I_Expr.STATIC_FIELD;
+		    e.left=null;
+		    cur_class.addDep(e.ClassName);
+		    return true;
+		}
+	    } else
+	    if (e.left.type==I_Expr.THIS)
+	    {
+		// Слева this. Проверим - может быть это обращение к статической переменной
+		I_Var v=cur_class.FindField(e.stringValue);
+		
+		if (v==null)
+		{
+		    // Поле не найдено !
+		    sapc.error(e.fname+":"+e.line+":  Field '"+cur_class.name+"."+e.stringValue+"' not found !\n");
+		    return false;
+		}
+		
+		if (v.is_static)
+		{
+		    // Это статическое поле
+		    e.type=I_Expr.STATIC_FIELD;
+		    e.ClassName=cur_class.name;
+		    e.left=null;
+		}
+		
+		return true;
+	    }
+	    
+	    // Это просто обращение к полю
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    return true;
+	} else
+	if (e.type==I_Expr.METHOD)
+	{
+	    // Либо метод, либо статический метод
+	    
+	    // Проверим параметры метода
+	    if (!CheckExprList(e.exprlist)) return false;
+	    
+	    // Проверим левое выражение
+	    if (e.left.type==I_Expr.VARIABLE)
+	    {
+		// Слева переменная. Проверим - может быть это название класса
+		if (sapc.prog.FindClass(e.left.stringValue) != null)
+		{
+		    // Это имя класса - значит это обращение к статическому методу
+		    e.ClassName=e.left.stringValue;
+		    e.type=I_Expr.STATIC_METHOD;
+		    e.left=null;
+		    
+		    // Проверим зависимости этого класса
+		    boolean ok=false;
+    		    for (int i=0; i<cur_class.depends.size(); i++)
+    		    {
+        		String str=(String)cur_class.depends.elementAt(i);
+			
+        		if (str.equals(e.ClassName))
+			{
+			    ok=true;
+			    break;
+			}
+    		    }
+		    
+    		    // Добавляем
+    		    if (!ok) cur_class.depends.add(e.ClassName);
+		    return true;
+		}
+	    } else
+	    if (e.left.type==I_Expr.THIS)
+	    {
+		// Слева this. Проверим - может быть это обращение к статическому методу
+		I_Method m=cur_class.FindMethod(e.stringValue);
+		
+		if (m==null)
+		{
+		    // Метод не найден !
+		    sapc.error(e.fname+":"+e.line+":  Method '"+cur_class.name+"."+e.stringValue+"' not found !\n");
+		    return false;
+		}
+		
+		if (m.is_static)
+		{
+		    // Это статический метод
+		    e.type=I_Expr.STATIC_METHOD;
+		    e.ClassName=cur_class.name;
+		    e.left=null;
+		}
+		
+		return true;
+	    }
+	    
+	    // Это просто обращение к методу
+	    if (!CheckExpr(e.left)) return false;
+	    
+	    return true;
+	}
+	
+	// Проверим все внутри
+	if (!CheckExpr(e.left)) return false;
+	if (!CheckExpr(e.right)) return false;
+	if (!CheckExpr(e.cond)) return false;
+	
+	if (!CheckExprList(e.exprlist)) return false;
+	
+	if (!CheckVarList(e.varlist)) return false;
+	
+	return true;
+    }
+    
+    
+    static boolean CheckVarList(Vector l)
+    {
+	if (l==null) return true;
+	
+	for (int i=0; i<l.size(); i++)
+	{
+	    I_Var v=(I_Var)l.elementAt(i);
+	    
+	    if (!CheckExpr(v.init)) return false;
+	}
+	
+	return true;
+    }
+}

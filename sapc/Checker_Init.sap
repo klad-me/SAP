@@ -1,0 +1,32 @@
+
+// Проверить, что у всех классов есть метод <init>.
+// Если метода нет - создать его
+// Если это не класс Object - сделать вызов предка <init>.
+class Checker_Init
+{
+    static boolean CheckClass(I_Class cls)
+    {
+	if (cls.is_interface) return true;	// интерфейсы мы не проверяем
+	
+	
+	// Создадим пустой метод <init>, если его нету
+	I_Method init=cls.FindMethod("<init>");
+	
+	if (init==null)
+	{
+	    // Надо создать метод <init> по умолчанию
+	    init=new I_Method(null, new I_Type(null, I_Type.VOID, 0, null), "<init>", false, false);
+	    init.fname=cls.fname;
+	    init.line=cls.line;
+	    init.code=new I_Stat(null, I_Stat.BLOCK);
+	    init.code.stats_list=new Vector();
+	    init.code.fname=cls.fname;
+	    init.code.line=cls.line;
+	    
+	    cls.methods.add(init);
+	}
+	
+	// Все готово
+	return true;
+    }
+}

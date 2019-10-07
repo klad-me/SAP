@@ -1,0 +1,178 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса CRC16</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>CRC16</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Класс CRC16 позволяет расчитывать стандартную контрольную сумму CRC16
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Fields section -->
+<a name="FIELDS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Поля</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static final short</td>
+  <td valign="top"><a href="#CRC_INIT"><b>CRC_INIT</b></a><br/>
+Начальное значение для CRC16
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static final short</td>
+  <td valign="top"><a href="#CRC_OK"><b>CRC_OK</b></a><br/>
+Значение, получаемое функцией CRC16, если в нее передать блок данных и его CRC16.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static short</td>
+  <td valign="top"><a href="#CRC16"><b>CRC16</b></a>(short&nbsp;crc, byte[]&nbsp;data, int&nbsp;offs, int&nbsp;size)<br/>
+Вычислить CRC16 для указанного блока данных. Функция CRC16 сделана таким образом,
+что если к вычисляемому блоку добавить значение CRC16, то CRC16 нового блока будет
+равна CRC_OK.
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание полей</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Field 'CRC_INIT' details -->
+<a name="CRC_INIT"/>
+<font size="+1"><b>Поле CRC_INIT</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static final short <b>CRC_INIT</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Начальное значение для CRC16
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Field 'CRC_OK' details -->
+<a name="CRC_OK"/>
+<font size="+1"><b>Поле CRC_OK</b></font><br/><br/>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">static final short <b>CRC_OK</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Значение, получаемое функцией CRC16, если в нее передать блок данных и его CRC16.
+  </td></tr>
+</table>
+<hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'CRC16' details -->
+<a name="CRC16"/>
+<font size="+1"><b>Метод CRC16</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static short <b>CRC16</b>(short&nbsp;crc, byte[]&nbsp;data, int&nbsp;offs, int&nbsp;size)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Вычислить CRC16 для указанного блока данных. Функция CRC16 сделана таким образом,
+что если к вычисляемому блоку добавить значение CRC16, то CRC16 нового блока будет
+равна CRC_OK.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+crc&nbsp;-&nbsp;контрольная сумма прошлого блока (для первого блока следует указывать CRC16.CRC_INIT)<br/>
+data&nbsp;-&nbsp;массив данных<br/>
+offs&nbsp;-&nbsp;смещение начала данных в массиве<br/>
+size&nbsp;-&nbsp;расзмер данных в массиве<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+вычисленная CRC16
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

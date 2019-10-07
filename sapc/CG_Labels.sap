@@ -1,0 +1,95 @@
+// Метка
+class CG_Labels_Entry
+{
+    String name;
+    short addr;
+    short[] users;
+    int n_users;
+}
+
+
+// Управление метами в байткоде
+class CG_Labels
+{
+    static int autolabel;
+    static Vector labels;
+    
+    
+    static void init()
+    {
+	autolabel=0;
+	labels=new Vector();
+    }
+    
+    
+    static String GenAutoLabel()
+    {
+	autolabel++;
+	return "<autolabel>"+autolabel;
+    }
+    
+    
+    static void DefineLabel(String name)
+    {
+	// Ищем использование метки
+	for (int i=0; i<labels.size(); i++)
+	{
+	    CG_Labels_Entry l=(CG_Labels_Entry)labels.elementAt(i);
+	    
+	    if (name.equals(l.name))
+	    {
+		// Нашли использование метки !
+		l.addr=(short)CG.bytecode.size();
+		
+		// Правим использование
+		for (int j=0; j<l.n_users; j++)
+		{
+		    CG.bytecode.putShortAt(l.users[j], l.addr);
+		}
+		l.users=null;
+		l.n_users=0;
+		
+		return;
+	    }
+	}
+	
+	// Создаем новую метку
+	CG_Labels_Entry l=new CG_Labels_Entry();
+	l.name=name;
+	l.addr=(short)CG.bytecode.size();
+	
+	labels.add(l);
+    }
+    
+    
+    static short UseLabel(String name)
+    {
+	// Ищем определение или использование метки
+	for (int i=0; i<labels.size(); i++)
+	{
+	    CG_Labels_Entry l=(CG_Labels_Entry)labels.elementAt(i);
+	    
+	    if (name.equals(l.name))
+	    {
+		// Нашли метку
+		if (l.addr>=0) return l.addr;	// у этой метки уже есть адрес
+		
+		// Еще не определена
+		l.users[l.n_users++]=(short)CG.bytecode.size();
+		return 0;
+	    }
+	}
+	
+	// Создаем новую метку
+	CG_Labels_Entry l=new CG_Labels_Entry();
+	l.name=name;
+	l.addr=-1;	// адреса пока нет
+	l.users=new short[128];
+	l.users[0]=(short)CG.bytecode.size();
+	l.n_users=1;
+	
+	labels.add(l);
+	
+	return 0;
+    }
+}

@@ -1,0 +1,307 @@
+class OP
+{
+    static final byte _ = 0;
+    
+    
+    // Модицикаторы типа операндов (для команд _*)
+    static final byte BYTE		= (byte)0x00;
+    static final byte SHORT		= (byte)0x40;
+    static final byte INT		= (byte)0x80;
+    static final byte FLOAT		= (byte)0xC0;
+    static final byte INT_OR_FLOAT	= (byte)0x80;	// если надо работать просто с 4 байтами независимо от типа
+    
+    
+    
+    // Другие команды
+    static final byte NOP		= (byte)0xC0;
+    
+    
+    // Операции над стеком
+    static final byte _PUSH		= (byte)0x00;	// B S IF	(0xC0 = NOP)
+    
+    static final byte _POP		= (byte)0x01;	// B S IF	(0xC1 = R_POP)
+    static final byte R_POP		= (byte)0xC1;
+    
+    static final byte _DUP		= (byte)0x02;	// B S IF	(0xC2 = R_DUP)
+    static final byte R_DUP		= (byte)0xC2;
+    
+    static final byte SWAP		= (byte)0x44;
+    static final byte SWAP2		= (byte)0x85;
+    
+    static final byte I_PUSH_0		= (byte)0xC6;
+    
+    
+    // Преобразования базовых типов
+    static final byte BYTE_TO_BOOL	= (byte)0x03;
+    static final byte _TO_BYTE		= (byte)0x03;	//   S I F	(0x03 = BYTE_TO_BOOL)
+    static final byte _TO_SHORT		= (byte)0x04;	// B   I F	(0x44 = SWAP)
+    static final byte _TO_INT		= (byte)0x05;	// B S   F	(0x85 = SWAP2)
+    static final byte _TO_FLOAT		= (byte)0x06;	// B S I	(0xC6 = I_PUSH_0)
+    
+    
+    // Работа с локальными переменными
+    static final byte _LOAD		= (byte)0x07;	// B S IF	(0xC7 = R_LOAD)
+    static final byte R_LOAD		= (byte)0xC7;
+    
+    static final byte _STORE		= (byte)0x08;	// B S IF	(0xC7 = R_STORE)
+    static final byte R_STORE		= (byte)0xC8;
+    
+    
+    // Работа с полями
+    static final byte _LOAD_STATIC	= (byte)0x09;	// B S IF	(0xC9 = R_LOAD_STATIC)
+    static final byte R_LOAD_STATIC	= (byte)0xC9;
+    
+    static final byte _STORE_STATIC	= (byte)0x0A;	// B S IF	(0xCA = R_STORE_STATIC)
+    static final byte R_STORE_STATIC	= (byte)0xCA;
+    
+    static final byte _LOAD_FIELD	= (byte)0x0B;	// B S IF	(0xCB = R_LOAD_FIELD)
+    static final byte R_LOAD_FIELD	= (byte)0xCB;
+    
+    static final byte _STORE_FIELD	= (byte)0x0C;	// B S IF	(0xCC = R_STORE_FIELD)
+    static final byte R_STORE_FIELD	= (byte)0xCC;
+    
+    
+    // Работа с массивами
+    static final byte _LOAD_ARRAY	= (byte)0x0D;	// B S IF	(0xCD = R_LOAD_ARRAY)
+    static final byte R_LOAD_ARRAY	= (byte)0xCD;
+    
+    static final byte _STORE_ARRAY	= (byte)0x0E;	// B S IF	(0xCE = R_STORE_ARRAY)
+    static final byte R_STORE_ARRAY	= (byte)0xCE;
+    
+    static final byte ARRAY_LENGTH	= (byte)0x20;	//		(0x60 = CALL_VIRTUAL) (0xA0 = CALL_INTERFACE) (0xE0 = CALL_METHOD)
+    
+    
+    // Математика
+    static final byte _ADD		= (byte)0x0F;	// B S I F
+    static final byte _MUL		= (byte)0x10;	// B S I F
+    static final byte _DIV		= (byte)0x11;	// B S I F
+    static final byte _REM		= (byte)0x12;	// B S I F
+    static final byte _UMINUS		= (byte)0x13;	// B S I F
+    static final byte _INC		= (byte)0x14;	// B S I F
+    static final byte _DEC		= (byte)0x15;	// B S I F
+    
+    
+    // Битовые операции
+    static final byte _NEG		= (byte)0x16;	// B S I	(0xD6 = R_EQ)
+    static final byte _AND		= (byte)0x17;	// B S I	(0xD7 = LOGIC_NOT)
+    static final byte _OR		= (byte)0x18;	// B S I	(0xD8 = JZ)
+    static final byte _XOR		= (byte)0x19;	// B S I	(0xD9 = JNZ)
+    static final byte _SHL		= (byte)0x1A;	// B S I	(0xDA = GOTO)
+    static final byte _SHR		= (byte)0x1B;	// B S I	(0xDB = CASE)
+    static final byte _SHRU		= (byte)0x1C;	// B S I	(0xDC = RETURN)
+    
+    
+    // Логические операции
+    static final byte _LT		= (byte)0x1D;	// B S I F
+    static final byte _GT		= (byte)0x1E;	// B S I F
+    static final byte _EQ		= (byte)0x1F;	// B S I F
+    static final byte R_EQ		= (byte)0xD6;
+    static final byte LOGIC_NOT		= (byte)0xD7;
+    
+    
+    // Операции перехода
+    static final byte JZ		= (byte)0xD8;
+    static final byte JNZ		= (byte)0xD9;
+    static final byte JNULL		= (byte)0xE2;
+    static final byte GOTO		= (byte)0xDA;
+    static final byte CASE		= (byte)0xDB;
+    static final byte RETURN		= (byte)0xDC;
+    
+    
+    // Операции вызова методов
+    static final byte CALL_VIRTUAL	= (byte)0x60;
+    static final byte CALL_INTERFACE	= (byte)0xA0;
+    static final byte CALL_METHOD	= (byte)0xE0;
+    
+    
+    // Работа с объектами
+    static final byte NEW_ARRAY		= (byte)0x21;	//		(0x61 = NEW_INSTANCE) (0xA1 = CAST) (0xE1 = INSTANCEOF)
+    static final byte NEW_INSTANCE	= (byte)0x61;
+    static final byte CAST		= (byte)0xA1;
+    static final byte INSTANCEOF	= (byte)0xE1;
+    static final byte MONITOR_ENTER	= (byte)0x22;	//		(0x62 = MONITOR_EXIT) (0xA2 = FILL_ARRAY_RAW) 0xE2
+    static final byte MONITOR_EXIT	= (byte)0x62;
+    static final byte FILL_ARRAY_RAW	= (byte)0xA2;
+    
+    
+    static byte OP4Type(byte op, I_Type t)
+    {
+	if (t.type==I_Type.BYTE) op=op | BYTE; else
+	if (t.type==I_Type.SHORT) op=op | SHORT; else
+	if (t.type==I_Type.INT) op=op | INT; else
+	if (t.type==I_Type.FLOAT) op=op | FLOAT;
+	
+	return op;
+    }
+    
+    
+    static byte OP4Type_IF(byte op, I_Type t)
+    {
+	if (t.type==I_Type.BYTE) op=op | BYTE; else
+	if (t.type==I_Type.SHORT) op=op | SHORT; else
+	if ( (t.type==I_Type.INT) ||
+	     (t.type==I_Type.FLOAT) ) op=op | INT_OR_FLOAT;
+	
+	return op;
+    }
+    
+    
+    
+    // Размеры операндов
+    static byte[] op_size=new byte
+    {
+	1,_,_,_,	_,_,_,2,	2,2,2,2,	2,_,_,_,	// 0x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 1x
+	_,2,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 2x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 3x
+	
+	2,_,_,_,	_,_,_,2,	2,2,2,2,	2,_,_,_,	// 4x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 5x
+	3,2,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 6x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 7x
+	
+	4,_,_,_,	_,_,_,2,	2,2,2,2,	2,_,_,_,	// 8x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 9x
+	3,2,2,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Ax
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Bx
+	
+	_,_,_,_,	_,_,_,2,	2,2,2,2,	2,_,_,_,	// Cx
+	_,_,_,_,	_,_,_,_,	2,2,2,2,	_,_,_,_,	// Dx
+	3,2,2,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Ex
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_		// Fx
+    };
+    
+    
+    // Типы операндов
+    static final byte i = 1;
+    static final byte f = 2;
+    static final byte F = 3;
+    static final byte M = 4;
+    static final byte T = 5;
+    static final byte C = 6;
+    static final byte S = 99;
+    
+    static byte[] op_type=new byte
+    {
+	i,_,_,_,	_,_,_,i,	i,F,F,F,	F,_,_,_,	// 0x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 1x
+	_,T,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 2x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 3x
+	
+	i,_,_,_,	_,_,_,i,	i,F,F,F,	F,_,_,_,	// 4x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 5x
+	M,C,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 6x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 7x
+	
+	i,_,_,_,	_,_,_,i,	i,F,F,F,	F,_,_,_,	// 8x
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// 9x
+	M,T,S,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Ax
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Bx
+	
+	_,_,_,_,	_,_,_,i,	i,F,F,F,	F,_,_,_,	// Cx
+	_,_,_,_,	_,_,_,_,	i,i,i,i,	_,_,_,_,	// Dx
+	M,T,i,_,	_,_,_,_,	_,_,_,_,	_,_,_,_,	// Ex
+	_,_,_,_,	_,_,_,_,	_,_,_,_,	_,_,_,_		// Fx
+    };
+    
+    
+    // Имена команд
+    static String[] op_name=new String
+    {
+	// 0x
+	"b_push",		"b_pop",		"b_dup",		"b2bool",
+	"b2s",			"b2i",			"b2f",			"b_load",
+	"b_store",		"b_load_static",	"b_store_static",	"b_load_field",
+	"b_store_field",	"b_load_array",		"b_store_array",	"b_add",
+	
+	// 1x
+	"b_mul",		"b_div",		"b_rem",		"b_uminus",
+	"b_inc",		"b_dec",		"b_neg",		"b_and",
+	"b_or",			"b_xor",		"b_shl",		"b_shr",
+	"b_shru",		"b_lt",			"b_gt",			"b_eq",
+	
+	// 2x
+	"array_length",		"new_array",		"monitor_enter",	null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// 3x
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// 4x
+	"s_push",		"s_pop",		"s_dup",		"s2b",
+	"swap",			"s2i",			"s2f",			"s_load",
+	"s_store",		"s_load_static",	"s_store_static",	"s_load_field",
+	"s_store_field",	"s_load_array",		"s_store_array",	"s_add",
+	
+	// 5x
+	"s_mul",		"s_div",		"s_rem",		"s_uminus",
+	"s_inc",		"s_dec",		"s_neg",		"s_and",
+	"s_or",			"s_xor",		"s_shl",		"s_shr",
+	"s_shru",		"s_lt",			"s_gt",			"s_eq",
+	
+	// 6x
+	"call_virtual",		"new_instance",		"monitor_exit",		null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// 7x
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// 8x
+	"if_push",		"if_pop",		"if_dup",		"i2b",
+	"i2s",			"swap2",		"i2f",			"if_load",
+	"if_store",		"if_load_static",	"if_store_static",	"if_load_field",
+	"if_store_field",	"if_load_array",	"if_store_array",	"i_add",
+	
+	// 9x
+	"i_mul",		"i_div",		"i_rem",		"i_uminus",
+	"i_inc",		"i_dec",		"i_neg",		"i_and",
+	"i_or",			"i_xor",		"i_shl",		"i_shr",
+	"i_shru",		"i_lt",			"i_gt",			"i_eq",
+	
+	// Ax
+	"call_interface",	"cast",			"fill_array_raw",	null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// Bx
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// Cx
+	"nop",			"r_pop",		"r_dup",		"f2b",
+	"f2s",			"f2i",			"i_push_0",		"r_load",
+	"r_store",		"r_load_static",	"r_store_static",	"r_load_field",
+	"r_store_field",	"r_load_array",		"r_store_array",	"f_add",
+	
+	// Dx
+	"f_mul",		"f_div",		"f_rem",		"f_uminus",
+	"f_inc",		"f_dec",		"r_eq",			"logic_not",
+	"jz",			"jnz",			"goto",			"case",
+	"return",		"f_lt",			"f_gt",			"f_eq",
+	
+	// Ex
+	"call_method",		"instanceof",		"jnull",		null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	
+	// Fx
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null,
+	null,			null,			null,			null
+    };
+}

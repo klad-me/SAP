@@ -1,0 +1,86 @@
+class CG_DisAsm
+{
+    static void DisAsm(byte[] code, int len, byte[] lines, int lines_len)
+    {
+	int PC=0;
+	int lines_n=0;
+	
+	lines_len=lines_len/4;
+	
+	while (PC<len)
+	{
+	    int op=((int)code[PC]) & 0xff;
+	    
+	    // Номера строк
+	    if (lines_n < lines_len)
+	    {
+		if (PC >= CG_Stream.R_Short(lines, lines_n*4))
+		{
+		    sapc.debug("LINE: "+CG_Stream.R_Short(lines, lines_n*4+2)+"\n");
+		    lines_n++;
+		}
+	    }
+	    
+	    // Метка
+	    for (int i=0; i<CG_Labels.labels.size(); i++)
+	    {
+		CG_Labels_Entry e=(CG_Labels_Entry)CG_Labels.labels.elementAt(i);
+		
+		if (e.addr == PC)
+		{
+		    sapc.debug("LABEL: "+e.name+"\n");
+		}
+	    }
+	    
+	    sapc.debug(""+PC+"\t"+OP.op_name[op]+"\t");
+	    
+	    PC++;
+	    
+	    
+	    switch (OP.op_type[op])
+	    {
+		case OP.i:
+		    // Целое
+		    if (OP.op_size[op]==4)
+			sapc.debug(""+CG_Stream.R_Int(code, PC)); else
+		    if (OP.op_size[op]==2)
+			sapc.debug(""+CG_Stream.R_Short(code, PC)); else
+			sapc.debug(""+code[PC]);
+		    
+		    PC=PC+OP.op_size[op];
+		    break;
+		
+		case OP.f:
+		    // Дробное
+		    sapc.debug(""+CG_Stream.R_Float(code, PC));
+		    PC=PC+4;
+		    break;
+		
+		case OP.F:
+		case OP.T:
+		case OP.C:
+		    // Просто взять из StringPool'а
+		    sapc.debug("'"+CG_StringPool.StringAt(CG_Stream.R_Short(code, PC))+"'");
+		    PC=PC+2;
+		    break;
+		    
+		case OP.M:
+		    // Вызов метода. Сначала идет размер параметров, потом спецификатор
+		    sapc.debug(""+code[PC++]+", '"+CG_StringPool.StringAt(CG_Stream.R_Short(code, PC))+"'");
+		    PC=PC+2;
+		    break;
+		
+		case OP.S:
+		    // Специальный параметр. Это только у FILL_ARRAY_RAW
+		    {
+			int l=CG_Stream.R_Int(code, PC);
+			PC=PC+4;
+			PC=PC+l;
+			sapc.debug("data["+l+"]");
+		    }
+		    break;
+	    }
+	    sapc.debug("\n");
+	}
+    }
+}

@@ -1,0 +1,44 @@
+
+class L_InstanceOfTab
+{
+    static void CreateInstanceOfTab()
+    {
+	for (int i=0; i<sapc.prog.classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)sapc.prog.classes.elementAt(i);
+	    
+	    Make_Tab(cls);
+	}
+    }
+    
+    
+    static void Make_Tab(I_Class cls)
+    {
+	if (cls.L_InstanceOfTab != null) return;	// уже есть таблица
+	
+	// Создаем таблицу
+	cls.L_InstanceOfTab=new Vector();
+	
+	// Первым делом добавляем себя (0 элемент - это сам класс)
+	cls.L_InstanceOfTab.add(cls);
+	
+	// Проверяем предка
+	if (cls.superclass != null)
+	{
+	    // Делаем таблицу для предка
+	    Make_Tab(cls.superclass);
+	    
+	    // Копируем все элементы себе
+	    cls.L_InstanceOfTab.addAll(cls.superclass.L_InstanceOfTab);
+	}
+	
+	// Добавляем все определенные интерфейсы
+	if (cls.if_list != null)
+	{
+	    for (int i=0; i<cls.if_list.size(); i++)
+	    {
+		cls.L_InstanceOfTab.add( sapc.prog.FindClass((String)cls.if_list.elementAt(i)) );
+	    }
+	}
+    }
+}

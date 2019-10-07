@@ -1,0 +1,368 @@
+class sapc
+{
+    // Компилируемая программа
+    static I_Program prog;
+    
+    // Требуется ли дизассемблер
+    static boolean disasm=false;
+    
+    
+    static void usage()
+    {
+	System.print("Usage: sapc [options] [source-files]\n");
+	System.print("\tOptions are:\n");
+	System.print("\t-o <dir>\tWhere to place .sapclass and .sapexe files\n");
+	System.print("\t-i <dir>\tWhere to look for .sapclass files (can be used more than once)\n");
+	System.print("\t-l <class>\tLink program for main class <class>\n");
+	System.print("\t-t <target>\tSelect target (will include <sapc-dir>/<target>)\n");
+	System.print("\t-asm\t\tEnable disassembler output\n");
+	System.print("\t-debug\t\tEnable debugging output (for compiler bug reports)\n");
+    }
+    
+    static void main()
+    {
+	String[] args=System.args();
+	
+    	// Создаем программу
+	prog=new I_Program();
+	
+	
+	// Парсим командную строку
+	Vector sources=new Vector();
+	String main_class_name=null;
+	prog.INC_DIRS=new Vector();
+	prog.INC_DIRS.add("./");
+	prog.OUT_DIR="./";
+	
+	// Получаем путь к компилятору
+	String mypath=args[0];
+	if ( (mypath.indexOf('/')<0) && (mypath.indexOf('\\')<0) )
+	{
+	    // Текущий каталог
+	    mypath="./";
+	} else
+	{
+	    // Отрубаем имя файла
+	    for (int i=mypath.length()-1; i>=0; i--)
+	    {
+		if ( (mypath.charAt(i)=='/') || (mypath.charAt(i)=='\\') )
+		{
+		    mypath=mypath.substring(0, i+1);
+		    break;
+		}
+	    }
+	}
+	
+	{
+	    int n=1;
+	    
+	    while (n < args.length)
+	    {
+		if (args[n].equals("-i"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			String dir=args[n];
+			if ( (dir.charAt(dir.length()-1)!='/') && (dir.charAt(dir.length()-1)!='\\') ) dir=dir+"/";
+			prog.INC_DIRS.add(dir);
+			n++;
+		    }
+		} else
+		if (args[n].equals("-t"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			String dir=args[n];
+			if ( (dir.charAt(dir.length()-1)!='/') && (dir.charAt(dir.length()-1)!='\\') ) dir=dir+"/";
+			prog.INC_DIRS.add(mypath+dir);
+			n++;
+		    }
+		} else
+		if (args[n].equals("-o"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			String dir=args[n];
+			if ( (dir.charAt(dir.length()-1)!='/') && (dir.charAt(dir.length()-1)!='\\') ) dir=dir+"/";
+			prog.OUT_DIR=dir;
+			prog.INC_DIRS.add(dir);
+			n++;
+		    }
+		} else
+		if (args[n].equals("-l"))
+		{
+		    n++;
+		    if (n < args.length)
+		    {
+			main_class_name=args[n++];
+		    }
+		} else
+		if (args[n].equals("-asm"))
+		{
+		    n++;
+		    disasm=true;
+		} else
+		if (args[n].equals("-debug"))
+		{
+		    n++;
+		    debug_enabled=true;
+		} else
+		{
+		    // Это имя исходника
+		    sources.add(args[n]);
+		    n++;
+		}
+	    }
+	}
+	
+	
+	// Выводим каталоги include
+	sapc.debug("Includes dirs:\n");
+	for (int i=0; i<prog.INC_DIRS.size(); i++)
+	{
+	    String dir=(String)prog.INC_DIRS.elementAt(i);
+	    sapc.debug(dir+"\n");
+	}
+	
+	
+	// Смотрим - надо ли что-то делать
+	if ( (sources.size()==0) && (main_class_name==null) )
+	{
+	    // Нечего делать - покажем справку
+	    usage();
+	    return;
+	}
+	
+	
+	if (sources.size() > 0)
+	{
+	    // Есть что компилировать !
+	    
+	    // Парсим исходники
+	    for (int i=0; i<sources.size(); i++)
+	    {
+		if (!prog.ParseSource((String)sources.elementAt(i))) return;
+	    }
+	    
+	    
+	    // Проверяем зависимости
+	    sapc.debug("Checker_Deps\n");
+	    for (int i=0; i<prog.classes.size(); i++)
+	    {
+		if (!Checker_Deps.CheckClass((I_Class)prog.classes.elementAt(i))) return;
+	    }
+	    
+	    // Оптимизируем математику (грубо)
+	    sapc.debug("Opt_Math\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		Opt_Math.CheckClass((I_Class)prog.classes2compile.elementAt(i));
+	    }
+	    
+	    // Проверим переопределение полей и методов
+	    sapc.debug("Checker_Field_Method_Redef\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Field_Method_Redef.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверяем определенность интерфейсов
+	    sapc.debug("Checker_Interface_Implementing\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Interface_Implementing.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Создаем везде конструкторы и делаем вызовы предков
+	    sapc.debug("Checker_Init\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Init.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Создаем инициализаторы полей (в методах <init>)
+	    sapc.debug("Checker_Fields_Init\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Fields_Init.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Создаем инициализаторы статических полей (в методах <staticinit>)
+	    sapc.debug("Checker_StaticInit\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_StaticInit.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Создаем вызов конструктора-предка
+	    sapc.debug("Checker_ParentInit\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_ParentInit.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Находим и адресуем локальные переменные
+	    sapc.debug("Checker_LocalVars\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_LocalVars.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверяем метки
+	    sapc.debug("Checker_Labels\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Labels.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверяем break и continue. Заменяем их на GOTO
+	    sapc.debug("Checker_Break_Continue\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Break_Continue.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверяем goto внутрь блока synchronized()
+	    sapc.debug("Checker_Goto_Into_Synch\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Goto_Into_Synch.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Для всех выражений goto и return поставить кол-во monitor_exit'ов
+	    sapc.debug("Checker_Goto_From_Synch\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Goto_From_Synch.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверить обращение к полям
+	    sapc.debug("Checker_Fields\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Fields.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    // Проверить, что в статических методах не используются динамические данные
+	    sapc.debug("Checker_Static_Methods\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Checker_Static_Methods.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    
+	    // Типизируем код
+	    sapc.debug("Typer\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!Typer.CheckClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	    
+	    
+	    // Запускаем кодогенератор
+	    sapc.debug("CG\n");
+	    for (int i=0; i<prog.classes2compile.size(); i++)
+	    {
+		if (!CG.GenClass((I_Class)prog.classes2compile.elementAt(i))) return;
+	    }
+	}
+	
+	if (main_class_name!=null)
+	{
+	    // Линковщик !!!
+	    prog.reset();
+	    prog.is_linker=true;
+	    
+	    // Загружаем класс
+	    if (prog.FindClass(main_class_name)==null)
+	    {
+    		if (!ClassLoader.LoadClassWithDeps(prog, main_class_name))
+    		{
+        	    sapc.error("Error loading class '"+main_class_name+"'\n");
+        	    return;
+    		}
+	    }
+	    
+	    // Получаем главный класс
+	    I_Class main_class=prog.FindClass(main_class_name);
+	    
+    	    // Проверяем главный класс
+    	    if (main_class.is_interface)
+    	    {
+        	// Главный класс не может быть интерфейсом
+        	sapc.error("Main class '"+main_class_name+"' is interface !\n");
+        	return;
+    	    }
+	    
+    	    // Даем классам номера
+    	    for (int i=0; i<prog.classes.size(); i++)
+    	    {
+        	I_Class cls=(I_Class)prog.classes.elementAt(i);
+		
+        	cls.L_number=i;
+    	    }
+	    
+    	    // Присваиваем полям адреса
+    	    sapc.debug("CalcFields\n");
+    	    L_CalcFields.CalcFields();
+	    
+    	    // Создаем глобальную таблицу методов
+    	    sapc.debug("CreateGlobalMethodsTab\n");
+    	    L_GlobalMethodsTab.CreateGlobalMethodsTab();
+	    
+    	    // Создаем таблицу виртуальных методов
+    	    sapc.debug("CreateVirtualTab\n");
+    	    if (!L_VirtualTab.CreateVirtualTab()) return;
+	    
+    	    // Создаем таблицу принадлежности классов
+    	    sapc.debug("CreateInstanceOfTab\n");
+    	    L_InstanceOfTab.CreateInstanceOfTab();
+	    
+    	    // Создаем таблицу методов интерфейсов
+    	    sapc.debug("CreateInterfaceMethodsTab\n");
+    	    L_InterfaceMethodsTab.CreateInterfaceMethodsTab();
+	    
+    	    // Создаем таблицу методов интерфейсов с привязкой к классам
+    	    sapc.debug("CreateInterfaceTab\n");
+    	    L_InterfaceTab.CreateInterfaceTab();
+	    
+    	    // Получаем очередность вызова <staticinit>
+    	    sapc.debug("CreateStaticInitOrder\n");
+    	    L_StaticInitOrder.CreateStaticInitOrder();
+	    
+    	    // Подготавливаем код
+    	    sapc.debug("PrepareCode\n");
+    	    if (!L_PrepareCode.PrepareAll()) return;
+	    
+	    
+    	    // Записываем в файл
+	    sapc.debug("ProgramWriter\n");
+    	    if (!L_ProgramWriter.WriteProgram(main_class_name)) return;
+	}
+	
+	sapc.debug("Finished !\n");
+    }
+    
+    
+    static boolean debug_enabled=false;
+    static void debug(String s)
+    {
+	if (debug_enabled) System.print(s);
+    }
+    
+    
+    static void warning(String s)
+    {
+	System.print(s);
+    }
+    
+    
+    static void error(String s)
+    {
+	System.print(s);
+	System.exit(1);
+    }
+}

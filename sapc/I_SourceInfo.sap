@@ -1,0 +1,15 @@
+class I_SourceInfo
+{
+    String fname;
+    int line;
+    
+    
+    I_SourceInfo(Lex lex)
+    {
+	if (lex!=null)
+	{
+	    fname=lex.file_name;
+	    line=lex.line_num;
+	}
+    }
+}

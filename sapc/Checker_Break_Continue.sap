@@ -1,0 +1,118 @@
+
+// Всем циклам и switch дать уникальные номера. Заменить BREAK и CONTINUE на GOTO
+class Checker_Break_Continue
+{
+    static Vector break_num=new Vector();
+    static Vector continue_num=new Vector();
+    static int cycle_num;
+    
+    
+    static boolean CheckClass(I_Class cls)
+    {
+	// Проверяем все методы
+	for (int i=0; i<cls.methods.size(); i++)
+	{
+	    if (!CheckMethod((I_Method)cls.methods.elementAt(i))) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    static boolean CheckMethod(I_Method m)
+    {
+	break_num.setSize(0);
+	continue_num.setSize(0);
+	cycle_num=0;
+	
+	return CheckStat(m.code);
+    }
+    
+    
+    static boolean CheckStat(I_Stat s)
+    {
+	if (s==null) return true;
+	
+	
+	// Запоминаем стек
+	int last_break=break_num.size();
+	int last_continue=continue_num.size();
+	
+	
+	// Работаем в зависимости от типа команды
+	if ( (s.type == I_Stat.WHILE) ||
+	     (s.type == I_Stat.DO_WHILE) ||
+	     (s.type == I_Stat.FOR) )
+	{
+	    // break и continue
+	    Integer tmp=new Integer(cycle_num);
+	    break_num.add(tmp);
+	    continue_num.add(tmp);
+	    s.cycle_num=cycle_num;
+	    
+	    cycle_num++;
+	} else
+	if (s.type == I_Stat.SWITCH)
+	{
+	    // break
+	    Integer tmp=new Integer(cycle_num);
+	    break_num.add(tmp);
+	    s.cycle_num=cycle_num;
+	    
+	    cycle_num++;
+	} else
+	if (s.type == I_Stat.BREAK)
+	{
+	    if ( (s.intValue < 0) ||
+		 (s.intValue >= break_num.size()) )
+	    {
+		// break не разрешен
+		sapc.error(s.fname+":"+s.line+":  Incorrect depth for 'break' !\n");
+		return false;
+	    }
+	    
+	    Integer n=(Integer)break_num.elementAt( break_num.size() - (s.intValue+1) );
+	    
+	    // Меняем на GOTO
+	    s.type=I_Stat.GOTO;
+	    s.stringValue="<break>"+n.intValue();
+	    s.intValue=0;
+	} else
+	if (s.type == I_Stat.CONTINUE)
+	{
+	    if ( (s.intValue < 0) ||
+		 (s.intValue >= continue_num.size()) )
+	    {
+		// continue не разрешен
+		sapc.error(s.fname+":"+s.line+":  Incorrect depth for 'continue' !\n");
+		return false;
+	    }
+	    
+	    Integer n=(Integer)continue_num.elementAt( continue_num.size() - (s.intValue+1) );
+	    
+	    // Меняем на GOTO
+	    s.type=I_Stat.GOTO;
+	    s.stringValue="<continue>"+n.intValue();
+	    s.intValue=0;
+	}
+	
+	
+	// Проверяем все внутри
+	if (!CheckStat(s.stat)) return false;
+	if (!CheckStat(s.stat2)) return false;
+	
+	if (s.stats_list != null)
+	{
+	    for (int i=0; i<s.stats_list.size(); i++)
+	    {
+		if (!CheckStat((I_Stat)s.stats_list.elementAt(i))) return false;
+	    }
+	}
+	
+	// Восстанавливаем стек
+	break_num.setSize(last_break);
+	continue_num.setSize(last_continue);
+	
+	return true;
+    }
+}

@@ -1,0 +1,33 @@
+
+class I_ExprList extends I_SourceInfo
+{
+    // Список выражений
+    Vector list;
+    
+    
+    
+    I_ExprList(Lex lex) : super(lex)
+    {
+	list=new Vector();
+    }
+    
+    
+    static I_ExprList ParseExprList(Lex lex)
+    {
+	I_ExprList list=new I_ExprList(lex);
+	
+	while (true)
+	{
+	    I_Expr expr=I_Expr.ParseExprOrVarList(lex);
+	    if (expr==null)
+	    {
+		if (list.list.size()==0) return null; else lex.error("expression expected !");
+	    }
+	    
+	    list.list.add(expr);
+	    
+	    if (!lex.expect(',')) return list;
+	    lex.GetToken();
+	}
+    }
+}

@@ -1,0 +1,191 @@
+
+class I_Program
+{
+    // Каталоги с классами
+    Vector INC_DIRS;
+    
+    // Каталог для выходных файлов
+    String OUT_DIR;
+    
+    
+    // Все известные классы
+    Vector classes;
+    
+    // Классы, которые нужно компилировать
+    Vector classes2compile;
+    
+    // Работа линковщиком ?
+    boolean is_linker;
+    
+    
+    ////////////////////
+    // Размер статических полей и кол-во статических полей-ссылок
+    int L_static_fields_size;
+    int L_n_static_refs;
+    
+    // Глобальная таблица методов
+    Vector L_GlobalMethodsTab;
+    
+    // Таблица методов интерфейсов
+    Vector L_InterfaceMethodsTab;
+    
+    // Очередность вызова <staticinit>
+    Vector L_StaticInitOrder;
+    
+    
+    
+    I_Program()
+    {
+	reset();
+    }
+    
+    
+    void reset()
+    {
+	classes=new Vector();
+	classes2compile=new Vector();
+	
+	// Создаем класс Object
+	I_Class obj=new I_Class(null, "Object", null, null);
+	obj.fname="<internal>";
+	
+	// Создаем конструктор
+	I_Method init=new I_Method(null, new I_Type(null, I_Type.VOID, 0, null), "<init>", false, true);
+	init.L_ParentClass=obj;
+	
+	// Добавляем конструктор к списку методов класса Object
+	obj.methods.add(init);
+	
+	// Добавляем класс Object к списку известных классов
+	classes.add(obj);
+    }
+    
+    
+    
+    // Найти (и если надо загрузить класс)
+    I_Class FindClass(String name)
+    {
+	// Ищем класс в уже загруженных
+	for (int i=0; i<classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)classes.elementAt(i);
+	    
+	    if (cls.name.equals(name)) return cls;
+	}
+	
+	// Попытаемся загрузить класс (только если это компилятор)
+	if (!is_linker)
+	{
+	    if (ClassLoader.LoadClassWithDeps(sapc.prog, name))
+	    {
+		// Класс загрузился
+		// Ищем еще раз
+		return FindClass(name);
+	    }
+	}
+	
+	return null;
+    }
+    
+    
+    boolean IsClassLoaded(String name)
+    {
+	for (int i=0; i<classes.size(); i++)
+	{
+	    I_Class cls=(I_Class)classes.elementAt(i);
+	    
+	    if (cls.name.equals(name)) return true;
+	}
+	return false;
+    }
+    
+    
+    boolean CheckClassName(String name)
+    {
+	// Проверим - может пытаются создать класс Object - этого мы не разрешаем !
+	if (name.equals("Object")) return false;
+	
+	// Посмотреть, может быть уже заявлен класс на компиляцию
+	for (int i=0; i<classes2compile.size(); i++)
+	{
+	    I_Class cls=(I_Class)classes2compile.elementAt(i);
+	    
+	    if (cls.name.equals(name)) return false;
+	}
+	
+	return true;
+    }
+    
+    
+    boolean ParseSource(String fname)
+    {
+        File f;
+	
+        // Открываем файл
+	f=new File(fname, File.READ);
+	if (!f.ok())
+	{
+	    sapc.error("Can't open file '"+fname+"' !\n");
+	    return false;
+	}
+	
+	// Определяем кодировку
+	int cp=CodePage.detectCodePage(f);
+	f.seek(0);
+	sapc.debug(fname+" auto-detected codepage "+CodePage.name[cp]+"\r\n");
+	
+        // Создаем лексический анализатор
+        Lex lex=new Lex(new DataStream(f), fname, cp);
+	
+	sapc.debug("Parsing '"+fname+"'...\n");
+	
+	// Смотрим первый токен. Может быть это указание кодировки
+	if (lex.expect(Lex.T_VARIABLE))
+	{
+	    cp=-1;
+	    
+	    lex.GetToken();
+	    String name=(String)lex.tok_value;
+	    
+	    if (name.equals("WIN")) cp=CodePage.WIN; else
+	    if (name.equals("KOI")) cp=CodePage.KOI; else
+	    if (name.equals("DOS")) cp=CodePage.DOS; else
+		lex.UngetToken();
+	    
+	    if (cp>=0)
+	    {
+		// Принудительная кодировка
+		lex.cp=cp;
+		sapc.debug(fname+" forced codepage "+CodePage.name[cp]+"\r\n");
+	    }
+	}
+	
+        // Парсим исходник
+	while (!lex.expect(Lex.T_EOF))
+	{
+	    I_Class cls;
+	    
+	    // Проверим на класс
+	    cls=I_Class.ParseClass(lex);
+	    if (cls==null)
+	        cls=I_Class.ParseInterface(lex);
+	    
+	    // Очищаем документацию
+	    lex.last_doc=null;
+	    
+	    if (cls!=null)
+	    {
+		if (!CheckClassName(cls.name)) lex.error("Class/Interface '"+cls.name+"' already in 'to-compile' list !");
+		classes.add(cls);
+		classes2compile.add(cls);
+		sapc.debug("Class/If '"+cls.name+"' ok !\n");
+		continue;
+	    }
+	    
+	    lex.unexpected();
+	}
+	
+	sapc.debug("Program ok !\n");
+	return true;
+    }
+}

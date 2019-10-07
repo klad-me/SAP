@@ -1,0 +1,394 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1251" />
+  <title>Описание класса System</title>
+</head>
+<body><font face="sans-serif">
+  <!-- Top navigation -->
+  <a name="TOP"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Class section -->
+<a name="CLASS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Класс</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%">
+<tr><td colspan="2" valign="top">class <b>System</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Предоставляет некоторые базовые функции исполнительной системы
+  </td></tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+
+<!-- Methods section -->
+<a name="METHODS"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Методы</b></font></td>
+    </tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#print"><b>print</b></a>(<a href="String.html"><b>String</b></a>&nbsp;str)<br/>
+Напечатать строку на стандартный вывод.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#disable_print"><b>disable_print</b></a>()<br/>
+Отключить стандартный вывод. System.print() при этом ничего выводить не будет.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#enable_print"><b>enable_print</b></a>()<br/>
+Включить стандартный вывод. System.print() возобновит свою работу.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="String.html"><b>String</b></a>[]</td>
+  <td valign="top"><a href="#args"><b>args</b></a>()<br/>
+Получить аргументы командной строки.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static <a href="String.html"><b>String</b></a></td>
+  <td valign="top"><a href="#getProperty"><b>getProperty</b></a>(<a href="String.html"><b>String</b></a>&nbsp;name)<br/>
+Получить значение именованного свойства
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#setProperty"><b>setProperty</b></a>(<a href="String.html"><b>String</b></a>&nbsp;name, <a href="String.html"><b>String</b></a>&nbsp;value)<br/>
+Установить значение именованного свойства
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#arrayCopy"><b>arrayCopy</b></a>(Object&nbsp;src, int&nbsp;srcOffs, Object&nbsp;dst, int&nbsp;dstOffs, int&nbsp;len)<br/>
+Быстрое копирование элементов массивов.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static int</td>
+  <td valign="top"><a href="#currentTime"><b>currentTime</b></a>()<br/>
+Получить текущее время в Unixtime
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#setCurrentTime"><b>setCurrentTime</b></a>(int&nbsp;ut)<br/>
+Установить текущее время в Unixtime
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static int</td>
+  <td valign="top"><a href="#currentTick"><b>currentTick</b></a>()<br/>
+Получить текущий счетчик миллисекунд.
+</td>
+</tr></table>
+    </td></tr>
+    <tr><td>
+<table border="0" width="100%"><tr>
+  <td width="100" valign="top">static void</td>
+  <td valign="top"><a href="#exit"><b>exit</b></a>(int&nbsp;code)<br/>
+Выйти из программы с указанием кода возврата
+</td>
+</tr></table>
+    </td></tr>
+  </table>
+  <hr/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Детальное описание методов</b></font></td>
+    </tr>
+  </table>
+  <hr/>
+
+<!-- Method 'print' details -->
+<a name="print"/>
+<font size="+1"><b>Метод print</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>print</b>(<a href="String.html"><b>String</b></a>&nbsp;str)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Напечатать строку на стандартный вывод. В зависимости от устройства, стандартный вывод может быть направлен на разные порты.
+В случае, если стандартный вывод пересекается с портом ввода/вывода, можно воспользоваться функциями System.disable_print() и
+System.enable_print(), чтобы избежать перемешивания данных и стандартного вывода при работе с портом ввода/вывода.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+str&nbsp;-&nbsp;строка для печати<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'disable_print' details -->
+<a name="disable_print"/>
+<font size="+1"><b>Метод disable_print</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>disable_print</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Отключить стандартный вывод. System.print() при этом ничего выводить не будет.
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'enable_print' details -->
+<a name="enable_print"/>
+<font size="+1"><b>Метод enable_print</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>enable_print</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Включить стандартный вывод. System.print() возобновит свою работу.
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'args' details -->
+<a name="args"/>
+<font size="+1"><b>Метод args</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="String.html"><b>String</b></a>[] <b>args</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить аргументы командной строки.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+массив аргументов командной строки
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'getProperty' details -->
+<a name="getProperty"/>
+<font size="+1"><b>Метод getProperty</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static <a href="String.html"><b>String</b></a> <b>getProperty</b>(<a href="String.html"><b>String</b></a>&nbsp;name)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить значение именованного свойства. Именованное свойство - это аналог переменных окружения.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+name&nbsp;-&nbsp;имя свойства<br/>
+</td></tr></table>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+значение свойства, или null если свойство с указанным именем отсутствует
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'setProperty' details -->
+<a name="setProperty"/>
+<font size="+1"><b>Метод setProperty</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>setProperty</b>(<a href="String.html"><b>String</b></a>&nbsp;name, <a href="String.html"><b>String</b></a>&nbsp;value)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить значение именованного свойства. Именованное свойство - это аналог переменных окружения.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+name&nbsp;-&nbsp;имя свойства<br/>
+value&nbsp;-&nbsp;новое значение для свойства (при указании пустой строки, свойство удаляется)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'arrayCopy' details -->
+<a name="arrayCopy"/>
+<font size="+1"><b>Метод arrayCopy</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>arrayCopy</b>(Object&nbsp;src, int&nbsp;srcOffs, Object&nbsp;dst, int&nbsp;dstOffs, int&nbsp;len)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Быстрое копирование элементов массивов. Оба массива должны иметь одинаковый базовый тип и размерности.
+Источник и приемник могут быть одним и тем же массивом. Перекрестные индексы обрабатываются корректно.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+src&nbsp;-&nbsp;массив-источник<br/>
+srcOffs&nbsp;-&nbsp;смещение данных в массиве-источнике<br/>
+dst&nbsp;-&nbsp;массив-приемник<br/>
+dstOffs&nbsp;-&nbsp;смещение данных в массиве-приемнике<br/>
+len&nbsp;-&nbsp;размер копируемых данных (в элементах, а не в байтах!)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'currentTime' details -->
+<a name="currentTime"/>
+<font size="+1"><b>Метод currentTime</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static int <b>currentTime</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить текущее время в Unixtime
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+текущее время в Unixtime
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'setCurrentTime' details -->
+<a name="setCurrentTime"/>
+<font size="+1"><b>Метод setCurrentTime</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>setCurrentTime</b>(int&nbsp;ut)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Установить текущее время в Unixtime
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+ut&nbsp;-&nbsp;текущее время в Unixtime<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'currentTick' details -->
+<a name="currentTick"/>
+<font size="+1"><b>Метод currentTick</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static int <b>currentTick</b>()
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Получить текущий счетчик миллисекунд.
+Счетчик миллисекунд считает прошедшее время в миллисекундах используя беззнаковый 32-битный счетчик.
+Значение этого счетчика можно использовать для измерения временных интервалов до 49 суток.
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Возвращаемое значение:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+текущий счетчик миллисекунд
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+<!-- Method 'exit' details -->
+<a name="exit"/>
+<font size="+1"><b>Метод exit</b></font><br/><br/>
+<table border="0" width="100%">
+  <tr><td colspan="2">
+static void <b>exit</b>(int&nbsp;code)
+  </td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+Выйти из программы с указанием кода возврата
+
+<br/>
+<br/><table border="0" width="100%">
+  <tr><td colspan="2"><b>Параметры:</b></td></tr>
+  <tr><td width="40">&nbsp;</td><td>
+code&nbsp;-&nbsp;код возврата (обычно используется следующим образом: 0=корректное завершение, положительное значение=корректное завершение+информация о завершении, отрицательное значение=некорректное завершение+информация об ошибке)<br/>
+</td></tr></table>
+  </td></tr>
+</table>
+<hr/>
+
+  <!-- Bottom navigation -->
+  <a name="BOTTOM"/>
+  <table border="1" width="100%" cellspacing="0">
+    <tr>
+      <td bgcolor="#C0C0FF"><font size="+1"><b>Навигация</b></font></td>
+    </tr>
+    <tr><td>
+
+<table border="0">
+  <tr>
+    <td><a href="#CLASS"><b>Класс</b></a></td>
+    <td>|</td>
+    <td><a href="#CONSTRUCTOR"><b>Конструктор</b></a></td>
+    <td>|</td>
+    <td><a href="#FIELDS"><b>Поля</b></a></td>
+    <td>|</td>
+    <td><a href="#METHODS"><b>Методы</b></a></td>
+  </tr>
+</table>
+    </td></tr>
+  </table>
+  <hr/>
+</font></body>
+</html>

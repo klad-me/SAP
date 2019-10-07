@@ -1,0 +1,37 @@
+
+
+class CG_LineNumbers
+{
+    static CG_Stream data;
+    static int last_PC, last_Line;
+    
+    
+    static void init()
+    {
+	data=new CG_Stream();
+	last_PC=-1;
+	last_Line=-1;
+    }
+    
+    
+    static void Line(I_SourceInfo s)
+    {
+	int PC=CG.bytecode.size();
+	int line=s.line;
+	
+	if (last_PC==PC)
+	{
+	    // Надо поправить прошлую запись
+	    data.putShortAt(data.size()-2, (short)line);
+	    return;
+	}
+	
+	if (last_Line==line) return;	// номер строки не изменился
+	
+	// Надо добавить новую запись
+	data.putShort((short)PC);
+	data.putShort((short)line);
+	last_PC=PC;
+	last_Line=line;
+    }
+}

@@ -1,0 +1,77 @@
+/**
+ * Реализует функцию ПИД-регулятора
+ */
+class PID
+{
+    /**
+     * Коэффициент передачи
+     */
+    float K=0.1;
+    
+    
+    /**
+     * Время интегрирования
+     */
+    float Ti=20.0;
+    
+    
+    /**
+     * Время дифференцирования
+     */
+    float Td=3.0;
+    
+    
+    // Переменные для работы
+    float e_k, e_k_1, e_k_2;
+    float q0, q1, q2;
+    int dT_prev;
+    
+    
+    /**
+     * Создать ПИД-регулятор
+     */
+    constructor()
+    {
+	dT_prev=System.currentTick();
+    }
+    
+    
+    /**
+     * Сбросить регулятор (память)
+     */
+    void reset()
+    {
+	dT_prev=System.currentTick();
+	e_k=0;
+	e_k_1=0;
+	e_k_2=0;
+    }
+    
+    
+    /**
+     * Сделать шаг регулятора
+     *
+     * @param d величина рассогласования
+     * @return величина воздействия
+     */
+    float step(float d)
+    {
+	// Вычисляем шаг регулятора
+	int t=System.currentTick();
+	float dT=((float)(t-dT_prev))/1000.0;
+	dT_prev=t;
+	
+	// Вычисляем коэффициенты
+        float q0= K * ( 1.0 +     (Td / dT) );
+        float q1=-K * ( 1.0 + 2.0*(Td / dT) - 2.0*(dT / Ti) );
+        float q2= K * (            Td / dT);
+        
+	// Получаем e(k)
+	e_k_2=e_k_1;
+	e_k_1=e_k;
+	e_k=d;
+	
+	// Вычисляем воздействие
+	return q0*e_k + q1*e_k_1 + q2*e_k_2;
+    }
+}
