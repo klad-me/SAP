@@ -193,7 +193,7 @@ sap_ushort sapvm_8bit_to_unicode(sap_byte   b)
     // Используем cp1251
     sap_ubyte c=(sap_ubyte)b;
     
-    if ( (c>=32) && (c<=127) ) return c; else
+    if (c<=127) return c; else
     if (c>=0xC0) return 0x410+(c-0xC0); else
     if (c==0xA8) return 0x401; else     // YO
     if (c==0xB8) return 0x451; else     // yo
@@ -204,7 +204,7 @@ sap_ushort sapvm_8bit_to_unicode(sap_byte   b)
 sap_byte   sapvm_unicode_to_8bit(sap_ushort u)
 {
     // Используем cp1251
-    if ( (u>=32) && (u<=127) ) return (sap_byte)u; else
+    if (u<=127) return (sap_byte)u; else
     if ( (u>=0x410) && (u<=0x44F) ) return (sap_byte)((u-0x410)+0xC0); else
     if (u==0x401) return (sap_byte)0xA8; else     // YO
     if (u==0x451) return (sap_byte)0xB8; else     // yo

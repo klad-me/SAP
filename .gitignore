@@ -1,0 +1,4 @@
+*.o
+/sapvm/vm
+/stdlib/obj
+/plc-lib/obj

@@ -1,4 +1,4 @@
-CFLAGS= -Wall -Wshadow -Wstrict-prototypes -I. -O3 -Ipt
+CFLAGS=-Wall -Wshadow -Wstrict-prototypes -I. -O3 -Ipt -m32
 LDFLAGS=-lm
 CC=gcc
 
