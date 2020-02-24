@@ -1,5 +1,5 @@
 CFLAGS=-Wall -Wshadow -Wstrict-prototypes -I. -O3 -Ipt -m32
-LDFLAGS=-lm
+LDFLAGS=-lm -lrt
 CC=gcc
 
 

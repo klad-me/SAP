@@ -1,4 +1,5 @@
 *.o
 /sapvm/vm
+/sapdoc/obj
 /stdlib/obj
 /plc-lib/obj

@@ -133,15 +133,15 @@ void sapvm_free(void *ptr)
 
 sap_uint sapvm_get_time_counter(void)
 {
-    struct timeval tv;
-    gettimeofday(&tv, 0);
-    
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+
     unsigned long long v;
-    
-    v=tv.tv_sec;
+
+    v=ts.tv_sec;
     v*=1000;
-    v+=tv.tv_usec/1000;
-    
+    v+=ts.tv_nsec/1000000;
+
     return (sap_uint)(v & 0xffffffff);
 }
 
